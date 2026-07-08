@@ -18,7 +18,7 @@ export default function CountryFlag({
       height={size * 0.75}
       unoptimized
       className="rounded-[2px] object-cover ring-1 ring-black/20"
-      style={{ width: size, height: size * 0.75 }}
+      style={{ width: `${size}px`, height: `${size * 0.75}px` }}
     />
   );
 }

@@ -1,9 +1,12 @@
 import type { Meta } from "@/data/types";
 import { bollards } from "@/data/bollards";
-import { currency } from "@/data/currency";
+import { poles } from "@/data/poles";
+import { licensePlates } from "@/data/licensePlates";
+import { roadLines } from "@/data/roadLines";
 import { signs } from "@/data/signs";
+import { currency } from "@/data/currency";
 
-export const metas: Meta[] = [bollards, signs, currency];
+export const metas: Meta[] = [bollards, poles, licensePlates, roadLines, signs, currency];
 
 export function getMeta(id: string): Meta | undefined {
   return metas.find((m) => m.id === id);

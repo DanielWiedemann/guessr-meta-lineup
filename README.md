@@ -4,21 +4,24 @@ A free, no-login GeoGuessr/WorldGuessr helper. Instead of clicking into one
 country's guide at a time, browse every documented variant of a meta side by
 side and match it to what you're seeing in-game.
 
-Currently covers South America across three metas — see `data/`:
+## Features
 
-- **Bollards** (`data/bollards.ts`) — Chile, Ecuador, Peru and Uruguay have
-  documented variants; Argentina, Bolivia, Brazil and Colombia have no
-  distinctive bollard meta per Plonk It.
-- **Signs** (`data/signs.ts`) — Stop, Yield, Pedestrian crossing and Bus stop,
-  each with real photos per country where a usable one exists on Wikimedia
-  Commons. Coverage is intentionally incomplete where no suitable free photo
-  exists (e.g. Bolivia/Peru have almost no photographed road signs on
-  Commons) — gaps are shown rather than filled with the wrong sign.
-- **Currency** (`data/currency.ts`) — plain factual reference (name, symbol,
-  code) for all 8 countries.
+- **Lineup** (`/`) — six South American metas, each browsable as a visual
+  grid: Bollards, Poles, License plates, Road lines (with a Chevrons
+  sub-tab), Signs (Stop/Yield/Pedestrian crossing/Bus stop sub-tabs), and
+  Currency (plain facts). Countries with no documented meta are shown
+  honestly rather than skipped.
+- **Quiz** (`/quiz`) — guess-the-country practice mode pulling a question
+  from every meta in the lineup, with instant feedback and a streak counter
+  persisted in `localStorage`.
+- **Country profile** (`/country/[code]`) — every meta for a single country
+  on one page, instead of switching meta tabs and scanning for that country
+  each time.
+- **Compare** (`/compare`) — two countries side by side across every meta at
+  once, for exactly the 50-50 moments this app is meant to solve.
+- **Search** — jump straight to a country profile from the nav bar.
 
-More metas (poles, license plates, lamp posts, road lines) and regions are
-planned — see `data/index.ts` for the meta registry.
+See `data/` for the meta registry (`data/index.ts`) and per-meta data files.
 
 ## Stack
 
@@ -40,7 +43,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Content & attribution
 
-- Bollard clue images and descriptions come from the
+- Bollard, pole, license plate and road line/chevron clue images and
+  descriptions come from the
   [Plonk It Guide to GeoGuessr](https://www.plonkit.net/guide), licensed
   under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 - Currency facts come from [GeoHints](https://geohints.com/meta/currencies)
@@ -48,12 +52,17 @@ Open [http://localhost:3000](http://localhost:3000).
 - Sign photos come from individual [Wikimedia Commons](https://commons.wikimedia.org/)
   contributors, each freely licensed (CC-BY/CC-BY-SA/CC0/PD) — per-photo
   author and license are shown in each detail view and linked to the source
-  file page.
+  file page. Every Commons photo used here was manually opened and visually
+  checked against its claimed meta before inclusion.
 - Flags come from [Worldometer](https://www.worldometers.info/geography/flags-of-the-world/).
 
 Note: GeoHints has not published a reuse license for its own photos/images,
 so none of its images are used in this app — only the plain factual
 currency data, which isn't copyrightable.
+
+Coverage is intentionally incomplete where no reliable meta or no suitable
+free photo exists (e.g. Bolivia and Peru have very few photographed road
+signs on Commons) — gaps are shown rather than filled with the wrong thing.
 
 This project is an unofficial, non-commercial fan tool and isn't affiliated
 with Plonk It, GeoHints, Wikimedia, Worldometer, GeoGuessr, or WorldGuessr.

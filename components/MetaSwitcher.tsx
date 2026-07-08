@@ -6,7 +6,7 @@ import SignsGallery from "@/components/SignsGallery";
 import CurrencyFacts from "@/components/CurrencyFacts";
 import type { Meta } from "@/data/types";
 
-const upcomingMetas = ["Poles", "License plates", "Lamp posts", "Road lines"];
+const upcomingMetas = ["Lamp posts", "Google cars"];
 
 export default function MetaSwitcher({ metas }: { metas: Meta[] }) {
   const [activeId, setActiveId] = useState(metas[0]?.id);
