@@ -1,11 +1,7 @@
-import { metas } from "@/data/metas";
-import MetaGallery from "@/components/MetaGallery";
-
-const upcomingMetas = ["Poles", "License plates", "Lamp posts", "Road lines"];
+import { metas } from "@/data";
+import MetaSwitcher from "@/components/MetaSwitcher";
 
 export default function Home() {
-  const meta = metas[0];
-
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 sm:px-6">
       <header className="mb-8">
@@ -20,27 +16,11 @@ export default function Home() {
         </p>
       </header>
 
-      <div className="mb-8 flex flex-wrap gap-2">
-        <span className="rounded-full bg-emerald-500/15 px-4 py-1.5 text-sm font-medium text-emerald-400 ring-1 ring-emerald-500/40">
-          {meta.name}
-        </span>
-        {upcomingMetas.map((name) => (
-          <span
-            key={name}
-            className="rounded-full bg-slate-900 px-4 py-1.5 text-sm text-slate-500 ring-1 ring-slate-800"
-          >
-            {name} · soon
-          </span>
-        ))}
-      </div>
-
-      <p className="mb-6 max-w-2xl text-sm text-slate-400">{meta.description}</p>
-
-      <MetaGallery meta={meta} />
+      <MetaSwitcher metas={metas} />
 
       <footer className="mt-16 border-t border-slate-800 pt-6 text-xs text-slate-500">
         <p>
-          Images and clues sourced from{" "}
+          Clue images and information sourced from{" "}
           <a
             href="https://www.plonkit.net/guide"
             target="_blank"
@@ -48,8 +28,8 @@ export default function Home() {
             className="text-slate-400 underline hover:text-slate-200"
           >
             Plonk It
-          </a>
-          , licensed under{" "}
+          </a>{" "}
+          (
           <a
             href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
             target="_blank"
@@ -58,8 +38,36 @@ export default function Home() {
           >
             CC BY-NC-SA 4.0
           </a>
+          ),{" "}
+          <a
+            href="https://geohints.com"
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="text-slate-400 underline hover:text-slate-200"
+          >
+            GeoHints
+          </a>{" "}
+          and{" "}
+          <a
+            href="https://commons.wikimedia.org/"
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="text-slate-400 underline hover:text-slate-200"
+          >
+            Wikimedia Commons
+          </a>{" "}
+          contributors (individual photo credits shown in each detail view).
+          Flags from{" "}
+          <a
+            href="https://www.worldometers.info/geography/flags-of-the-world/"
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="text-slate-400 underline hover:text-slate-200"
+          >
+            Worldometer
+          </a>
           . This is an unofficial, non-commercial fan project and isn&apos;t
-          affiliated with Plonk It or GeoGuessr.
+          affiliated with any of these sites, GeoGuessr, or WorldGuessr.
         </p>
       </footer>
     </main>
