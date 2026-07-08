@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import CountryFlag from "@/components/CountryFlag";
-import { southAmerica, countryName } from "@/data/countries";
+import { countries, countryName } from "@/data/countries";
 import type { QuizQuestion } from "@/data/quiz";
 
 const BEST_STREAK_KEY = "meta-lineup-best-streak";
@@ -17,34 +17,47 @@ function shuffle<T>(arr: T[]): T[] {
   return copy;
 }
 
-function readBestStreak(): number {
-  if (typeof window === "undefined") return 0;
-  const saved = Number(localStorage.getItem(BEST_STREAK_KEY) ?? 0);
-  return Number.isNaN(saved) ? 0 : saved;
-}
-
 export default function QuizGame({ questions }: { questions: QuizQuestion[] }) {
-  const [order, setOrder] = useState<QuizQuestion[]>(() => shuffle(questions));
+  // order/best start as deterministic placeholders so server and client render
+  // identical markup on first paint — the real (random / localStorage-derived)
+  // values are only computed client-side after mount, in the effect below.
+  const [order, setOrder] = useState<QuizQuestion[]>(questions);
+  const [mounted, setMounted] = useState(false);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [best, setBest] = useState(readBestStreak);
+  const [best, setBest] = useState(0);
   const [answered, setAnswered] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Intentional: order is randomized (Math.random) and best comes from
+    // localStorage, so both must be computed client-only, after mount, to
+    // keep the server-rendered and first client-rendered HTML identical.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOrder(shuffle(questions));
+    const saved = Number(localStorage.getItem(BEST_STREAK_KEY) ?? 0);
+    setBest(Number.isNaN(saved) ? 0 : saved);
+    setMounted(true);
+  }, [questions]);
 
   const question = order[index];
 
   const options = useMemo(() => {
-    if (!question) return [];
-    const distractors = shuffle(
-      southAmerica.filter((c) => c.code !== question.answerCode)
-    )
+    if (!mounted || !question) return [];
+    const answerCountry = countries.find((c) => c.code === question.answerCode);
+    const pool = answerCountry
+      ? countries.filter(
+          (c) => c.code !== question.answerCode && c.region === answerCountry.region
+        )
+      : countries.filter((c) => c.code !== question.answerCode);
+    const distractors = shuffle(pool)
       .slice(0, 3)
       .map((c) => c.code);
     return shuffle([question.answerCode, ...distractors]);
-  }, [question]);
+  }, [mounted, question]);
 
-  if (!question) {
+  if (!mounted || !question) {
     return <p className="text-sm text-slate-500">Loading questions…</p>;
   }
 

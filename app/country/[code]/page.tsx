@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { southAmerica, countryName } from "@/data/countries";
+import { countries, countryName } from "@/data/countries";
 import { getCountryProfile } from "@/data/countryProfile";
 import CountryProfile from "@/components/CountryProfile";
 import CountryFlag from "@/components/CountryFlag";
 
 export function generateStaticParams() {
-  return southAmerica.map((c) => ({ code: c.code }));
+  return countries.map((c) => ({ code: c.code }));
 }
 
 export async function generateMetadata(props: {
@@ -20,7 +20,8 @@ export default async function CountryPage(props: {
   params: Promise<{ code: string }>;
 }) {
   const { code } = await props.params;
-  if (!southAmerica.some((c) => c.code === code)) notFound();
+  const country = countries.find((c) => c.code === code);
+  if (!country) notFound();
   const sections = getCountryProfile(code);
 
   return (
@@ -28,7 +29,7 @@ export default async function CountryPage(props: {
       <header className="mb-8 flex items-center gap-3">
         <CountryFlag code={code} name={countryName(code)} size={40} />
         <div>
-          <p className="text-sm font-medium text-emerald-400">Country profile</p>
+          <p className="text-sm font-medium text-emerald-400">{country.region}</p>
           <h1 className="text-3xl font-bold tracking-tight">{countryName(code)}</h1>
         </div>
       </header>

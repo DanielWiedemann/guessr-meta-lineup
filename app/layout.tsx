@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Meta Lineup — GeoGuessr South America Metas",
+  title: "Meta Lineup — GeoGuessr Country Metas",
   description:
-    "Compare GeoGuessr metas side by side — starting with South American bollards — instead of hunting through country guides one at a time.",
+    "Compare GeoGuessr metas side by side across Latin America and Europe, instead of hunting through country guides one at a time.",
 };
 
 export default function RootLayout({

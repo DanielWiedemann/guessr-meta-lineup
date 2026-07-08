@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { southAmerica, countryName } from "@/data/countries";
+import { countries, countryName } from "@/data/countries";
 import { getCountryProfile } from "@/data/countryProfile";
 import CountryProfile from "@/components/CountryProfile";
 import CountryFlag from "@/components/CountryFlag";
 import CountrySearchSelect from "@/components/CountrySearchSelect";
 
 export default function CompareView() {
-  const [a, setA] = useState(southAmerica[0].code);
-  const [b, setB] = useState(southAmerica[1].code);
+  const [a, setA] = useState(countries[0].code);
+  const [b, setB] = useState(countries[1].code);
 
   return (
     <div>

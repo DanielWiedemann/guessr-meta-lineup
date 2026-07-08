@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { southAmerica } from "@/data/countries";
+import { countries } from "@/data/countries";
 import CountryFlag from "@/components/CountryFlag";
 
 const links = [
@@ -21,7 +21,7 @@ export default function Nav() {
   const matches = useMemo(() => {
     if (!query.trim()) return [];
     const q = query.trim().toLowerCase();
-    return southAmerica.filter((c) => c.name.toLowerCase().includes(q));
+    return countries.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 8);
   }, [query]);
 
   function goToCountry(code: string) {
@@ -68,7 +68,7 @@ export default function Nav() {
             className="w-full rounded-full border border-slate-800 bg-slate-900 px-3 py-1.5 text-sm text-slate-200 placeholder:text-slate-600 focus:border-emerald-500/50 focus:outline-none"
           />
           {open && matches.length > 0 && (
-            <ul className="absolute right-0 z-20 mt-1 w-full overflow-hidden rounded-lg border border-slate-800 bg-slate-900 shadow-lg">
+            <ul className="absolute right-0 z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-slate-800 bg-slate-900 shadow-lg">
               {matches.map((c) => (
                 <li key={c.code}>
                   <button

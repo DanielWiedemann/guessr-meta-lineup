@@ -17,7 +17,7 @@ function fromMeta(meta: Meta): QuizQuestion[] {
       country.variants.map((variant) => ({
         id: `${meta.id}:${variant.id}`,
         metaName: meta.name,
-        prompt: `Which country is this ${meta.name.toLowerCase()} from?`,
+        prompt: "Which country is this from?",
         image: variant.image,
         answerCode: country.code,
         sourceUrl: country.sourceUrl,

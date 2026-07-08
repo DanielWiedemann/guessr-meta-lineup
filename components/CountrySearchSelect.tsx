@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { southAmerica, countryName } from "@/data/countries";
+import { countries, countryName } from "@/data/countries";
 import CountryFlag from "@/components/CountryFlag";
 
 export default function CountrySearchSelect({
@@ -18,7 +18,7 @@ export default function CountrySearchSelect({
 
   const displayValue = open ? query : countryName(value);
 
-  const options = southAmerica.filter(
+  const options = countries.filter(
     (c) => c.code !== excludeCode && c.name.toLowerCase().includes(query.trim().toLowerCase())
   );
 
