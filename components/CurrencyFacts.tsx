@@ -1,3 +1,4 @@
+import Image from "next/image";
 import CountryFlag from "@/components/CountryFlag";
 import { countryName } from "@/data/countries";
 import type { FactsMeta } from "@/data/types";
@@ -14,6 +15,18 @@ export default function CurrencyFacts({ meta }: { meta: FactsMeta }) {
             <CountryFlag code={country.code} name={countryName(country.code)} size={24} />
             <p className="font-medium text-slate-100">{countryName(country.code)}</p>
           </div>
+          {country.image && (
+            <div className="relative mt-3 aspect-4/3 w-full overflow-hidden rounded-lg bg-slate-800">
+              <Image
+                src={country.image}
+                alt={`${meta.name} — ${countryName(country.code)}`}
+                fill
+                unoptimized
+                sizes="300px"
+                className="object-contain p-1"
+              />
+            </div>
+          )}
           <dl className="mt-3 space-y-1.5">
             {country.facts.map((fact) => (
               <div key={fact.label} className="flex items-baseline justify-between gap-3">

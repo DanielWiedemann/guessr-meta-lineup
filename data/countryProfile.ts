@@ -24,6 +24,7 @@ export type ProfileSection =
       metaName: string;
       attribution: string;
       facts: Fact[];
+      image?: string;
       sourceUrl?: string;
     };
 
@@ -64,6 +65,7 @@ export function getCountryProfile(code: string): ProfileSection[] {
       metaName: meta.name,
       attribution: meta.attribution,
       facts: country?.facts ?? [],
+      image: country?.image,
       sourceUrl: country?.sourceUrl,
     };
   });

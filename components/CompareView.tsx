@@ -5,32 +5,7 @@ import { southAmerica, countryName } from "@/data/countries";
 import { getCountryProfile } from "@/data/countryProfile";
 import CountryProfile from "@/components/CountryProfile";
 import CountryFlag from "@/components/CountryFlag";
-
-function CountrySelect({
-  value,
-  onChange,
-  excludeCode,
-}: {
-  value: string;
-  onChange: (code: string) => void;
-  excludeCode: string;
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full cursor-pointer appearance-none rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-lg font-semibold text-slate-100 focus:border-emerald-500/50 focus:outline-none"
-    >
-      {southAmerica
-        .filter((c) => c.code !== excludeCode)
-        .map((c) => (
-          <option key={c.code} value={c.code}>
-            {c.name}
-          </option>
-        ))}
-    </select>
-  );
-}
+import CountrySearchSelect from "@/components/CountrySearchSelect";
 
 export default function CompareView() {
   const [a, setA] = useState(southAmerica[0].code);
@@ -38,25 +13,25 @@ export default function CompareView() {
 
   return (
     <div>
-      <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <CountrySelect value={a} onChange={setA} excludeCode={b} />
-        <CountrySelect value={b} onChange={setB} excludeCode={a} />
+      <div className="mb-10 grid grid-cols-2 gap-3 sm:gap-6">
+        <CountrySearchSelect value={a} onChange={setA} excludeCode={b} />
+        <CountrySearchSelect value={b} onChange={setB} excludeCode={a} />
       </div>
 
-      <div className="grid grid-cols-1 gap-x-10 gap-y-10 lg:grid-cols-2">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-10">
         <div>
           <div className="mb-6 flex items-center gap-2 border-b border-slate-800 pb-3">
             <CountryFlag code={a} name={countryName(a)} size={28} />
             <h2 className="text-xl font-bold text-slate-100">{countryName(a)}</h2>
           </div>
-          <CountryProfile code={a} sections={getCountryProfile(a)} />
+          <CountryProfile sections={getCountryProfile(a)} columns={1} />
         </div>
         <div>
           <div className="mb-6 flex items-center gap-2 border-b border-slate-800 pb-3">
             <CountryFlag code={b} name={countryName(b)} size={28} />
             <h2 className="text-xl font-bold text-slate-100">{countryName(b)}</h2>
           </div>
-          <CountryProfile code={b} sections={getCountryProfile(b)} />
+          <CountryProfile sections={getCountryProfile(b)} columns={1} />
         </div>
       </div>
     </div>

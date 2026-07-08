@@ -37,6 +37,7 @@ export type Fact = {
 export type FactCountry = {
   code: string;
   facts: Fact[];
+  image?: string;
   sourceUrl?: string;
 };
 

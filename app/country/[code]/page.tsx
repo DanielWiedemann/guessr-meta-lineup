@@ -33,7 +33,7 @@ export default async function CountryPage(props: {
         </div>
       </header>
 
-      <CountryProfile code={code} sections={sections} />
+      <CountryProfile sections={sections} />
     </main>
   );
 }
