@@ -4,8 +4,8 @@ A free, no-login GeoGuessr/WorldGuessr helper. Instead of clicking into one
 country's guide at a time, browse every documented variant of a meta side by
 side and match it to what you're seeing in-game.
 
-Covers **62 countries** across South America, Latin America (Central
-America/Caribbean), and Europe.
+Covers **72 countries** across South America, Latin America (Central
+America/Caribbean), North America, and Europe.
 
 ## Features
 
@@ -39,7 +39,8 @@ with regions (`data/countries.ts`), and per-meta data files.
 - Country flags are hotlinked from Worldometer by ISO code (`data/countries.ts`).
   A handful of sub-national territories without their own Worldometer flag
   (Azores, Madeira, Faroe Islands, Gibraltar, Isle of Man, Jersey, Svalbard,
-  Puerto Rico) fall back to their parent country's flag via `flagCode`.
+  Puerto Rico, Alaska, Hawaii) fall back to their parent country's flag via
+  `flagCode`.
 
 ## Getting started
 
@@ -52,10 +53,14 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Content & attribution
 
-- Bollard, pole, license plate, road line/chevron and (for most of Europe
-  and Latin America) sign clue images and descriptions come from the
-  [Plonk It Guide to GeoGuessr](https://www.plonkit.net/guide), licensed
-  under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+- Bollard, pole, license plate, road line/chevron and (for most of Europe,
+  Latin America, and North America) sign clue images and descriptions come
+  from the [Plonk It Guide to GeoGuessr](https://www.plonkit.net/guide),
+  licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+  For the United States and Canada — whose Plonk It guides cover dozens of
+  state/province-specific variants each — only a representative sample of
+  the clearest, most distinctive clues is included per meta, not an
+  exhaustive state-by-state breakdown.
 - South American sign photos come from individual
   [Wikimedia Commons](https://commons.wikimedia.org/) contributors, each
   freely licensed (CC-BY/CC-BY-SA/CC0/PD) — per-photo author and license are

@@ -53,6 +53,18 @@ export const phoneNumbers: FactsMeta = {
     p("pa", "+507"),
     p("pr", "+1 (787 or 939)"),
 
+    // North America
+    p("us", "+1"),
+    p("us-ak", "+1 (907)"),
+    p("us-hi", "+1 (808)"),
+    p("ca", "+1"),
+    p("bm", "+1 (441)"),
+    p("gl", "+299"),
+    p("mq", "+596"),
+    p("pm", "+508"),
+    p("um", "+1 (808, shared with Hawaii)"),
+    p("vi", "+1 (340)"),
+
     // Europe
     p("al", "+355"),
     p("ad", "+376"),

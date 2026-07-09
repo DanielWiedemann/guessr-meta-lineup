@@ -65,6 +65,35 @@ export const licensePlates: GalleryMeta = {
     ]),
     { code: "pr", sourceUrl: "https://www.plonkit.net/puerto-rico", variants: [] },
 
+    // North America
+    c("us", "united-states", [
+      v("us-plate-short", "Short US-style plate", "The US (like most of the Americas) uses a short, roughly square-ish plate shape, unlike Europe's longer plates with a blue side strip.", pk("united-states", "Short_license_plate.png")),
+      v("us-plate-states", "Each state's unique design", "Every US state issues its own distinctive plate design, and many remain identifiable even heavily blurred.", pk("united-states", "us_licenceplates_2025.png")),
+      v("us-plate-front", "Front-plate requirement map", "Roughly half of US states don't require a front plate at all — which states do or don't can itself help narrow down a location.", pk("united-states", "us_licenceplates_map_2025.png")),
+    ]),
+    c("ca", "canada", [
+      v("ca-plate-short", "Short North American plate", "Canada and the US both use short, roughly square plates, in contrast to the longer plates with a blue side strip common in Europe.", pk("canada", "License_plates.png")),
+      v("ca-plate-provincial", "Provincial plate designs", "Every Canadian province issues its own distinct plate design; some provinces, like New Brunswick since 2019, don't require a front plate at all.", pk("canada", "ca_license_plates_updated.png.png")),
+    ]),
+    c("us-ak", "alaska", [
+      v("ak-plate", "Yellow plate, orange circle", "Alaska's standard plate is solid yellow across the whole surface; a Generation 4-only variant adds a large orange circle in the centre. Front plates are mandatory.", pk("alaska", "ak_licenceplates.png")),
+    ]),
+    c("us-hi", "hawaii", [
+      v("hi-plate", "White plate, rainbow arc", "Hawaii's common plate is white with a rainbow arcing across the middle; even under blur, the rainbow's curve often remains visible. Front plates are mandatory.", pk("hawaii", "hi_plate.png")),
+    ]),
+    c("bm", "bermuda", [
+      v("bm-plate", "All-white long plate", "Bermudian plates are elongated and entirely white, with black digits clustered toward the centre rather than spread edge to edge.", pk("bermuda", "bm_licenceplate.png")),
+    ]),
+    { code: "gl", sourceUrl: "https://www.plonkit.net/greenland", variants: [] },
+    { code: "mq", sourceUrl: "https://www.plonkit.net/martinique", variants: [] },
+    c("pm", "saint-pierre-and-miquelon", [
+      v("spm-plate", "French-style plate, blue EU strip", "Plates can be short or long and either white or yellow, but all carry the blue EU band on the left, matching standard French plates.", pk("saint-pierre-and-miquelon", "pm_licenceplate.png")),
+    ]),
+    { code: "um", sourceUrl: "https://www.plonkit.net/us-minor-outlying-islands", variants: [] },
+    c("vi", "us-virgin-islands", [
+      v("usvi-plate", "Short blue plate", "Plates are short in shape and come in either a bright blue or a dark navy blue colour scheme.", pk("us-virgin-islands", "usvi_licenceplates.png")),
+    ]),
+
     // Europe
     c("al", "albania", [
       v("al-plate", "Red or blue strip plate", "Blue strips on both sides, or a single red strip on the left side — Albania is the only European country with red on the left.", pk("albania", "albania_plate.png")),

@@ -41,6 +41,18 @@ export const currency: FactsMeta = {
     c("pa", "Panamanian balboa (USD also used)", "B/. / $", "PAB"),
     c("pr", "United States dollar", "$ / US$ / U$", "USD"),
 
+    // North America
+    c("us", "United States dollar", "$ / US$ / U$", "USD"),
+    c("us-ak", "United States dollar", "$ / US$ / U$", "USD"),
+    c("us-hi", "United States dollar", "$ / US$ / U$", "USD"),
+    c("ca", "Canadian dollar", "$ / CA$ / C$", "CAD"),
+    c("bm", "Bermudian dollar (USD also used)", "$ / BD$", "BMD"),
+    c("gl", "Danish krone", "kr.", "DKK"),
+    c("mq", "Euro", "€", "EUR"),
+    c("pm", "Euro", "€", "EUR"),
+    c("um", "United States dollar", "$ / US$ / U$", "USD"),
+    c("vi", "United States dollar", "$ / US$ / U$", "USD"),
+
     // Europe
     c("al", "Albanian lek", "L", "ALL"),
     c("ad", "Euro", "€", "EUR"),

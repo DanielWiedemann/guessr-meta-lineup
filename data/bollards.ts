@@ -55,6 +55,28 @@ export const bollards: GalleryMeta = {
     { code: "pa", sourceUrl: "https://www.plonkit.net/panama", variants: [] },
     { code: "pr", sourceUrl: "https://www.plonkit.net/puerto-rico", variants: [] },
 
+    // North America
+    c("us", "united-states", [
+      v("us-nevada", "Nevada thin-post bollard", "A slim post topped with a narrow vertical rectangular reflector that has a white centre and black border.", pk("united-states", "15Nevada_bollard.png")),
+      v("us-co-wy", "Colorado/Wyoming metal-post bollard", "A dark metal post whose top extends above a round white reflector rather than stopping at it; in Wyoming the exposed tip is sometimes painted white or grey.", pk("united-states", "Wyoming_Bollard.png")),
+      v("us-washington", "Washington twin-square bollard", "A white or brown post with one white rectangular reflector on the front and two smaller white or silver squares on the back.", pk("united-states", "washingtonbollard.png")),
+      v("us-utah", "Utah stacked-reflector bollard", "A bollard style unique to Utah that stacks a white square reflector directly above a black rectangular reflector.", pk("united-states", "Utah_bollard.png")),
+    ], "The US has dozens of state-specific bollard variants beyond these four — this is a representative, not exhaustive, sample."),
+    c("ca", "canada", [
+      v("ca-alberta", "Alberta black-and-white cylinder", "A cylindrical roadside post with two black bands separated by a white gap, extremely common at Alberta intersections.", pk("canada", "Alberta_bollard.png")),
+      v("ca-bc", "British Columbia thin curved post", "A slim, slightly curved black-and-white bollard found province-wide but especially on Vancouver Island.", pk("canada", "Canada_Map18.png")),
+      v("ca-quebec", "Quebec guardrail-mounted post", "Long, thin white posts fixed directly to guardrails, topped with a red or green reflector.", pk("canada", "Quebec_bollard_v2.png")),
+      v("ca-ontario", "Ontario diamond marker", "Diamond-shaped delineator markers seen along Ontario roadsides, appearing in a range of colours.", pk("canada", "Untitled_2200_1080_px_1.png")),
+    ]),
+    { code: "us-ak", sourceUrl: "https://www.plonkit.net/alaska", variants: [] },
+    { code: "us-hi", sourceUrl: "https://www.plonkit.net/hawaii", variants: [] },
+    { code: "bm", sourceUrl: "https://www.plonkit.net/bermuda", variants: [] },
+    { code: "gl", sourceUrl: "https://www.plonkit.net/greenland", variants: [] },
+    { code: "mq", sourceUrl: "https://www.plonkit.net/martinique", variants: [] },
+    { code: "pm", sourceUrl: "https://www.plonkit.net/saint-pierre-and-miquelon", variants: [] },
+    { code: "um", sourceUrl: "https://www.plonkit.net/us-minor-outlying-islands", variants: [] },
+    { code: "vi", sourceUrl: "https://www.plonkit.net/us-virgin-islands", variants: [] },
+
     // Europe
     c("al", "albania", [
       v("al-bollard", "Black-top reflector bollard", "Black top with a red and grey reflector, painted white on the bottom.", pk("albania", "Bollards.png")),

@@ -1,4 +1,4 @@
-export type Region = "South America" | "Latin America" | "Europe";
+export type Region = "South America" | "Latin America" | "Europe" | "North America";
 
 export type Country = {
   code: string;
@@ -26,6 +26,18 @@ export const countries: Country[] = [
   { code: "mx", name: "Mexico", region: "Latin America" },
   { code: "pa", name: "Panama", region: "Latin America" },
   { code: "pr", name: "Puerto Rico", region: "Latin America", flagCode: "us" },
+
+  // North America
+  { code: "us", name: "United States", region: "North America" },
+  { code: "us-ak", name: "Alaska", region: "North America", flagCode: "us" },
+  { code: "us-hi", name: "Hawaii", region: "North America", flagCode: "us" },
+  { code: "ca", name: "Canada", region: "North America" },
+  { code: "bm", name: "Bermuda", region: "North America" },
+  { code: "gl", name: "Greenland", region: "North America" },
+  { code: "mq", name: "Martinique", region: "North America" },
+  { code: "pm", name: "Saint Pierre and Miquelon", region: "North America" },
+  { code: "um", name: "US Minor Outlying Islands", region: "North America" },
+  { code: "vi", name: "US Virgin Islands", region: "North America" },
 
   // Europe
   { code: "al", name: "Albania", region: "Europe" },

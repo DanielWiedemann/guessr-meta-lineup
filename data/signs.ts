@@ -95,6 +95,11 @@ export const signs: GroupedGalleryMeta = {
           vp("pr-stop", "PARE", "Stop signs in Puerto Rico say \"PARE\" — the same wording used across all of South America and the Dominican Republic.", "puerto-rico", "pr_pare.png"),
         ]),
 
+        // North America (Plonk It)
+        countryPk("ca", "canada", [
+          vp("ca-stop", "Arrêt / Stop", "Stop signs reading \"Arrêt\" instead of, or alongside, \"Stop\" are unique to Quebec; the rest of Canada uses the standard English \"Stop\".", "canada", "Canada_Map16__281_29.png"),
+        ]),
+
         // Europe (Plonk It) — most of Europe uses the standard international "STOP" text,
         // so it's usually not a distinguishing meta; only countries with a documented
         // deviation or notable variation are listed.
@@ -129,6 +134,12 @@ export const signs: GroupedGalleryMeta = {
         country("pe", [], "No usable real photo found on Wikimedia Commons yet."),
         country("uy", [], "No usable real photo found on Wikimedia Commons yet."),
 
+        countryPk("us", "united-states", [
+          vp("us-yield", "YIELD", "American yield signs are the standard inverted-triangle shape with a red border and white face, but include the word \"YIELD\" printed on them.", "united-states", "yield_sign.png"),
+        ]),
+        countryPk("ca", "canada", [
+          vp("ca-yield", "Blank yield sign", "Canadian yield signs use the same inverted-triangle shape as the US, but are typically left blank without the word \"YIELD\" printed on them.", "canada", "Canada_less_wordy_signs.png"),
+        ]),
         countryPk("ie", "ireland", [
           vp("ie-yield", "YIELD", "Irish yield signs display the word \"YIELD\", compared to the UK's \"GIVE WAY\" phrasing.", "ireland", "Yield_sign.png"),
         ]),

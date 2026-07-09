@@ -65,6 +65,29 @@ export const roadLines: GroupedGalleryMeta = {
         gap("do", "dominican-republic"),
         gap("pr", "puerto-rico"),
 
+        // North America
+        c("us", "united-states", [
+          v("us-lines", "Yellow double centre line", "US roads typically use yellow lines down the centre (often doubled) and white lines on the outer edges.", pk("united-states", "road_lines.png")),
+          v("us-lines-texas", "Wide-gap yellow centre lines", "Centre lines with an unusually wide gap between the two yellow stripes show up most often in Texas, Arkansas, Louisiana, Mississippi and Oregon.", pk("united-states", "Wide_lines_updated.png")),
+          v("us-lines-california", "California black centre stripe", "Some California roads show a thin black stripe sandwiched between the two yellow centre lines.", pk("united-states", "12werwerwerwer.png")),
+        ]),
+        c("ca", "canada", [
+          v("ca-lines", "Single yellow centre line", "Most Canadian roads use a single yellow centre line, though double yellow lines are still fairly common — a useful but not fully reliable clue versus the US.", pk("canada", "Road_lines.png")),
+          v("ca-lines-east", "Eastern double-yellow frequency", "Among eastern provinces, double yellow centre lines show up most often in Nova Scotia, then Quebec and PEI, while Ontario leans toward single yellow lines.", pk("canada", "canada_double_road_lines.png")),
+          v("ca-lines-sk", "Saskatchewan white dashes", "Saskatchewan roads sometimes show small white dashes running between the yellow centre lines.", pk("canada", "SK-RoadLines_Guide_map.png")),
+        ]),
+        gap("us-ak", "alaska"),
+        gap("us-hi", "hawaii"),
+        c("bm", "bermuda", [
+          v("bm-lines-yellow", "Solid yellow centre line", "Most Bermudian roads have just one solid yellow line down the middle and no painted lines along the outer edges.", pk("bermuda", "bm_yellowroadline.png")),
+          v("bm-lines-zigzag", "White zigzag markings", "White zigzag line markings appear occasionally on Bermudian roads, typically near crossings.", pk("bermuda", "bm_zigzaglines.png")),
+        ]),
+        gap("gl", "greenland"),
+        gap("mq", "martinique"),
+        gap("pm", "saint-pierre-and-miquelon"),
+        gap("um", "us-minor-outlying-islands"),
+        gap("vi", "us-virgin-islands"),
+
         // Europe
         c("be", "belgium", [
           v("be-lines", "All-white lines", "All-white road lines, which can be continuous or broken, often paired with bike lanes on both sides.", pk("belgium", "be_white_lines.webp")),
@@ -158,6 +181,20 @@ export const roadLines: GroupedGalleryMeta = {
         gap("bo", "bolivia"),
         gap("co", "colombia"),
         gap("pe", "peru"),
+
+        // North America
+        gap("us", "united-states"),
+        c("ca", "canada", [
+          v("ca-chevron-quebec", "Quebec red-and-white chevron", "Quebec is the only Canadian province to use red-and-white curve-warning chevrons; every other province uses the standard yellow-and-black style.", pk("canada", "PEI11.png")),
+        ]),
+        gap("us-ak", "alaska"),
+        gap("us-hi", "hawaii"),
+        gap("bm", "bermuda"),
+        gap("gl", "greenland"),
+        gap("mq", "martinique"),
+        gap("pm", "saint-pierre-and-miquelon"),
+        gap("um", "us-minor-outlying-islands"),
+        gap("vi", "us-virgin-islands"),
 
         // Europe
         c("al", "albania", [

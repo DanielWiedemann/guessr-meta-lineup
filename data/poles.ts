@@ -68,6 +68,31 @@ export const poles: GalleryMeta = {
     ]),
     { code: "pr", sourceUrl: "https://www.plonkit.net/puerto-rico", variants: [] },
 
+    // North America
+    c("us", "united-states", [
+      v("us-wooden", "Wooden pole, cylindrical transformer", "North America (US & Canada) is identified by wooden utility poles and large metallic cylinder-shaped transformers, a combination essentially absent in Europe.", pk("united-states", "poles.png")),
+      v("us-california", "California triple yellow stripe", "Most utility poles across California carry three yellow horizontal stripes near the base, with exceptions in Modoc and Lassen counties.", pk("united-states", "Cali_Striped_Updated.png")),
+      v("us-wi-mi", "Wisconsin/Michigan pole plate", "A small white rectangular metal plate with an orange rectangle-and-diamond graphic, attached to most poles in Wisconsin and Michigan's Upper Peninsula.", pk("united-states", "23us_wisconsinmichiganpolesticker.png")),
+      v("us-pacificorp", "PacifiCorp pole plates", "Thick yellow metal plates with raised or black lettering mark PacifiCorp territory across Oregon, eastern Idaho, Utah and Wyoming.", pk("united-states", "Pacificorp_Plates2.png")),
+    ], "The shared US/Canada wooden-pole-and-cylindrical-transformer look is one of the most reliable ways to place a location in North America rather than Europe."),
+    c("ca", "canada", [
+      v("ca-transformer-orientation", "Transformer facing the road", "In British Columbia and New Brunswick transformers are mounted facing toward the road, while most other provinces mount them parallel to the wires.", pk("canada", "ca_transformers.png")),
+      v("ca-transformer-45", "45-degree transformers", "Transformers on Prince Edward Island and Nova Scotia hang at a 45-degree angle relative to the road; PEI examples often carry red painted numbers.", pk("canada", "45_angle_transformers.png")),
+      v("ca-ontario-top", "Ontario side-and-top insulators", "A distinctive pole-top arrangement common in Ontario with two insulators mounted to the side and one on top.", pk("canada", "Canada_Map20.png")),
+      v("ca-saskatchewan", "Saskatchewan alternating pole tops", "Saskatchewan poles alternate their top insulator count from one pole to the next, swapping sides along a line.", pk("canada", "Infrastructure_-_SK_Alternating_Pole_Tops.png")),
+      v("ca-manitoba", "Manitoba hanging insulators", "Poles with two insulators hanging down from the top are a common sight in Manitoba.", pk("canada", "Manitoba_pole.png")),
+    ]),
+    { code: "us-ak", sourceUrl: "https://www.plonkit.net/alaska", variants: [] },
+    c("us-hi", "hawaii", [
+      v("hi-pole-band", "Yellow band on utility poles", "Some utility poles in Hawaii have a thick yellow band wrapped around them, a distinct marking from California's three separate base stripes.", pk("hawaii", "poleband.png")),
+    ]),
+    { code: "bm", sourceUrl: "https://www.plonkit.net/bermuda", variants: [] },
+    { code: "gl", sourceUrl: "https://www.plonkit.net/greenland", variants: [] },
+    { code: "mq", sourceUrl: "https://www.plonkit.net/martinique", variants: [] },
+    { code: "pm", sourceUrl: "https://www.plonkit.net/saint-pierre-and-miquelon", variants: [] },
+    { code: "um", sourceUrl: "https://www.plonkit.net/us-minor-outlying-islands", variants: [] },
+    { code: "vi", sourceUrl: "https://www.plonkit.net/us-virgin-islands", variants: [] },
+
     // Europe
     c("al", "albania", [
       v("al-pole-triangle", "Upside-down triangle pole top", "Pole tops often feature an upside-down triangle shape (also seen in Serbia, Czechia, Slovakia, Romania).", pk("albania", "Upside_triangle_pole_top.png")),
