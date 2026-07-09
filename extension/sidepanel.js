@@ -55,20 +55,30 @@ async function loadData() {
 }
 
 // A country matches if, for every category with at least one option
-// checked, it carries at least one of the checked options in that
-// category (OR within a category, AND across categories).
+// checked, it satisfies that category's tags — AND across categories
+// always. Within a category it's normally OR (any checked option is
+// enough — useful when two colors look similar and you're unsure), except
+// the letter categories, where it's AND (you're describing letters you
+// saw together in the same word/sign, so the country's alphabet must
+// contain all of them).
 function matchesFilters(countryCode) {
   const tags = state.tagsByCountry.get(countryCode) ?? new Set();
-  for (const selectedOptions of state.selected.values()) {
+  for (const [categoryId, selectedOptions] of state.selected) {
     if (selectedOptions.size === 0) continue;
-    let matchedThisCategory = false;
-    for (const optionId of selectedOptions) {
-      if (tags.has(optionId)) {
-        matchedThisCategory = true;
-        break;
+    if (LETTER_CATEGORY_IDS.has(categoryId)) {
+      for (const optionId of selectedOptions) {
+        if (!tags.has(optionId)) return false;
       }
+    } else {
+      let matchedThisCategory = false;
+      for (const optionId of selectedOptions) {
+        if (tags.has(optionId)) {
+          matchedThisCategory = true;
+          break;
+        }
+      }
+      if (!matchedThisCategory) return false;
     }
-    if (!matchedThisCategory) return false;
   }
   return true;
 }
@@ -93,6 +103,12 @@ function renderFilters() {
     section.appendChild(heading);
 
     const isLetterCategory = LETTER_CATEGORY_IDS.has(category.id);
+    if (isLetterCategory && category.description) {
+      const hint = document.createElement("p");
+      hint.className = "filter-category-hint";
+      hint.textContent = category.description;
+      section.appendChild(hint);
+    }
     const optionsList = document.createElement("div");
     optionsList.className = isLetterCategory ? "letter-grid" : "filter-options";
 

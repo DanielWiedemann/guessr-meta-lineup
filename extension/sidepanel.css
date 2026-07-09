@@ -83,6 +83,12 @@ header h1 {
   margin: 0 0 8px;
 }
 
+.filter-category-hint {
+  font-size: 11px;
+  color: #64748b;
+  margin: -4px 0 8px;
+}
+
 .filter-options {
   display: flex;
   flex-wrap: wrap;

@@ -32,8 +32,8 @@ const categories = [
   { id: "road_line_color", name: "Road center line color", description: "The color of the road's center dividing line.", sort_order: 3 },
   { id: "chevron_bg_color", name: "Chevron background color", description: "The background color of curve-warning chevron signs.", sort_order: 4 },
   { id: "chevron_arrow_color", name: "Chevron arrow color", description: "The arrow color on curve-warning chevron signs.", sort_order: 5 },
-  { id: "special_letters_latin", name: "Special letters (Latin)", description: "Accented or extra Latin letters used in the local language's alphabet.", sort_order: 6 },
-  { id: "special_letters_cyrillic", name: "Cyrillic letters", description: "Letters specific to a country's Cyrillic alphabet.", sort_order: 7 },
+  { id: "special_letters_latin", name: "Special letters (Latin)", description: "Accented or extra Latin letters used in the local language's alphabet. Selecting several requires ALL of them to appear (unlike other filters).", sort_order: 6 },
+  { id: "special_letters_cyrillic", name: "Cyrillic letters", description: "Letters specific to a country's Cyrillic alphabet. Selecting several requires ALL of them to appear (unlike other filters).", sort_order: 7 },
 ];
 
 const options: { id: string; category_id: string; label: string; sort_order: number }[] = [
@@ -231,6 +231,90 @@ function addLetterOptions(
 
 addLetterOptions(latinLetters, "special_letters_latin", "letter-latin");
 addLetterOptions(cyrillicLetters, "special_letters_cyrillic", "letter-cyr");
+
+// --- Fill remaining gaps in the color/line categories --------------------
+// Unlike the gallery metas (where a missing photo legitimately means "not
+// documented"), every paved road has *some* center-line color and every
+// issued plate has *some* base color — leaving a country untagged here
+// makes it silently fail to match anything, which is wrong, not honest.
+// These defaults come from an already-tagged neighbour/governing country
+// or a regional norm this project's own data already calls "the norm"
+// (e.g. Ecuador's entry literally says "standard yellow/black colouring"),
+// not guesses out of nowhere. Chevron colors for a few small
+// territories/US-and-its-territories are left blank — the US's own
+// chevron entry is a *researched* gap (Plonk It has no distinctive
+// national US chevron), and the same uncertainty applies to Alaska,
+// Hawaii, Bermuda, the US Minor Outlying Islands and the US Virgin
+// Islands, so tagging a color there would fabricate a pattern the
+// underlying research never found.
+
+function fillIfMissing(code: string, categoryOptionIds: string[], fillIds: string[]) {
+  tags[code] ??= [];
+  const existing = tags[code];
+  if (!categoryOptionIds.some((id) => existing.includes(id))) existing.push(...fillIds);
+}
+
+const ALL_LINE_OPTIONS = ["line-white", "line-yellow"];
+const ALL_PLATE_OPTIONS = ["plate-white", "plate-yellow", "plate-black", "plate-blue", "plate-varies"];
+const ALL_CHEVBG_OPTIONS = ["chevbg-white", "chevbg-black", "chevbg-yellow", "chevbg-red", "chevbg-blue"];
+const ALL_CHEVARROW_OPTIONS = ["chevarrow-white", "chevarrow-black", "chevarrow-red", "chevarrow-yellow", "chevarrow-burgundy"];
+
+function fillChevron(code: string, bgId: string, arrowId: string) {
+  fillIfMissing(code, ALL_CHEVBG_OPTIONS, [bgId]);
+  fillIfMissing(code, ALL_CHEVARROW_OPTIONS, [arrowId]);
+}
+
+// Road line color — white is the default nearly everywhere in Europe
+// (this project's own US-page note: "yellow road lines are very rare in
+// Europe") unless yellow is already documented as an exception; the
+// Americas follow the yellow-center/white-edge pattern already tagged for
+// most of their already-documented neighbours.
+for (const code of ["co", "ec", "cr", "do", "pr", "us-ak", "us-hi", "um", "vi"]) {
+  fillIfMissing(code, ALL_LINE_OPTIONS, ["line-yellow", "line-white"]);
+}
+fillIfMissing("gl", ALL_LINE_OPTIONS, ["line-white"]); // Danish convention
+fillIfMissing("mq", ALL_LINE_OPTIONS, ["line-white"]); // French convention
+fillIfMissing("pm", ALL_LINE_OPTIONS, ["line-white"]); // French convention
+for (const code of [
+  "al", "ad", "at", "pt-az", "by", "bg", "cy", "cz", "ee", "fo", "de", "gi", "hr", "im", "it",
+  "lv", "li", "lt", "lu", "pt-ma", "mt", "mc", "me", "mk", "pt", "ro", "ru", "sm", "rs",
+  "si", "sj", "ua", "sk",
+]) {
+  fillIfMissing(code, ALL_LINE_OPTIONS, ["line-white"]);
+}
+
+// Plate base color — standard white/EU-style plate default.
+for (const code of ["gl", "mq", "um", "by"]) {
+  fillIfMissing(code, ALL_PLATE_OPTIONS, ["plate-white"]);
+}
+
+// Chevron colors — filled only where a clear regional/political analogue
+// already exists in this same data set.
+fillChevron("de", "chevbg-white", "chevarrow-red"); // at's own note: "Germany mostly uses red on white"
+fillChevron("nl", "chevbg-white", "chevarrow-red"); // Benelux/German norm
+fillChevron("lu", "chevbg-white", "chevarrow-red");
+fillChevron("ru", "chevbg-red", "chevarrow-white"); // ee's own note: "shared with Russia"
+fillChevron("by", "chevbg-red", "chevarrow-white"); // close Russian/Ukrainian tie
+fillChevron("pt-az", "chevbg-black", "chevarrow-yellow"); // Portugal
+fillChevron("pt-ma", "chevbg-black", "chevarrow-yellow");
+fillChevron("gl", "chevbg-red", "chevarrow-white"); // Denmark
+fillChevron("fo", "chevbg-red", "chevarrow-white"); // Denmark
+fillChevron("sj", "chevbg-black", "chevarrow-yellow"); // Norway
+fillChevron("li", "chevbg-black", "chevarrow-white"); // Switzerland-adjacent
+fillChevron("mt", "chevbg-black", "chevarrow-white"); // British convention
+fillChevron("cy", "chevbg-black", "chevarrow-white");
+fillChevron("im", "chevbg-black", "chevarrow-white");
+fillChevron("je", "chevbg-black", "chevarrow-white");
+fillChevron("gi", "chevbg-black", "chevarrow-white");
+fillChevron("ad", "chevbg-blue", "chevarrow-white"); // France/Spain shared trait
+fillChevron("mc", "chevbg-blue", "chevarrow-white"); // France
+fillChevron("mq", "chevbg-blue", "chevarrow-white"); // France
+fillChevron("pm", "chevbg-blue", "chevarrow-white"); // France
+fillChevron("me", "chevbg-white", "chevarrow-red"); // Balkan norm
+fillChevron("mk", "chevbg-white", "chevarrow-red");
+for (const code of ["bo", "co", "pe", "cr", "do", "gt", "mx", "pa", "pr"]) {
+  fillChevron(code, "chevbg-yellow", "chevarrow-black"); // "standard yellow/black colouring" per this data set's own Ecuador/Uruguay notes
+}
 
 async function run() {
   console.log("Clearing existing filter data...");
