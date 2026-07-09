@@ -4,7 +4,7 @@ A free, no-login GeoGuessr/WorldGuessr helper. Instead of clicking into one
 country's guide at a time, browse every documented variant of a meta side by
 side and match it to what you're seeing in-game.
 
-Covers **72 countries** across South America, Latin America (Central
+Covers **74 countries** across South America, Latin America (Central
 America/Caribbean), North America, and Europe.
 
 ## Features
@@ -26,15 +26,22 @@ America/Caribbean), North America, and Europe.
   select country pickers, forced 2-column layout even on mobile.
 - **Search** — jump straight to a country profile from the nav bar.
 
-See `data/` for the meta registry (`data/index.ts`), the country registry
-with regions (`data/countries.ts`), and per-meta data files.
+See `data/` for the data-access layer (`data/db.ts`, `data/countries.ts`)
+and `data/static*.ts` / per-meta files for the authoring source that feeds
+Supabase.
 
 ## Stack
 
 - [Next.js](https://nextjs.org) (App Router) + TypeScript + Tailwind CSS
-- Static data in [`data/`](data) — no database needed yet. If this grows to
-  accept user submissions or needs editing outside a code change, a Postgres
-  backend (e.g. Supabase) would be the natural next step.
+- [Supabase](https://supabase.com) (Postgres) is the single source of truth
+  for countries, metas, variants, facts, and the Chrome extension's filter
+  tags — read by both the website and the extension via the public anon
+  key (all tables are public read-only reference data, enforced by RLS).
+  Content is still authored in version-controlled TypeScript files
+  (`data/staticCountries.ts`, `data/staticMetas.ts`, and the per-meta files
+  they aggregate) for git history and reviewability — after editing one,
+  run `npx tsx --env-file=.env.local scripts/migrate-to-supabase.ts` to
+  sync. Filter tags are authored directly in `scripts/seed-filters.ts`.
 - Images are hotlinked directly from their source (not re-hosted).
 - Country flags are hotlinked from Worldometer by ISO code (`data/countries.ts`).
   A handful of sub-national territories without their own Worldometer flag

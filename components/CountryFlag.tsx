@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { flagUrl } from "@/data/countries";
+import { useCountries } from "@/components/CountriesProvider";
 
 export default function CountryFlag({
   code,
@@ -10,9 +13,11 @@ export default function CountryFlag({
   name: string;
   size?: number;
 }) {
+  const { getCountry } = useCountries();
+
   return (
     <Image
-      src={flagUrl(code)}
+      src={flagUrl(code, getCountry(code)?.flagCode)}
       alt={`Flag of ${name}`}
       width={size}
       height={size * 0.75}

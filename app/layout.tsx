@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Nav from "@/components/Nav";
+import { CountriesProvider } from "@/components/CountriesProvider";
+import { fetchCountries } from "@/data/countries";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,19 +21,23 @@ export const metadata: Metadata = {
     "Compare GeoGuessr metas side by side across Latin America and Europe, instead of hunting through country guides one at a time.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const countries = await fetchCountries();
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-slate-950 text-slate-100">
-        <Nav />
-        {children}
+        <CountriesProvider countries={countries}>
+          <Nav />
+          {children}
+        </CountriesProvider>
       </body>
     </html>
   );

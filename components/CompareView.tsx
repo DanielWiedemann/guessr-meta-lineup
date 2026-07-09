@@ -1,18 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { countries } from "@/data/countries";
-import { getCountryProfile } from "@/data/countryProfile";
+import { useCountries } from "@/components/CountriesProvider";
+import type { ProfileSection } from "@/data/countryProfile";
 import SectionBody from "@/components/SectionBody";
 import CountrySearchSelect from "@/components/CountrySearchSelect";
 
 const MIN_COUNTRIES = 2;
 const MAX_COUNTRIES = 3;
 
-export default function CompareView() {
+export default function CompareView({
+  profiles: allProfiles,
+}: {
+  profiles: Record<string, ProfileSection[]>;
+}) {
+  const { countries } = useCountries();
   const [codes, setCodes] = useState<string[]>([countries[0].code, countries[1].code]);
 
-  const profiles = codes.map((code) => getCountryProfile(code));
+  const profiles = codes.map((code) => allProfiles[code] ?? []);
   const sectionCount = profiles[0]?.length ?? 0;
   const gridStyle = { gridTemplateColumns: `repeat(${codes.length}, minmax(0, 1fr))` };
 

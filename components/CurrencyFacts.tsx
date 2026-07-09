@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import CountryFlag from "@/components/CountryFlag";
-import { countryName } from "@/data/countries";
+import { useCountries } from "@/components/CountriesProvider";
 import type { FactsMeta } from "@/data/types";
 
 export default function CurrencyFacts({ meta }: { meta: FactsMeta }) {
+  const { countryName } = useCountries();
   const [query, setQuery] = useState("");
 
   const q = query.trim().toLowerCase();

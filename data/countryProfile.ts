@@ -1,5 +1,5 @@
-import { metas } from "@/data";
-import type { Variant, Fact } from "@/data/types";
+import { getMetas } from "@/data/db";
+import type { Meta, Variant, Fact } from "@/data/types";
 
 export type ProfileSection =
   | {
@@ -28,7 +28,7 @@ export type ProfileSection =
       sourceUrl?: string;
     };
 
-export function getCountryProfile(code: string): ProfileSection[] {
+function buildProfile(metas: Meta[], code: string): ProfileSection[] {
   return metas.map((meta): ProfileSection => {
     if (meta.kind === "gallery") {
       const country = meta.countries.find((c) => c.code === code);
@@ -69,4 +69,14 @@ export function getCountryProfile(code: string): ProfileSection[] {
       sourceUrl: country?.sourceUrl,
     };
   });
+}
+
+export async function getCountryProfile(code: string): Promise<ProfileSection[]> {
+  const metas = await getMetas();
+  return buildProfile(metas, code);
+}
+
+export async function getAllCountryProfiles(codes: string[]): Promise<Record<string, ProfileSection[]>> {
+  const metas = await getMetas();
+  return Object.fromEntries(codes.map((code) => [code, buildProfile(metas, code)]));
 }

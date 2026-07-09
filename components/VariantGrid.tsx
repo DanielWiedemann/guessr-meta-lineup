@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import CountryFlag from "@/components/CountryFlag";
-import { countryName } from "@/data/countries";
+import { useCountries } from "@/components/CountriesProvider";
 import type { CountryEntry } from "@/data/types";
 
 type Tile = {
@@ -20,6 +20,7 @@ export default function VariantGrid({
   attribution: string;
   metaLabel: string;
 }) {
+  const { countryName } = useCountries();
   const [active, setActive] = useState<Tile | null>(null);
   const [showEmpty, setShowEmpty] = useState(false);
 

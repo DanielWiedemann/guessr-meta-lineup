@@ -1,4 +1,4 @@
-import { metas } from "@/data";
+import { getMetas } from "@/data/db";
 import type { Meta } from "@/data/types";
 
 export type QuizQuestion = {
@@ -58,6 +58,7 @@ function fromMeta(meta: Meta): QuizQuestion[] {
   });
 }
 
-export function getQuizQuestions(): QuizQuestion[] {
+export async function getQuizQuestions(): Promise<QuizQuestion[]> {
+  const metas = await getMetas();
   return metas.flatMap(fromMeta);
 }

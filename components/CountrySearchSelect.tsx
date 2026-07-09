@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { countries, countryName } from "@/data/countries";
+import { useCountries } from "@/components/CountriesProvider";
 import CountryFlag from "@/components/CountryFlag";
 
 export default function CountrySearchSelect({
@@ -16,6 +16,7 @@ export default function CountrySearchSelect({
   excludeCodes?: string[];
   onRemove?: () => void;
 }) {
+  const { countries, countryName } = useCountries();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [menuRect, setMenuRect] = useState<{ top: number; left: number; width: number } | null>(null);

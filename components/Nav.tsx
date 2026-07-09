@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { countries } from "@/data/countries";
+import { useCountries } from "@/components/CountriesProvider";
 import CountryFlag from "@/components/CountryFlag";
 
 const links = [
@@ -16,6 +16,7 @@ const links = [
 export default function Nav() {
   const pathname = usePathname();
   const router = useRouter();
+  const { countries } = useCountries();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -26,7 +27,7 @@ export default function Nav() {
       .filter((c) => c.name.toLowerCase().includes(q))
       .sort((a, b) => a.name.localeCompare(b.name))
       .slice(0, 8);
-  }, [query]);
+  }, [query, countries]);
 
   function goToCountry(code: string) {
     setQuery("");

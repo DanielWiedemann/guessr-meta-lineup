@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import CountryFlag from "@/components/CountryFlag";
-import { countries, countryName } from "@/data/countries";
+import { useCountries } from "@/components/CountriesProvider";
 import type { QuizQuestion } from "@/data/quiz";
 
 const BEST_STREAK_KEY = "meta-lineup-best-streak";
@@ -21,6 +21,7 @@ export default function QuizGame({ questions }: { questions: QuizQuestion[] }) {
   // order/best start as deterministic placeholders so server and client render
   // identical markup on first paint — the real (random / localStorage-derived)
   // values are only computed client-side after mount, in the effect below.
+  const { countries, countryName } = useCountries();
   const [order, setOrder] = useState<QuizQuestion[]>(questions);
   const [mounted, setMounted] = useState(false);
   const [index, setIndex] = useState(0);
@@ -55,7 +56,7 @@ export default function QuizGame({ questions }: { questions: QuizQuestion[] }) {
       .slice(0, 3)
       .map((c) => c.code);
     return shuffle([question.answerCode, ...distractors]);
-  }, [mounted, question]);
+  }, [mounted, question, countries]);
 
   if (!mounted || !question) {
     return <p className="text-sm text-slate-500">Loading questions…</p>;

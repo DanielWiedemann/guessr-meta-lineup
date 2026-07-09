@@ -1,3 +1,5 @@
+import { fetchCountries } from "@/data/countries";
+import { getAllCountryProfiles } from "@/data/countryProfile";
 import CompareView from "@/components/CompareView";
 
 export const metadata = {
@@ -5,18 +7,21 @@ export const metadata = {
   description: "Compare two countries across every meta side by side.",
 };
 
-export default function ComparePage() {
+export default async function ComparePage() {
+  const countries = await fetchCountries();
+  const profiles = await getAllCountryProfiles(countries.map((c) => c.code));
+
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 sm:px-6">
       <header className="mb-8">
-        <p className="text-sm font-medium text-emerald-400">Latin America &amp; Europe</p>
+        <p className="text-sm font-medium text-emerald-400">The Americas &amp; Europe</p>
         <h1 className="mt-1 text-3xl font-bold tracking-tight">Compare</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-400">
           Torn between two countries? Pick both and see every meta side by side.
         </p>
       </header>
 
-      <CompareView />
+      <CompareView profiles={profiles} />
     </main>
   );
 }
