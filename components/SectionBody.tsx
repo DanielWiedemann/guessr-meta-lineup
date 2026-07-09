@@ -1,20 +1,15 @@
-import Image from "next/image";
 import type { ProfileSection } from "@/data/countryProfile";
 import type { Variant } from "@/data/types";
+import ExpandableImage from "@/components/ExpandableImage";
 
 export function VariantCard({ variant }: { variant: Variant }) {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
-      <div className="relative aspect-4/3 w-full bg-slate-800">
-        <Image
-          src={variant.image}
-          alt={variant.label}
-          fill
-          unoptimized
-          sizes="(max-width: 640px) 100vw, 480px"
-          className="object-contain p-2"
-        />
-      </div>
+      <ExpandableImage
+        src={variant.image}
+        alt={variant.label}
+        className="aspect-4/3 bg-slate-800"
+      />
       <div className="p-3">
         <p className="text-sm font-semibold text-slate-100">{variant.label}</p>
         <p className="mt-1 text-sm leading-relaxed text-slate-400">{variant.description}</p>
@@ -102,16 +97,13 @@ export default function SectionBody({
   return (
     <div className="max-w-xs space-y-1.5 rounded-xl border border-slate-800 bg-slate-900 p-4">
       {section.image && (
-        <div className="relative mb-3 aspect-4/3 w-full overflow-hidden rounded-lg bg-slate-800">
-          <Image
-            src={section.image}
-            alt={section.metaName}
-            fill
-            unoptimized
-            sizes="300px"
-            className="object-contain p-1"
-          />
-        </div>
+        <ExpandableImage
+          src={section.image}
+          alt={section.metaName}
+          className="mb-3 aspect-4/3 overflow-hidden rounded-lg bg-slate-800"
+          imageClassName="object-contain p-1"
+          sizes="300px"
+        />
       )}
       {section.facts.map((fact) => (
         <div key={fact.label} className="flex items-baseline justify-between gap-3">
