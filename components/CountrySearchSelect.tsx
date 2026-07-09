@@ -7,11 +7,11 @@ import CountryFlag from "@/components/CountryFlag";
 export default function CountrySearchSelect({
   value,
   onChange,
-  excludeCode,
+  excludeCodes = [],
 }: {
   value: string;
   onChange: (code: string) => void;
-  excludeCode: string;
+  excludeCodes?: string[];
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -19,7 +19,7 @@ export default function CountrySearchSelect({
   const displayValue = open ? query : countryName(value);
 
   const options = countries.filter(
-    (c) => c.code !== excludeCode && c.name.toLowerCase().includes(query.trim().toLowerCase())
+    (c) => !excludeCodes.includes(c.code) && c.name.toLowerCase().includes(query.trim().toLowerCase())
   );
 
   function select(code: string) {
