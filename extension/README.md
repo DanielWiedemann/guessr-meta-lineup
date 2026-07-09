@@ -2,9 +2,12 @@
 
 A sidebar extension for narrowing down GeoGuessr countries by the visual
 clues you're currently seeing — side of driving, stop sign wording, license
-plate color, road center line color, and chevron colors. Pick as many
-options as apply within a category (useful when two clues look similar or
-you're unsure), and the matching country list updates live.
+plate color, road center line color, chevron colors, and special alphabet
+letters (accented Latin letters and Cyrillic-specific letters, rendered as
+clickable tiles — Greek, Thai, Korean, Arabic and other non-Latin/Cyrillic
+scripts are a future addition). Pick as many options as apply within a
+category (useful when two clues look similar or you're unsure), and the
+matching country list updates live.
 
 No build step — plain HTML/CSS/JS, reading directly from the same Supabase
 project as [the website](https://guessr-meta-lineup.vercel.app) via its

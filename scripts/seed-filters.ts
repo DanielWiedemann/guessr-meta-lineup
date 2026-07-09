@@ -32,6 +32,8 @@ const categories = [
   { id: "road_line_color", name: "Road center line color", description: "The color of the road's center dividing line.", sort_order: 3 },
   { id: "chevron_bg_color", name: "Chevron background color", description: "The background color of curve-warning chevron signs.", sort_order: 4 },
   { id: "chevron_arrow_color", name: "Chevron arrow color", description: "The arrow color on curve-warning chevron signs.", sort_order: 5 },
+  { id: "special_letters_latin", name: "Special letters (Latin)", description: "Accented or extra Latin letters used in the local language's alphabet.", sort_order: 6 },
+  { id: "special_letters_cyrillic", name: "Cyrillic letters", description: "Letters specific to a country's Cyrillic alphabet.", sort_order: 7 },
 ];
 
 const options: { id: string; category_id: string; label: string; sort_order: number }[] = [
@@ -150,6 +152,85 @@ const tags: Record<string, string[]> = {
   ua: ["drive-right", "stop-stop", "plate-white", "chevbg-red", "chevarrow-white"],
   gb: ["drive-left", "stop-stop", "plate-white", "plate-yellow", "line-white", "chevbg-black", "chevarrow-white"],
 };
+
+// Special letters — distinctive characters from each country's official
+// or predominant language(s) that show up on road signs/text in-game.
+// Non-Latin, non-Cyrillic scripts (Greek, Thai, Korean, Arabic, ...) are
+// intentionally out of scope for this pass.
+//
+// code -> array of literal characters (deduplicated automatically below
+// into filter_options, so there's no separate list to keep in sync).
+const latinLetters: Record<string, string[]> = {
+  // Spanish-speaking Latin America
+  ar: ["ñ"], bo: ["ñ"], cl: ["ñ"], co: ["ñ"], ec: ["ñ"], pe: ["ñ"], uy: ["ñ"],
+  cr: ["ñ"], do: ["ñ"], gt: ["ñ"], mx: ["ñ"], pa: ["ñ"], pr: ["ñ"], es: ["ñ"],
+  // Portuguese
+  br: ["ã", "õ", "ç"], "pt-az": ["ã", "õ", "ç"], "pt-ma": ["ã", "õ", "ç"], pt: ["ã", "õ", "ç"],
+  // French (incl. French-speaking territories/regions)
+  ca: ["é", "è", "ç", "à"], mq: ["é", "è", "ç", "à"], pm: ["é", "è", "ç", "à"],
+  fr: ["é", "è", "ç", "à", "ê", "â", "ù", "ï", "ô", "û"], mc: ["é", "è", "ç", "à"],
+  // German
+  at: ["ä", "ö", "ü", "ß"], de: ["ä", "ö", "ü", "ß"], li: ["ä", "ö", "ü", "ß"],
+  // Nordic
+  dk: ["æ", "ø", "å"], no: ["æ", "ø", "å"], sj: ["æ", "ø", "å"], gl: ["æ", "ø", "å"],
+  se: ["å", "ä", "ö"], fi: ["ä", "ö"],
+  fo: ["ø", "á", "í", "ó", "ú", "ý", "æ", "ð"],
+  is: ["þ", "ð", "æ", "ö"],
+  // Baltics
+  ee: ["õ", "ä", "ö", "ü"],
+  lv: ["ā", "č", "ē", "ģ", "ī", "ķ", "ļ", "ņ", "š", "ū", "ž"],
+  lt: ["ą", "č", "ę", "ė", "į", "š", "ų", "ū", "ž"],
+  // Balkans / Central Europe
+  al: ["ë", "ç"],
+  hr: ["č", "š", "ž", "ć", "đ"],
+  cz: ["č", "š", "ž", "ř", "ě", "ý", "ů", "ď", "ť", "ň"],
+  sk: ["ä", "č", "ď", "é", "í", "ĺ", "ľ", "ň", "ó", "ŕ", "š", "ť", "ú", "ý", "ž"],
+  si: ["č", "š", "ž"],
+  rs: ["š", "č", "ž", "ć", "đ"],
+  me: ["š", "č", "ž", "ć", "ś", "ź"],
+  hu: ["ő", "ű", "á", "é", "í", "ó", "ú", "ö", "ü"],
+  pl: ["ą", "ć", "ę", "ł", "ń", "ó", "ś", "ź", "ż"],
+  ro: ["ă", "â", "î", "ș", "ț"],
+  // Other
+  ad: ["ç", "ï", "à", "è"],
+  ie: ["á", "é", "í", "ó", "ú"],
+  it: ["à", "è", "é", "ì", "ò", "ù"],
+  sm: ["à", "è", "é", "ì", "ò", "ù"],
+  lu: ["é", "è", "ç", "ä", "ö", "ü", "ß"],
+  mt: ["ġ", "ħ", "ż", "ċ"],
+  be: ["é", "è", "ç"],
+  ch: ["ä", "ö", "ü", "é", "è", "à"],
+  tr: ["ç", "ğ", "ı", "ö", "ş", "ü"],
+};
+
+const cyrillicLetters: Record<string, string[]> = {
+  by: ["ў", "і"],
+  bg: ["ъ"],
+  mk: ["ѓ", "ќ", "џ"],
+  ru: ["ъ", "ы", "э", "ё"],
+  ua: ["ї", "і", "є", "ґ"],
+  rs: ["љ", "њ", "ђ", "ћ", "џ", "ј"],
+};
+
+function addLetterOptions(
+  lettersByCountry: Record<string, string[]>,
+  categoryId: string,
+  idPrefix: string
+) {
+  const unique = [...new Set(Object.values(lettersByCountry).flat())].sort((a, b) =>
+    a.localeCompare(b, "en")
+  );
+  for (const [i, letter] of unique.entries()) {
+    options.push({ id: `${idPrefix}-${letter}`, category_id: categoryId, label: letter, sort_order: i });
+  }
+  for (const [code, letters] of Object.entries(lettersByCountry)) {
+    tags[code] ??= [];
+    for (const letter of letters) tags[code].push(`${idPrefix}-${letter}`);
+  }
+}
+
+addLetterOptions(latinLetters, "special_letters_latin", "letter-latin");
+addLetterOptions(cyrillicLetters, "special_letters_cyrillic", "letter-cyr");
 
 async function run() {
   console.log("Clearing existing filter data...");

@@ -16,6 +16,11 @@ function flagUrl(code, flagCode) {
   return `https://www.worldometers.info/images/flags/w240/${flagCode || code}.webp`;
 }
 
+// These categories render as a grid of single-letter tiles instead of the
+// usual pill checkboxes — one click selects, another deselects, and any
+// number can be active at once.
+const LETTER_CATEGORY_IDS = new Set(["special_letters_latin", "special_letters_cyrillic"]);
+
 const state = {
   countries: [],
   categories: [],
@@ -87,13 +92,15 @@ function renderFilters() {
     heading.textContent = category.name;
     section.appendChild(heading);
 
+    const isLetterCategory = LETTER_CATEGORY_IDS.has(category.id);
     const optionsList = document.createElement("div");
-    optionsList.className = "filter-options";
+    optionsList.className = isLetterCategory ? "letter-grid" : "filter-options";
 
     const optionsForCategory = state.options.filter((o) => o.category_id === category.id);
     for (const option of optionsForCategory) {
       const label = document.createElement("label");
-      label.className = "filter-option";
+      label.className = isLetterCategory ? "letter-tile" : "filter-option";
+      label.title = option.label;
 
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
@@ -107,7 +114,14 @@ function renderFilters() {
       });
 
       label.appendChild(checkbox);
-      label.append(option.label);
+      if (isLetterCategory) {
+        const glyph = document.createElement("span");
+        glyph.className = "letter-glyph";
+        glyph.textContent = option.label;
+        label.appendChild(glyph);
+      } else {
+        label.append(option.label);
+      }
       optionsList.appendChild(label);
     }
 
