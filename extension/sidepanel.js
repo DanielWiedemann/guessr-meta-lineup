@@ -23,12 +23,11 @@ const LETTER_CATEGORY_IDS = new Set(["special_letters_latin", "special_letters_c
 
 // These categories render as actual color swatches instead of a text
 // label naming the color.
-const COLOR_CATEGORY_IDS = new Set([
-  "plate_base_color",
-  "road_line_color",
-  "chevron_bg_color",
-  "chevron_arrow_color",
-]);
+const COLOR_CATEGORY_IDS = new Set(["road_line_color", "chevron_bg_color", "chevron_arrow_color"]);
+
+// Every category starts collapsed except this one, since it's the
+// fastest, most universal clue to check first.
+const EXPANDED_BY_DEFAULT = new Set(["side_of_driving"]);
 
 // label (lowercased) -> CSS color. Anything not listed here (e.g. "Varies
 // (state/province)") falls back to a striped pattern instead of a color.
@@ -72,6 +71,7 @@ async function loadData() {
   }
 
   state.selected = new Map(categories.map((c) => [c.id, new Set()]));
+  state.collapsed = new Set(categories.filter((c) => !EXPANDED_BY_DEFAULT.has(c.id)).map((c) => c.id));
 }
 
 // A country matches if, for every category with at least one option
@@ -118,9 +118,34 @@ function renderFilters() {
     const section = document.createElement("section");
     section.className = "filter-category";
 
-    const heading = document.createElement("h2");
-    heading.textContent = category.name;
+    const isCollapsed = state.collapsed.has(category.id);
+    const selectedCount = state.selected.get(category.id)?.size ?? 0;
+
+    const heading = document.createElement("button");
+    heading.type = "button";
+    heading.className = "filter-category-heading";
+    heading.setAttribute("aria-expanded", String(!isCollapsed));
+
+    const headingText = document.createElement("span");
+    headingText.textContent = category.name + (selectedCount > 0 ? ` (${selectedCount})` : "");
+    heading.appendChild(headingText);
+
+    const chevron = document.createElement("span");
+    chevron.className = "filter-category-chevron";
+    chevron.textContent = isCollapsed ? "▸" : "▾";
+    heading.appendChild(chevron);
+
+    heading.addEventListener("click", () => {
+      if (state.collapsed.has(category.id)) state.collapsed.delete(category.id);
+      else state.collapsed.add(category.id);
+      renderFilters();
+    });
     section.appendChild(heading);
+
+    if (isCollapsed) {
+      container.appendChild(section);
+      continue;
+    }
 
     const isLetterCategory = LETTER_CATEGORY_IDS.has(category.id);
     const isColorCategory = COLOR_CATEGORY_IDS.has(category.id);

@@ -28,13 +28,17 @@ const supabase = createClient(url, serviceRoleKey);
 const categories = [
   { id: "side_of_driving", name: "Side of driving", description: "Which side of the road traffic drives on.", sort_order: 0 },
   { id: "stop_sign_wording", name: "Stop sign wording", description: "The word printed on the stop sign.", sort_order: 1 },
-  { id: "plate_base_color", name: "License plate color", description: "The dominant background color of the plate.", sort_order: 2 },
-  { id: "road_line_color", name: "Road center line color", description: "The color of the road's center dividing line.", sort_order: 3 },
-  { id: "chevron_bg_color", name: "Chevron background color", description: "The background color of curve-warning chevron signs.", sort_order: 4 },
-  { id: "chevron_arrow_color", name: "Chevron arrow color", description: "The arrow color on curve-warning chevron signs.", sort_order: 5 },
-  { id: "special_letters_latin", name: "Special letters (Latin)", description: "Accented or extra Latin letters used in the local language's alphabet. Selecting several requires ALL of them to appear (unlike other filters).", sort_order: 6 },
-  { id: "special_letters_cyrillic", name: "Cyrillic letters", description: "Letters specific to a country's Cyrillic alphabet. Selecting several requires ALL of them to appear (unlike other filters).", sort_order: 7 },
+  { id: "road_line_color", name: "Road center line color", description: "The color of the road's center dividing line.", sort_order: 2 },
+  { id: "chevron_bg_color", name: "Chevron background color", description: "The background color of curve-warning chevron signs.", sort_order: 3 },
+  { id: "chevron_arrow_color", name: "Chevron arrow color", description: "The arrow color on curve-warning chevron signs.", sort_order: 4 },
+  { id: "special_letters_latin", name: "Special letters (Latin)", description: "Accented or extra Latin letters used in the local language's alphabet. Selecting several requires ALL of them to appear (unlike other filters).", sort_order: 5 },
+  { id: "special_letters_cyrillic", name: "Cyrillic letters", description: "Letters specific to a country's Cyrillic alphabet. Selecting several requires ALL of them to appear (unlike other filters).", sort_order: 6 },
 ];
+
+// Canonical display order shared by every color category, so "white" is
+// always first, "yellow" always second, etc. regardless of which colors a
+// given category happens to use.
+const COLOR_ORDER = ["white", "yellow", "black", "red", "blue", "burgundy"];
 
 const options: { id: string; category_id: string; label: string; sort_order: number }[] = [
   { id: "drive-left", category_id: "side_of_driving", label: "Left", sort_order: 0 },
@@ -46,26 +50,20 @@ const options: { id: string; category_id: string; label: string; sort_order: num
   { id: "stop-dur", category_id: "stop_sign_wording", label: "DUR", sort_order: 3 },
   { id: "stop-arret", category_id: "stop_sign_wording", label: "ARRÊT", sort_order: 4 },
 
-  { id: "plate-white", category_id: "plate_base_color", label: "White", sort_order: 0 },
-  { id: "plate-yellow", category_id: "plate_base_color", label: "Yellow", sort_order: 1 },
-  { id: "plate-black", category_id: "plate_base_color", label: "Black", sort_order: 2 },
-  { id: "plate-blue", category_id: "plate_base_color", label: "Blue", sort_order: 3 },
-  { id: "plate-varies", category_id: "plate_base_color", label: "Varies (state/province)", sort_order: 4 },
+  { id: "line-white", category_id: "road_line_color", label: "White", sort_order: COLOR_ORDER.indexOf("white") },
+  { id: "line-yellow", category_id: "road_line_color", label: "Yellow", sort_order: COLOR_ORDER.indexOf("yellow") },
 
-  { id: "line-white", category_id: "road_line_color", label: "White", sort_order: 0 },
-  { id: "line-yellow", category_id: "road_line_color", label: "Yellow", sort_order: 1 },
+  { id: "chevbg-white", category_id: "chevron_bg_color", label: "White", sort_order: COLOR_ORDER.indexOf("white") },
+  { id: "chevbg-yellow", category_id: "chevron_bg_color", label: "Yellow", sort_order: COLOR_ORDER.indexOf("yellow") },
+  { id: "chevbg-black", category_id: "chevron_bg_color", label: "Black", sort_order: COLOR_ORDER.indexOf("black") },
+  { id: "chevbg-red", category_id: "chevron_bg_color", label: "Red", sort_order: COLOR_ORDER.indexOf("red") },
+  { id: "chevbg-blue", category_id: "chevron_bg_color", label: "Blue", sort_order: COLOR_ORDER.indexOf("blue") },
 
-  { id: "chevbg-white", category_id: "chevron_bg_color", label: "White", sort_order: 0 },
-  { id: "chevbg-black", category_id: "chevron_bg_color", label: "Black", sort_order: 1 },
-  { id: "chevbg-yellow", category_id: "chevron_bg_color", label: "Yellow", sort_order: 2 },
-  { id: "chevbg-red", category_id: "chevron_bg_color", label: "Red", sort_order: 3 },
-  { id: "chevbg-blue", category_id: "chevron_bg_color", label: "Blue", sort_order: 4 },
-
-  { id: "chevarrow-white", category_id: "chevron_arrow_color", label: "White", sort_order: 0 },
-  { id: "chevarrow-black", category_id: "chevron_arrow_color", label: "Black", sort_order: 1 },
-  { id: "chevarrow-red", category_id: "chevron_arrow_color", label: "Red", sort_order: 2 },
-  { id: "chevarrow-yellow", category_id: "chevron_arrow_color", label: "Yellow", sort_order: 3 },
-  { id: "chevarrow-burgundy", category_id: "chevron_arrow_color", label: "Burgundy", sort_order: 4 },
+  { id: "chevarrow-white", category_id: "chevron_arrow_color", label: "White", sort_order: COLOR_ORDER.indexOf("white") },
+  { id: "chevarrow-yellow", category_id: "chevron_arrow_color", label: "Yellow", sort_order: COLOR_ORDER.indexOf("yellow") },
+  { id: "chevarrow-black", category_id: "chevron_arrow_color", label: "Black", sort_order: COLOR_ORDER.indexOf("black") },
+  { id: "chevarrow-red", category_id: "chevron_arrow_color", label: "Red", sort_order: COLOR_ORDER.indexOf("red") },
+  { id: "chevarrow-burgundy", category_id: "chevron_arrow_color", label: "Burgundy", sort_order: COLOR_ORDER.indexOf("burgundy") },
 ];
 
 // code -> array of filter_option ids
@@ -160,39 +158,53 @@ const tags: Record<string, string[]> = {
 //
 // code -> array of literal characters (deduplicated automatically below
 // into filter_options, so there's no separate list to keep in sync).
+// IMPORTANT: these must be each language's FULL standard diacritic set, not
+// just the "iconic" letters — under AND-within-category matching, a
+// missing-but-real letter causes a false NEGATIVE (the correct country
+// silently disappears), which is actively worse than an honest gap. (This
+// is exactly what happened with Czech missing á/é/í/ó/ú: selecting a real
+// Czech word's letters wrongly excluded Czechia.)
 const latinLetters: Record<string, string[]> = {
-  // Spanish-speaking Latin America
-  ar: ["ñ"], bo: ["ñ"], cl: ["ñ"], co: ["ñ"], ec: ["ñ"], pe: ["ñ"], uy: ["ñ"],
-  cr: ["ñ"], do: ["ñ"], gt: ["ñ"], mx: ["ñ"], pa: ["ñ"], pr: ["ñ"], es: ["ñ"],
-  // Portuguese
-  br: ["ã", "õ", "ç"], "pt-az": ["ã", "õ", "ç"], "pt-ma": ["ã", "õ", "ç"], pt: ["ã", "õ", "ç"],
+  // Spanish-speaking Latin America (+ Spain) — full accented-vowel set
+  ar: ["ñ", "á", "é", "í", "ó", "ú"], bo: ["ñ", "á", "é", "í", "ó", "ú"],
+  cl: ["ñ", "á", "é", "í", "ó", "ú"], co: ["ñ", "á", "é", "í", "ó", "ú"],
+  ec: ["ñ", "á", "é", "í", "ó", "ú"], pe: ["ñ", "á", "é", "í", "ó", "ú"],
+  uy: ["ñ", "á", "é", "í", "ó", "ú"], cr: ["ñ", "á", "é", "í", "ó", "ú"],
+  do: ["ñ", "á", "é", "í", "ó", "ú"], gt: ["ñ", "á", "é", "í", "ó", "ú"],
+  mx: ["ñ", "á", "é", "í", "ó", "ú"], pa: ["ñ", "á", "é", "í", "ó", "ú"],
+  pr: ["ñ", "á", "é", "í", "ó", "ú"], es: ["ñ", "á", "é", "í", "ó", "ú"],
+  // Portuguese — full accented set
+  br: ["ã", "õ", "ç", "á", "â", "é", "ê", "í", "ó", "ô", "ú"],
+  "pt-az": ["ã", "õ", "ç", "á", "â", "é", "ê", "í", "ó", "ô", "ú"],
+  "pt-ma": ["ã", "õ", "ç", "á", "â", "é", "ê", "í", "ó", "ô", "ú"],
+  pt: ["ã", "õ", "ç", "á", "â", "é", "ê", "í", "ó", "ô", "ú"],
   // French (incl. French-speaking territories/regions)
   ca: ["é", "è", "ç", "à"], mq: ["é", "è", "ç", "à"], pm: ["é", "è", "ç", "à"],
-  fr: ["é", "è", "ç", "à", "ê", "â", "ù", "ï", "ô", "û"], mc: ["é", "è", "ç", "à"],
+  fr: ["é", "è", "ç", "à", "ê", "â", "ù", "î", "ô", "û", "ï", "ë"], mc: ["é", "è", "ç", "à"],
   // German
   at: ["ä", "ö", "ü", "ß"], de: ["ä", "ö", "ü", "ß"], li: ["ä", "ö", "ü", "ß"],
   // Nordic
   dk: ["æ", "ø", "å"], no: ["æ", "ø", "å"], sj: ["æ", "ø", "å"], gl: ["æ", "ø", "å"],
   se: ["å", "ä", "ö"], fi: ["ä", "ö"],
   fo: ["ø", "á", "í", "ó", "ú", "ý", "æ", "ð"],
-  is: ["þ", "ð", "æ", "ö"],
+  is: ["þ", "ð", "æ", "ö", "á", "é", "í", "ó", "ú", "ý"],
   // Baltics
-  ee: ["õ", "ä", "ö", "ü"],
+  ee: ["õ", "ä", "ö", "ü", "š", "ž"],
   lv: ["ā", "č", "ē", "ģ", "ī", "ķ", "ļ", "ņ", "š", "ū", "ž"],
   lt: ["ą", "č", "ę", "ė", "į", "š", "ų", "ū", "ž"],
   // Balkans / Central Europe
   al: ["ë", "ç"],
   hr: ["č", "š", "ž", "ć", "đ"],
-  cz: ["č", "š", "ž", "ř", "ě", "ý", "ů", "ď", "ť", "ň"],
-  sk: ["ä", "č", "ď", "é", "í", "ĺ", "ľ", "ň", "ó", "ŕ", "š", "ť", "ú", "ý", "ž"],
+  cz: ["á", "č", "ď", "é", "ě", "í", "ň", "ó", "ř", "š", "ť", "ú", "ů", "ý", "ž"],
+  sk: ["á", "ä", "č", "ď", "é", "í", "ĺ", "ľ", "ň", "ó", "ô", "ŕ", "š", "ť", "ú", "ý", "ž"],
   si: ["č", "š", "ž"],
   rs: ["š", "č", "ž", "ć", "đ"],
-  me: ["š", "č", "ž", "ć", "ś", "ź"],
+  me: ["š", "č", "ž", "ć", "đ", "ś", "ź"],
   hu: ["ő", "ű", "á", "é", "í", "ó", "ú", "ö", "ü"],
   pl: ["ą", "ć", "ę", "ł", "ń", "ó", "ś", "ź", "ż"],
   ro: ["ă", "â", "î", "ș", "ț"],
   // Other
-  ad: ["ç", "ï", "à", "è"],
+  ad: ["ç", "ï", "à", "è", "é", "í", "ò", "ó", "ú", "ü"],
   ie: ["á", "é", "í", "ó", "ú"],
   it: ["à", "è", "é", "ì", "ò", "ù"],
   sm: ["à", "è", "é", "ì", "ò", "ù"],
@@ -206,7 +218,7 @@ const latinLetters: Record<string, string[]> = {
 const cyrillicLetters: Record<string, string[]> = {
   by: ["ў", "і"],
   bg: ["ъ"],
-  mk: ["ѓ", "ќ", "џ"],
+  mk: ["ѓ", "ќ", "џ", "ѕ"],
   ru: ["ъ", "ы", "э", "ё"],
   ua: ["ї", "і", "є", "ґ"],
   rs: ["љ", "њ", "ђ", "ћ", "џ", "ј"],
@@ -255,7 +267,6 @@ function fillIfMissing(code: string, categoryOptionIds: string[], fillIds: strin
 }
 
 const ALL_LINE_OPTIONS = ["line-white", "line-yellow"];
-const ALL_PLATE_OPTIONS = ["plate-white", "plate-yellow", "plate-black", "plate-blue", "plate-varies"];
 const ALL_CHEVBG_OPTIONS = ["chevbg-white", "chevbg-black", "chevbg-yellow", "chevbg-red", "chevbg-blue"];
 const ALL_CHEVARROW_OPTIONS = ["chevarrow-white", "chevarrow-black", "chevarrow-red", "chevarrow-yellow", "chevarrow-burgundy"];
 
@@ -281,11 +292,6 @@ for (const code of [
   "si", "sj", "ua", "sk",
 ]) {
   fillIfMissing(code, ALL_LINE_OPTIONS, ["line-white"]);
-}
-
-// Plate base color — standard white/EU-style plate default.
-for (const code of ["gl", "mq", "um", "by"]) {
-  fillIfMissing(code, ALL_PLATE_OPTIONS, ["plate-white"]);
 }
 
 // Chevron colors — filled only where a clear regional/political analogue
@@ -330,8 +336,13 @@ async function run() {
   const { error: optErr } = await supabase.from("filter_options").insert(options);
   if (optErr) throw optErr;
 
+  // Some country entries below still literally mention "plate-*" option ids
+  // from the now-removed License plate color category (left as-is rather
+  // than editing every one of ~70 lines) — drop anything that doesn't
+  // correspond to a real option instead of failing on the FK insert.
+  const validOptionIds = new Set(options.map((o) => o.id));
   const rows = Object.entries(tags).flatMap(([code, optionIds]) =>
-    optionIds.map((optionId) => ({ country_code: code, filter_option_id: optionId }))
+    optionIds.filter((id) => validOptionIds.has(id)).map((optionId) => ({ country_code: code, filter_option_id: optionId }))
   );
   console.log(`Inserting ${rows.length} country/tag rows...`);
   const { error: tagErr } = await supabase.from("country_filter_tags").insert(rows);
