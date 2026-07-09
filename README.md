@@ -25,6 +25,12 @@ America/Caribbean), North America, and Europe.
   once, for exactly the 50-50 moments this app is meant to solve. Search-to-
   select country pickers, forced 2-column layout even on mobile.
 - **Search** — jump straight to a country profile from the nav bar.
+- **Chrome extension** ([`extension/`](extension)) — a sidebar you can keep
+  open next to GeoGuessr. Check off the clues you're seeing (side of
+  driving, stop sign wording, plate color, road line color, chevron
+  colors — multi-select within a category for "similar or unsure" cases)
+  and the country list narrows live. See [`extension/README.md`](extension/README.md)
+  for how to load it.
 
 See `data/` for the data-access layer (`data/db.ts`, `data/countries.ts`)
 and `data/static*.ts` / per-meta files for the authoring source that feeds
