@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { countries, countryName } from "@/data/countries";
+import { countries } from "@/data/countries";
 import { getCountryProfile } from "@/data/countryProfile";
 import SectionBody from "@/components/SectionBody";
-import CountryFlag from "@/components/CountryFlag";
 import CountrySearchSelect from "@/components/CountrySearchSelect";
 
 const MIN_COUNTRIES = 2;
@@ -45,27 +44,13 @@ export default function CompareView() {
 
       <div className="grid gap-x-4 gap-y-10 sm:gap-x-8" style={gridStyle}>
         {codes.map((code, i) => (
-          <div key={i} className="sticky top-0 z-20 -mx-1 bg-slate-950 px-1 pb-3 pt-1">
+          <div key={i} className="sticky top-0 z-20 -mx-1 border-b border-slate-800 bg-slate-950 px-1 pb-3 pt-1">
             <CountrySearchSelect
               value={code}
               onChange={(newCode) => setCode(i, newCode)}
               excludeCodes={codes.filter((_, j) => j !== i)}
+              onRemove={codes.length > MIN_COUNTRIES ? () => removeCountry(i) : undefined}
             />
-            <div className="mt-3 flex items-center justify-between gap-2 border-b border-slate-800 pb-3">
-              <div className="flex min-w-0 items-center gap-2">
-                <CountryFlag code={code} name={countryName(code)} size={26} />
-                <h2 className="truncate text-lg font-bold text-slate-100">{countryName(code)}</h2>
-              </div>
-              {codes.length > MIN_COUNTRIES && (
-                <button
-                  onClick={() => removeCountry(i)}
-                  aria-label={`Remove ${countryName(code)}`}
-                  className="shrink-0 cursor-pointer rounded-full px-2 py-1 text-xs text-slate-500 hover:text-red-400"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
           </div>
         ))}
 

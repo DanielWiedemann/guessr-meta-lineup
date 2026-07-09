@@ -8,10 +8,12 @@ export default function CountrySearchSelect({
   value,
   onChange,
   excludeCodes = [],
+  onRemove,
 }: {
   value: string;
   onChange: (code: string) => void;
   excludeCodes?: string[];
+  onRemove?: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -30,6 +32,9 @@ export default function CountrySearchSelect({
 
   return (
     <div className="relative">
+      <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
+        <CountryFlag code={value} name={countryName(value)} size={22} />
+      </div>
       <input
         value={displayValue}
         onChange={(e) => {
@@ -45,8 +50,19 @@ export default function CountrySearchSelect({
           if (e.key === "Enter" && options[0]) select(options[0].code);
         }}
         placeholder="Search country…"
-        className="w-full cursor-text rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-lg font-semibold text-slate-100 placeholder:text-slate-600 focus:border-emerald-500/50 focus:outline-none"
+        className={`w-full cursor-text rounded-xl border border-slate-800 bg-slate-900 py-3 text-lg font-semibold text-slate-100 placeholder:text-slate-600 focus:border-emerald-500/50 focus:outline-none ${
+          onRemove ? "pl-11 pr-9" : "pl-11 pr-4"
+        }`}
       />
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          aria-label={`Remove ${countryName(value)}`}
+          className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded-full px-1.5 py-1 text-slate-500 hover:text-red-400"
+        >
+          ✕
+        </button>
+      )}
       {open && (
         <ul className="absolute left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-slate-800 bg-slate-900 shadow-lg">
           {options.length > 0 ? (
