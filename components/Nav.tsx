@@ -22,7 +22,10 @@ export default function Nav() {
   const matches = useMemo(() => {
     if (!query.trim()) return [];
     const q = query.trim().toLowerCase();
-    return countries.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 8);
+    return countries
+      .filter((c) => c.name.toLowerCase().includes(q))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .slice(0, 8);
   }, [query]);
 
   function goToCountry(code: string) {

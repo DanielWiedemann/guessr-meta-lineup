@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { countries, countryName } from "@/data/countries";
 import CountryFlag from "@/components/CountryFlag";
 
@@ -17,12 +18,16 @@ export default function CountrySearchSelect({
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [menuRect, setMenuRect] = useState<{ top: number; left: number; width: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const displayValue = open ? query : countryName(value);
 
-  const options = countries.filter(
-    (c) => !excludeCodes.includes(c.code) && c.name.toLowerCase().includes(query.trim().toLowerCase())
-  );
+  const options = countries
+    .filter(
+      (c) => !excludeCodes.includes(c.code) && c.name.toLowerCase().includes(query.trim().toLowerCase())
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   function select(code: string) {
     onChange(code);
@@ -30,8 +35,28 @@ export default function CountrySearchSelect({
     setOpen(false);
   }
 
+  function openMenu() {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (rect) setMenuRect({ top: rect.bottom, left: rect.left, width: rect.width });
+    setOpen(true);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    function updateRect() {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) setMenuRect({ top: rect.bottom, left: rect.left, width: rect.width });
+    }
+    window.addEventListener("scroll", updateRect, true);
+    window.addEventListener("resize", updateRect);
+    return () => {
+      window.removeEventListener("scroll", updateRect, true);
+      window.removeEventListener("resize", updateRect);
+    };
+  }, [open]);
+
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
         <CountryFlag code={value} name={countryName(value)} size={22} />
       </div>
@@ -39,12 +64,9 @@ export default function CountrySearchSelect({
         value={displayValue}
         onChange={(e) => {
           setQuery(e.target.value);
-          setOpen(true);
+          openMenu();
         }}
-        onFocus={() => {
-          setQuery("");
-          setOpen(true);
-        }}
+        onFocus={openMenu}
         onBlur={() => setOpen(false)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && options[0]) select(options[0].code);
@@ -63,26 +85,32 @@ export default function CountrySearchSelect({
           ✕
         </button>
       )}
-      {open && (
-        <ul className="absolute left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-slate-800 bg-slate-900 shadow-lg">
-          {options.length > 0 ? (
-            options.map((c) => (
-              <li key={c.code}>
-                <button
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => select(c.code)}
-                  className="flex w-full cursor-pointer items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-200 hover:bg-slate-800"
-                >
-                  <CountryFlag code={c.code} name={c.name} size={20} />
-                  {c.name}
-                </button>
-              </li>
-            ))
-          ) : (
-            <li className="px-4 py-2.5 text-sm text-slate-600">No matches</li>
-          )}
-        </ul>
-      )}
+      {open &&
+        menuRect &&
+        createPortal(
+          <ul
+            style={{ position: "fixed", top: menuRect.top, left: menuRect.left, width: menuRect.width }}
+            className="z-50 mt-1 max-h-64 overflow-y-auto rounded-xl border border-slate-800 bg-slate-900 shadow-lg"
+          >
+            {options.length > 0 ? (
+              options.map((c) => (
+                <li key={c.code}>
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => select(c.code)}
+                    className="flex w-full cursor-pointer items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-200 hover:bg-slate-800"
+                  >
+                    <CountryFlag code={c.code} name={c.name} size={20} />
+                    {c.name}
+                  </button>
+                </li>
+              ))
+            ) : (
+              <li className="px-4 py-2.5 text-sm text-slate-600">No matches</li>
+            )}
+          </ul>,
+          document.body
+        )}
     </div>
   );
 }
