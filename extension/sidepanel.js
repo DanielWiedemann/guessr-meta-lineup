@@ -1,19 +1,33 @@
 const SUPABASE_URL = "https://ofiiluzxhnyzkbjlqfgk.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_AfMMFkL2mEu48zpi1HjowQ_HYt511A3";
 
+const PAGE_SIZE = 1000;
+
+// PostgREST caps a single response at 1000 rows by default — with 137
+// countries this project already clears that on country_filter_tags, so
+// every query pages through with Range until a short page signals the end.
 async function sb(path) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-  });
-  if (!res.ok) throw new Error(`Supabase request failed (${res.status})`);
-  return res.json();
+  const rows = [];
+  let offset = 0;
+  for (;;) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Range: `${offset}-${offset + PAGE_SIZE - 1}`,
+      },
+    });
+    if (!res.ok) throw new Error(`Supabase request failed (${res.status})`);
+    const page = await res.json();
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  return rows;
 }
 
 function flagUrl(code, flagCode) {
-  return `https://www.worldometers.info/images/flags/w240/${flagCode || code}.webp`;
+  return `https://flagcdn.com/w80/${flagCode || code}.png`;
 }
 
 // These categories render as a grid of single-letter tiles instead of the
@@ -209,8 +223,8 @@ function renderResults() {
   const matching = state.countries.filter((c) => matchesFilters(c.code));
 
   document.getElementById("results-summary").textContent = hasAnyFilterSelected()
-    ? `${matching.length} of ${state.countries.length} countries match`
-    : `Showing all ${state.countries.length} countries — pick filters below to narrow it down`;
+    ? `${matching.length} of ${state.countries.length} possible matches`
+    : `Showing all ${state.countries.length} — pick filters below to narrow it down`;
 
   const list = document.getElementById("results");
   list.innerHTML = "";
@@ -227,8 +241,20 @@ function renderResults() {
     const li = document.createElement("li");
 
     const img = document.createElement("img");
-    img.src = flagUrl(country.code, country.flag_code);
     img.alt = "";
+    img.src = flagUrl(country.code, country.flag_code);
+    // A handful of flags can transiently fail to load in a list this long;
+    // retry once before giving up and just hiding the broken-image icon.
+    img.addEventListener("error", () => {
+      if (!img.dataset.retried) {
+        img.dataset.retried = "1";
+        setTimeout(() => {
+          img.src = `${flagUrl(country.code, country.flag_code)}?retry`;
+        }, 300 + Math.random() * 500);
+      } else {
+        img.style.visibility = "hidden";
+      }
+    });
     li.appendChild(img);
 
     const span = document.createElement("span");

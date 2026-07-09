@@ -1,18 +1,24 @@
 # Meta Lineup Filter (Chrome extension)
 
-A sidebar extension for narrowing down GeoGuessr countries by the visual
-clues you're currently seeing — side of driving, stop sign wording, road
+A sidebar extension for narrowing down GeoGuessr countries by what you're
+seeing (or hearing) — side of driving, continent, stop sign wording, road
 center line color, chevron colors (shown as round color swatches, not
-text labels), and special alphabet letters (accented Latin letters and
-Cyrillic-specific letters, shown as clickable square tiles — Greek, Thai,
-Korean, Arabic and other non-Latin/Cyrillic scripts are a future
-addition). Every filter section is collapsible and starts collapsed
-except Side of driving. Pick as many options as apply within a category
-(useful when two clues look similar or you're unsure) — except the two
+text labels), language, and special alphabet letters (accented Latin
+letters and Cyrillic-specific letters, shown as clickable square tiles —
+Greek, Thai, Korean, Arabic and other non-Latin/Cyrillic scripts are a
+future addition). Every filter section is collapsible and starts
+collapsed except Side of driving. Pick as many options as apply within a
+category (useful when two clues look similar, you're unsure which
+language it is, or you're between two continents) — except the two
 letter categories, where picking several requires a country's alphabet
 to contain *all* of them (you're describing letters seen together in the
 same word/sign, not alternatives). The matching country list updates
 live either way. (License plate color was removed pending a rework.)
+
+Continent is a real geographic continent, not the same thing as the
+app's "region" grouping (which lumps Central America/the Caribbean into
+"Latin America" for navigation purposes) — Russia, Turkey, and Cyprus are
+tagged with both Europe and Asia since they're genuinely transcontinental.
 
 Side of driving is tagged for all 137 countries and territories Plonk It
 documents. Stop-sign wording, road-line color, and chevron colors are

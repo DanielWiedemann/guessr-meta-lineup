@@ -1,13 +1,21 @@
 import { cache } from "react";
 import { supabase } from "@/lib/supabase";
 
-export type Region = "South America" | "Latin America" | "Europe" | "North America";
+export type Region =
+  | "South America"
+  | "Latin America"
+  | "Europe"
+  | "North America"
+  | "Africa"
+  | "Antarctica"
+  | "Asia"
+  | "Oceania";
 
 export type Country = {
   code: string;
   name: string;
   region: Region;
-  /** Override when the entity has no standalone flag in the Worldometer flag set (e.g. sub-national territories) */
+  /** Override when the entity has no standalone flag entry (e.g. sub-national territories using a made-up code) */
   flagCode?: string;
 };
 
@@ -26,5 +34,5 @@ export const fetchCountries = cache(async (): Promise<Country[]> => {
 });
 
 export function flagUrl(code: string, flagCode?: string): string {
-  return `https://www.worldometers.info/images/flags/w240/${flagCode ?? code}.webp`;
+  return `https://flagcdn.com/w80/${flagCode ?? code}.png`;
 }

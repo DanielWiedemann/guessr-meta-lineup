@@ -46,21 +46,32 @@ Supabase.
 
 - [Next.js](https://nextjs.org) (App Router) + TypeScript + Tailwind CSS
 - [Supabase](https://supabase.com) (Postgres) is the single source of truth
-  for countries, metas, variants, facts, languages, and the Chrome
-  extension's filter tags — read by both the website and the extension via
-  the public anon key (all tables are public read-only reference data,
-  enforced by RLS).
+  for countries, metas, variants, facts, and the Chrome extension's filter
+  tags (`filter_categories` / `filter_options` / `country_filter_tags`) —
+  read by both the website and the extension via the public anon key (all
+  tables are public read-only reference data, enforced by RLS). Language
+  is one more filter category in that same table trio rather than its own
+  parallel `languages` table (an earlier version had one) — driving side,
+  language, and plate color are all "a country can have one or more tags
+  from a category," so they share one generic system instead of several
+  differently-shaped ones. When querying more than 1000 rows from a
+  PostgREST endpoint (true for `country_filter_tags` now), page through
+  with the `Range` header — a single unpaginated request silently
+  truncates at 1000, which is exactly what broke the Continent/Language
+  filters until caught during testing.
   Content is still authored in version-controlled TypeScript files
   (`data/staticCountries.ts`, `data/staticMetas.ts`, and the per-meta files
   they aggregate) for git history and reviewability — after editing one,
   run `npx tsx --env-file=.env.local scripts/migrate-to-supabase.ts` to
   sync. Filter tags are authored directly in `scripts/seed-filters.ts`.
 - Images are hotlinked directly from their source (not re-hosted).
-- Country flags are hotlinked from Worldometer by ISO code (`data/countries.ts`).
-  A handful of sub-national territories without their own Worldometer flag
-  (Azores, Madeira, Faroe Islands, Gibraltar, Isle of Man, Jersey, Svalbard,
-  Puerto Rico, Alaska, Hawaii) fall back to their parent country's flag via
-  `flagCode`.
+- Country flags are hotlinked from [flagcdn.com](https://flagcdn.com) by ISO
+  code (`data/countries.ts`) — chosen specifically because it's a
+  dedicated flag-hotlinking service with complete territory coverage
+  (including Antarctica's Treaty flag, which Worldometer, the original
+  source, doesn't have at all). A few made-up codes that aren't real ISO
+  entries (Azores, Madeira, Alaska, Hawaii) still fall back to their parent
+  country's flag via `flagCode`.
 
 ## Getting started
 
@@ -94,7 +105,7 @@ Open [http://localhost:3000](http://localhost:3000).
   facts not listed on GeoHints (Belarus, Liechtenstein, Panama) are
   well-established public knowledge, not sourced from any GeoGuessr meta
   site.
-- Flags come from [Worldometer](https://www.worldometers.info/geography/flags-of-the-world/).
+- Flags come from [flagcdn.com](https://flagcdn.com).
 
 Note: GeoHints has not published a reuse license for its own photos/images,
 so none of its images are used in this app — only the plain factual
@@ -106,7 +117,7 @@ Most of Europe uses the standard international "STOP" text, so Stop signs
 specifically are only listed for countries with a documented deviation.
 
 This project is an unofficial, non-commercial fan tool and isn't affiliated
-with Plonk It, GeoHints, Wikimedia, Worldometer, GeoGuessr, or WorldGuessr.
+with Plonk It, GeoHints, Wikimedia, flagcdn.com, GeoGuessr, or WorldGuessr.
 
 ## Deploy
 

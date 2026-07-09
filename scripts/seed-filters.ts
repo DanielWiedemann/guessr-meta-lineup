@@ -27,12 +27,14 @@ const supabase = createClient(url, serviceRoleKey);
 
 const categories = [
   { id: "side_of_driving", name: "Side of driving", description: "Which side of the road traffic drives on.", sort_order: 0 },
-  { id: "stop_sign_wording", name: "Stop sign wording", description: "The word printed on the stop sign.", sort_order: 1 },
-  { id: "road_line_color", name: "Road center line color", description: "The color of the road's center dividing line.", sort_order: 2 },
-  { id: "chevron_bg_color", name: "Chevron background color", description: "The background color of curve-warning chevron signs.", sort_order: 3 },
-  { id: "chevron_arrow_color", name: "Chevron arrow color", description: "The arrow color on curve-warning chevron signs.", sort_order: 4 },
-  { id: "special_letters_latin", name: "Special letters (Latin)", description: "Accented or extra Latin letters used in the local language's alphabet. Selecting several requires ALL of them to appear (unlike other filters).", sort_order: 5 },
-  { id: "special_letters_cyrillic", name: "Cyrillic letters", description: "Letters specific to a country's Cyrillic alphabet. Selecting several requires ALL of them to appear (unlike other filters).", sort_order: 6 },
+  { id: "continent", name: "Continent", description: "Which continent this is on. Pick several if you're between regions.", sort_order: 1 },
+  { id: "stop_sign_wording", name: "Stop sign wording", description: "The word printed on the stop sign.", sort_order: 2 },
+  { id: "road_line_color", name: "Road center line color", description: "The color of the road's center dividing line.", sort_order: 3 },
+  { id: "chevron_bg_color", name: "Chevron background color", description: "The background color of curve-warning chevron signs.", sort_order: 4 },
+  { id: "chevron_arrow_color", name: "Chevron arrow color", description: "The arrow color on curve-warning chevron signs.", sort_order: 5 },
+  { id: "language", name: "Language", description: "A language spoken in this country. Pick several if you're not sure which one.", sort_order: 6 },
+  { id: "special_letters_latin", name: "Special letters (Latin)", description: "Accented or extra Latin letters used in the local language's alphabet. Selecting several requires ALL of them to appear (unlike other filters).", sort_order: 7 },
+  { id: "special_letters_cyrillic", name: "Cyrillic letters", description: "Letters specific to a country's Cyrillic alphabet. Selecting several requires ALL of them to appear (unlike other filters).", sort_order: 8 },
 ];
 
 // Canonical display order shared by every color category, so "white" is
@@ -251,25 +253,159 @@ const cyrillicLetters: Record<string, string[]> = {
   rs: ["љ", "њ", "ђ", "ћ", "џ", "ј"],
 };
 
-function addLetterOptions(
-  lettersByCountry: Record<string, string[]>,
+// Shared by letters/language: derive filter_options automatically from the
+// set of values actually used, so the option list can never drift out of
+// sync with the tags (labelFor lets language sort/display by full name
+// while letters just use the character itself).
+function addTagOptionsFromMap(
+  valuesByCountry: Record<string, string[]>,
   categoryId: string,
-  idPrefix: string
+  idPrefix: string,
+  labelFor: (value: string) => string = (v) => v
 ) {
-  const unique = [...new Set(Object.values(lettersByCountry).flat())].sort((a, b) =>
-    a.localeCompare(b, "en")
+  const unique = [...new Set(Object.values(valuesByCountry).flat())].sort((a, b) =>
+    labelFor(a).localeCompare(labelFor(b), "en")
   );
-  for (const [i, letter] of unique.entries()) {
-    options.push({ id: `${idPrefix}-${letter}`, category_id: categoryId, label: letter, sort_order: i });
+  for (const [i, value] of unique.entries()) {
+    options.push({ id: `${idPrefix}-${value}`, category_id: categoryId, label: labelFor(value), sort_order: i });
   }
-  for (const [code, letters] of Object.entries(lettersByCountry)) {
+  for (const [code, values] of Object.entries(valuesByCountry)) {
     tags[code] ??= [];
-    for (const letter of letters) tags[code].push(`${idPrefix}-${letter}`);
+    for (const value of values) tags[code].push(`${idPrefix}-${value}`);
   }
 }
 
-addLetterOptions(latinLetters, "special_letters_latin", "letter-latin");
-addLetterOptions(cyrillicLetters, "special_letters_cyrillic", "letter-cyr");
+addTagOptionsFromMap(latinLetters, "special_letters_latin", "letter-latin");
+addTagOptionsFromMap(cyrillicLetters, "special_letters_cyrillic", "letter-cyr");
+
+// --- Language ------------------------------------------------------------
+// One tag per language actually spoken/official in a country (not just the
+// single "primary" one) — deliberately excludes very obscure minority
+// languages a player couldn't realistically identify (e.g. Guaraní), but
+// includes genuinely well-known co-official ones like Quechua.
+const languageNames: Record<string, string> = {
+  af: "Afrikaans", ar: "Arabic", be: "Belarusian", bg: "Bulgarian", bi: "Bislama",
+  bn: "Bengali", ca: "Catalan", ch: "Chamorro", cnr: "Montenegrin", cs: "Czech",
+  da: "Danish", de: "German", dz: "Dzongkha", el: "Greek", en: "English",
+  es: "Spanish", et: "Estonian", fi: "Finnish", fo: "Faroese", fr: "French",
+  ga: "Irish", he: "Hebrew", hi: "Hindi", hr: "Croatian", hu: "Hungarian",
+  id: "Indonesian", is: "Icelandic", it: "Italian", ja: "Japanese", kk: "Kazakh",
+  kl: "Greenlandic", km: "Khmer", ko: "Korean", ku: "Kurdish", ky: "Kyrgyz",
+  lb: "Luxembourgish", lo: "Lao", lt: "Lithuanian", lv: "Latvian", mg: "Malagasy",
+  mi: "Maori", mk: "Macedonian", mn: "Mongolian", ms: "Malay", mt: "Maltese",
+  ne: "Nepali", nl: "Dutch", no: "Norwegian", pap: "Papiamentu", pl: "Polish",
+  pt: "Portuguese", qu: "Quechua", rm: "Romansh", ro: "Romanian", ru: "Russian",
+  rw: "Kinyarwanda", si: "Sinhala", sk: "Slovak", sl: "Slovenian", sm: "Samoan",
+  sq: "Albanian", sr: "Serbian", sv: "Swedish", sw: "Swahili", ta: "Tamil",
+  th: "Thai", tl: "Filipino", tr: "Turkish", uk: "Ukrainian", ur: "Urdu",
+  vi: "Vietnamese", yue: "Cantonese", zh: "Mandarin Chinese", zu: "Zulu",
+};
+
+const countryLanguages: Record<string, string[]> = {
+  // South America
+  ar: ["es"], bo: ["es", "qu"], br: ["pt"], cl: ["es"], co: ["es"],
+  cw: ["nl", "pap"], ec: ["es", "qu"], fk: ["en"], pe: ["es", "qu"], uy: ["es"],
+  // Latin America
+  cr: ["es"], do: ["es"], gt: ["es"], mx: ["es"], pa: ["es"], pr: ["es", "en"],
+  // North America
+  us: ["en"], "us-ak": ["en"], "us-hi": ["en"], ca: ["en", "fr"], bm: ["en"],
+  gl: ["kl", "da"], mq: ["fr"], pm: ["fr"], um: ["en"], vi: ["en"],
+  // Europe
+  al: ["sq"], ad: ["ca"], at: ["de"], "pt-az": ["pt"], by: ["be", "ru"],
+  be: ["nl", "fr", "de"], bg: ["bg"], hr: ["hr"], cy: ["el", "tr"], cz: ["cs"],
+  dk: ["da"], ee: ["et"], fo: ["fo", "da"], fi: ["fi", "sv"], fr: ["fr"],
+  de: ["de"], gi: ["en"], gr: ["el"], hu: ["hu"], is: ["is"], ie: ["en", "ga"],
+  im: ["en"], it: ["it"], je: ["en"], lv: ["lv"], li: ["de"], lt: ["lt"],
+  lu: ["lb", "fr", "de"], "pt-ma": ["pt"], mt: ["mt", "en"], mc: ["fr"],
+  me: ["cnr"], nl: ["nl"], mk: ["mk"], no: ["no"], pl: ["pl"], pt: ["pt"],
+  ro: ["ro"], ru: ["ru"], sm: ["it"], rs: ["sr"], sk: ["sk"], si: ["sl"],
+  es: ["es"], sj: ["no"], se: ["sv"], ch: ["de", "fr", "it", "rm"], tr: ["tr"],
+  ua: ["uk"], gb: ["en"],
+  // Africa
+  bw: ["en"], eg: ["ar"], sz: ["en"], gh: ["en"], ke: ["sw", "en"], ls: ["en"],
+  mg: ["mg", "fr"], ml: ["fr"], na: ["en"], ng: ["en"], re: ["fr"],
+  rw: ["rw", "fr", "en"], sn: ["fr"], za: ["en", "zu", "af"], st: ["pt"],
+  tz: ["sw", "en"], tn: ["ar", "fr"], ug: ["en", "sw"],
+  // Antarctica (Antarctica itself has no official language — skipped)
+  gs: ["en"],
+  // Asia
+  bd: ["bn"], bt: ["dz"], io: ["en"], kh: ["km"], cn: ["zh"], hk: ["yue", "en"],
+  in: ["hi", "en"], id: ["id"], iq: ["ar", "ku"], il: ["he", "ar"], ps: ["ar"],
+  jp: ["ja"], jo: ["ar"], kz: ["kk", "ru"], kg: ["ky", "ru"], la: ["lo"],
+  lb: ["ar", "fr"], mo: ["yue", "pt"], my: ["ms"], mn: ["mn"], np: ["ne"],
+  om: ["ar"], pk: ["ur", "en"], ph: ["tl", "en"], qa: ["ar"],
+  sg: ["en", "zh", "ms", "ta"], kr: ["ko"], lk: ["si", "ta"], tw: ["zh"],
+  th: ["th"], ae: ["ar"], vn: ["vi"],
+  // Oceania
+  as: ["sm", "en"], au: ["en"], cx: ["en"], cc: ["en"], gu: ["en", "ch"],
+  nz: ["en", "mi"], mp: ["en", "ch"], pn: ["en"], vu: ["bi", "en", "fr"],
+};
+
+addTagOptionsFromMap(countryLanguages, "language", "lang", (id) => languageNames[id] ?? id);
+
+// --- Continent -------------------------------------------------------------
+// A real geographic continent, distinct from the app's "region" grouping
+// (which lumps Central America/Caribbean into "Latin America" for
+// navigation purposes, not geography). Transcontinental countries
+// (Russia, Turkey, Cyprus) are tagged with both — OR logic means picking
+// either one still matches them, which is correct.
+const continentNames: Record<string, string> = {
+  samerica: "South America",
+  namerica: "North America",
+  europe: "Europe",
+  africa: "Africa",
+  asia: "Asia",
+  oceania: "Oceania",
+  antarctica: "Antarctica",
+};
+const CONTINENT_ORDER = ["samerica", "namerica", "europe", "africa", "asia", "oceania", "antarctica"];
+for (const [i, id] of CONTINENT_ORDER.entries()) {
+  options.push({ id: `continent-${id}`, category_id: "continent", label: continentNames[id], sort_order: i });
+}
+
+const countryContinents: Record<string, string[]> = {
+  // South America
+  ar: ["samerica"], bo: ["samerica"], br: ["samerica"], cl: ["samerica"],
+  co: ["samerica"], ec: ["samerica"], fk: ["samerica"], pe: ["samerica"], uy: ["samerica"],
+  // Latin America + North America + Caribbean — all geographically North America
+  cr: ["namerica"], do: ["namerica"], gt: ["namerica"], mx: ["namerica"],
+  pa: ["namerica"], pr: ["namerica"], us: ["namerica"], "us-ak": ["namerica"],
+  "us-hi": ["namerica"], ca: ["namerica"], bm: ["namerica"], gl: ["namerica"],
+  mq: ["namerica"], pm: ["namerica"], um: ["namerica"], vi: ["namerica"], cw: ["namerica"],
+  // Europe (Russia/Turkey/Cyprus also tagged Asia below)
+  al: ["europe"], ad: ["europe"], at: ["europe"], "pt-az": ["europe"], by: ["europe"],
+  be: ["europe"], bg: ["europe"], hr: ["europe"], cy: ["europe", "asia"], cz: ["europe"],
+  dk: ["europe"], ee: ["europe"], fo: ["europe"], fi: ["europe"], fr: ["europe"],
+  de: ["europe"], gi: ["europe"], gr: ["europe"], hu: ["europe"], is: ["europe"],
+  ie: ["europe"], im: ["europe"], it: ["europe"], je: ["europe"], lv: ["europe"],
+  li: ["europe"], lt: ["europe"], lu: ["europe"], "pt-ma": ["europe"], mt: ["europe"],
+  mc: ["europe"], me: ["europe"], nl: ["europe"], mk: ["europe"], no: ["europe"],
+  pl: ["europe"], pt: ["europe"], ro: ["europe"], ru: ["europe", "asia"], sm: ["europe"],
+  rs: ["europe"], sk: ["europe"], si: ["europe"], es: ["europe"], sj: ["europe"],
+  se: ["europe"], ch: ["europe"], tr: ["europe", "asia"], ua: ["europe"], gb: ["europe"],
+  // Africa
+  bw: ["africa"], eg: ["africa"], sz: ["africa"], gh: ["africa"], ke: ["africa"],
+  ls: ["africa"], mg: ["africa"], ml: ["africa"], na: ["africa"], ng: ["africa"],
+  re: ["africa"], rw: ["africa"], sn: ["africa"], za: ["africa"], st: ["africa"],
+  tz: ["africa"], tn: ["africa"], ug: ["africa"],
+  // Antarctica
+  aq: ["antarctica"], gs: ["antarctica"],
+  // Asia
+  bd: ["asia"], bt: ["asia"], io: ["asia"], kh: ["asia"], cn: ["asia"], hk: ["asia"],
+  in: ["asia"], id: ["asia"], iq: ["asia"], il: ["asia"], ps: ["asia"], jp: ["asia"],
+  jo: ["asia"], kz: ["asia"], kg: ["asia"], la: ["asia"], lb: ["asia"], mo: ["asia"],
+  my: ["asia"], mn: ["asia"], np: ["asia"], om: ["asia"], pk: ["asia"], ph: ["asia"],
+  qa: ["asia"], sg: ["asia"], kr: ["asia"], lk: ["asia"], tw: ["asia"], th: ["asia"],
+  ae: ["asia"], vn: ["asia"],
+  // Oceania
+  as: ["oceania"], au: ["oceania"], cx: ["oceania"], cc: ["oceania"], gu: ["oceania"],
+  nz: ["oceania"], mp: ["oceania"], pn: ["oceania"], vu: ["oceania"],
+};
+
+for (const [code, continentIds] of Object.entries(countryContinents)) {
+  tags[code] ??= [];
+  for (const continentId of continentIds) tags[code].push(`continent-${continentId}`);
+}
 
 // --- Fill remaining gaps in the color/line categories --------------------
 // Unlike the gallery metas (where a missing photo legitimately means "not
