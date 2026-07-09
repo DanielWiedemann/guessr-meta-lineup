@@ -149,6 +149,33 @@ const tags: Record<string, string[]> = {
   tr: ["drive-right", "stop-dur", "plate-white", "line-white", "line-yellow", "chevbg-white", "chevarrow-red"],
   ua: ["drive-right", "stop-stop", "plate-white", "chevbg-red", "chevarrow-white"],
   gb: ["drive-left", "stop-stop", "plate-white", "plate-yellow", "line-white", "chevbg-black", "chevarrow-white"],
+
+  // ---- South America (additional) ----
+  cw: ["drive-right"],
+  fk: ["drive-left"],
+
+  // ---- Africa / Antarctica / Asia / Oceania ----
+  // Only side-of-driving is tagged here — stop-sign wording, plate/road-line/
+  // chevron colors, and Latin/Cyrillic letters all still require actual
+  // documented Plonk It research, which hasn't been done for these
+  // countries yet (unlike the Americas/Europe above).
+  bw: ["drive-left"], eg: ["drive-right"], sz: ["drive-left"], gh: ["drive-right"],
+  ke: ["drive-left"], ls: ["drive-left"], mg: ["drive-right"], ml: ["drive-right"],
+  na: ["drive-left"], ng: ["drive-right"], re: ["drive-right"], rw: ["drive-right"],
+  sn: ["drive-right"], za: ["drive-left"], st: ["drive-right"], tz: ["drive-left"],
+  tn: ["drive-right"], ug: ["drive-left"],
+  gs: ["drive-left"],
+  bd: ["drive-left"], bt: ["drive-left"], io: ["drive-left"], kh: ["drive-right"],
+  cn: ["drive-right"], hk: ["drive-left"], in: ["drive-left"], id: ["drive-left"],
+  iq: ["drive-right"], il: ["drive-right"], ps: ["drive-right"], jp: ["drive-left"],
+  jo: ["drive-right"], kz: ["drive-right"], kg: ["drive-right"], la: ["drive-right"],
+  lb: ["drive-right"], mo: ["drive-left"], my: ["drive-left"], mn: ["drive-right"],
+  np: ["drive-left"], om: ["drive-right"], pk: ["drive-left"], ph: ["drive-right"],
+  qa: ["drive-right"], sg: ["drive-left"], kr: ["drive-right"], lk: ["drive-left"],
+  tw: ["drive-right"], th: ["drive-left"], ae: ["drive-right"], vn: ["drive-right"],
+  as: ["drive-right"], au: ["drive-left"], cx: ["drive-left"], cc: ["drive-left"],
+  gu: ["drive-right"], nz: ["drive-left"], mp: ["drive-right"], pn: ["drive-left"],
+  vu: ["drive-right"],
 };
 
 // Special letters — distinctive characters from each country's official

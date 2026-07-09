@@ -4,8 +4,13 @@ A free, no-login GeoGuessr/WorldGuessr helper. Instead of clicking into one
 country's guide at a time, browse every documented variant of a meta side by
 side and match it to what you're seeing in-game.
 
-Covers **74 countries** across South America, Latin America (Central
-America/Caribbean), North America, and Europe.
+Covers **137 countries and territories** across every Plonk It region —
+South America, Latin America, North America, Europe, Africa, Asia,
+Oceania, and Antarctica. The image-based metas (Bollards, Poles, License
+plates, Road lines/Chevrons, Signs) are currently researched for the
+Americas and Europe only; Africa/Asia/Oceania/Antarctica have basic facts
+(driving side, currency, phone code, language) with image-meta research
+still to come.
 
 ## Features
 
@@ -27,10 +32,11 @@ America/Caribbean), North America, and Europe.
 - **Search** — jump straight to a country profile from the nav bar.
 - **Chrome extension** ([`extension/`](extension)) — a sidebar you can keep
   open next to GeoGuessr. Check off the clues you're seeing (side of
-  driving, stop sign wording, plate color, road line color, chevron
-  colors — multi-select within a category for "similar or unsure" cases)
-  and the country list narrows live. See [`extension/README.md`](extension/README.md)
-  for how to load it.
+  driving, stop sign wording, road line color, chevron colors, and
+  special alphabet letters) and the country list narrows live — colors
+  are OR-within-category ("similar or unsure"), letters are AND (you're
+  describing characters seen together). See
+  [`extension/README.md`](extension/README.md) for how to load it.
 
 See `data/` for the data-access layer (`data/db.ts`, `data/countries.ts`)
 and `data/static*.ts` / per-meta files for the authoring source that feeds
@@ -40,9 +46,10 @@ Supabase.
 
 - [Next.js](https://nextjs.org) (App Router) + TypeScript + Tailwind CSS
 - [Supabase](https://supabase.com) (Postgres) is the single source of truth
-  for countries, metas, variants, facts, and the Chrome extension's filter
-  tags — read by both the website and the extension via the public anon
-  key (all tables are public read-only reference data, enforced by RLS).
+  for countries, metas, variants, facts, languages, and the Chrome
+  extension's filter tags — read by both the website and the extension via
+  the public anon key (all tables are public read-only reference data,
+  enforced by RLS).
   Content is still authored in version-controlled TypeScript files
   (`data/staticCountries.ts`, `data/staticMetas.ts`, and the per-meta files
   they aggregate) for git history and reviewability — after editing one,

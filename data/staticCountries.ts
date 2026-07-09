@@ -2,7 +2,15 @@
 // `scripts/migrate-to-supabase.ts` to sync to Supabase. The live app reads
 // from Supabase (see data/countries.ts), not from this file.
 
-export type Region = "South America" | "Latin America" | "Europe" | "North America";
+export type Region =
+  | "South America"
+  | "Latin America"
+  | "Europe"
+  | "North America"
+  | "Africa"
+  | "Antarctica"
+  | "Asia"
+  | "Oceania";
 
 export type StaticCountry = {
   code: string;
@@ -19,7 +27,9 @@ export const staticCountries: StaticCountry[] = [
   { code: "br", name: "Brazil", region: "South America" },
   { code: "cl", name: "Chile", region: "South America" },
   { code: "co", name: "Colombia", region: "South America" },
+  { code: "cw", name: "Curaçao", region: "South America" },
   { code: "ec", name: "Ecuador", region: "South America" },
+  { code: "fk", name: "Falkland Islands", region: "South America" },
   { code: "pe", name: "Peru", region: "South America" },
   { code: "uy", name: "Uruguay", region: "South America" },
 
@@ -94,4 +104,73 @@ export const staticCountries: StaticCountry[] = [
   { code: "tr", name: "Turkey", region: "Europe" },
   { code: "ua", name: "Ukraine", region: "Europe" },
   { code: "gb", name: "United Kingdom", region: "Europe" },
+
+  // Africa
+  { code: "bw", name: "Botswana", region: "Africa" },
+  { code: "eg", name: "Egypt", region: "Africa" },
+  { code: "sz", name: "Eswatini", region: "Africa" },
+  { code: "gh", name: "Ghana", region: "Africa" },
+  { code: "ke", name: "Kenya", region: "Africa" },
+  { code: "ls", name: "Lesotho", region: "Africa" },
+  { code: "mg", name: "Madagascar", region: "Africa" },
+  { code: "ml", name: "Mali", region: "Africa" },
+  { code: "na", name: "Namibia", region: "Africa" },
+  { code: "ng", name: "Nigeria", region: "Africa" },
+  { code: "re", name: "Reunion", region: "Africa" },
+  { code: "rw", name: "Rwanda", region: "Africa" },
+  { code: "sn", name: "Senegal", region: "Africa" },
+  { code: "za", name: "South Africa", region: "Africa" },
+  { code: "st", name: "São Tomé and Príncipe", region: "Africa" },
+  { code: "tz", name: "Tanzania", region: "Africa" },
+  { code: "tn", name: "Tunisia", region: "Africa" },
+  { code: "ug", name: "Uganda", region: "Africa" },
+
+  // Antarctica
+  { code: "aq", name: "Antarctica", region: "Antarctica" },
+  { code: "gs", name: "South Georgia and the South Sandwich Islands", region: "Antarctica", flagCode: "gb" },
+
+  // Asia
+  { code: "bd", name: "Bangladesh", region: "Asia" },
+  { code: "bt", name: "Bhutan", region: "Asia" },
+  { code: "io", name: "British Indian Ocean Territory", region: "Asia", flagCode: "gb" },
+  { code: "kh", name: "Cambodia", region: "Asia" },
+  { code: "cn", name: "China", region: "Asia" },
+  { code: "hk", name: "Hong Kong", region: "Asia" },
+  { code: "in", name: "India", region: "Asia" },
+  { code: "id", name: "Indonesia", region: "Asia" },
+  { code: "iq", name: "Iraq", region: "Asia" },
+  { code: "il", name: "Israel", region: "Asia" },
+  { code: "ps", name: "West Bank", region: "Asia" },
+  { code: "jp", name: "Japan", region: "Asia" },
+  { code: "jo", name: "Jordan", region: "Asia" },
+  { code: "kz", name: "Kazakhstan", region: "Asia" },
+  { code: "kg", name: "Kyrgyzstan", region: "Asia" },
+  { code: "la", name: "Laos", region: "Asia" },
+  { code: "lb", name: "Lebanon", region: "Asia" },
+  { code: "mo", name: "Macau", region: "Asia" },
+  { code: "my", name: "Malaysia", region: "Asia" },
+  { code: "mn", name: "Mongolia", region: "Asia" },
+  { code: "np", name: "Nepal", region: "Asia" },
+  { code: "om", name: "Oman", region: "Asia" },
+  { code: "pk", name: "Pakistan", region: "Asia" },
+  { code: "ph", name: "Philippines", region: "Asia" },
+  { code: "qa", name: "Qatar", region: "Asia" },
+  { code: "sg", name: "Singapore", region: "Asia" },
+  { code: "kr", name: "South Korea", region: "Asia" },
+  { code: "lk", name: "Sri Lanka", region: "Asia" },
+  { code: "tw", name: "Taiwan", region: "Asia" },
+  { code: "th", name: "Thailand", region: "Asia" },
+  { code: "ae", name: "United Arab Emirates", region: "Asia" },
+  { code: "vn", name: "Vietnam", region: "Asia" },
+
+  // Oceania
+  { code: "as", name: "American Samoa", region: "Oceania" },
+  { code: "au", name: "Australia", region: "Oceania" },
+  { code: "cx", name: "Christmas Island", region: "Oceania", flagCode: "au" },
+  { code: "cc", name: "Cocos Islands", region: "Oceania", flagCode: "au" },
+  { code: "gu", name: "Guam", region: "Oceania" },
+  { code: "nz", name: "New Zealand", region: "Oceania" },
+  { code: "mp", name: "Northern Mariana Islands", region: "Oceania" },
+  { code: "pn", name: "Pitcairn Islands", region: "Oceania", flagCode: "gb" },
+  { code: "vu", name: "Vanuatu", region: "Oceania" },
 ];
