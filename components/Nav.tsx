@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -7,7 +8,7 @@ import { countries } from "@/data/countries";
 import CountryFlag from "@/components/CountryFlag";
 
 const links = [
-  { href: "/", label: "Lineup" },
+  { href: "/", label: "Meta" },
   { href: "/quiz", label: "Quiz" },
   { href: "/compare", label: "Compare" },
 ];
@@ -33,8 +34,8 @@ export default function Nav() {
   return (
     <nav className="border-b border-slate-800 bg-slate-950/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
-        <Link href="/" className="mr-2 text-sm font-bold tracking-tight text-slate-100">
-          Meta Lineup
+        <Link href="/" className="mr-2 shrink-0">
+          <Image src="/logo.png" alt="Meta Lineup" width={28} height={34} priority />
         </Link>
         <div className="flex gap-1">
           {links.map((link) => (
