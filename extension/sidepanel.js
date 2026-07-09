@@ -21,6 +21,26 @@ function flagUrl(code, flagCode) {
 // number can be active at once.
 const LETTER_CATEGORY_IDS = new Set(["special_letters_latin", "special_letters_cyrillic"]);
 
+// These categories render as actual color swatches instead of a text
+// label naming the color.
+const COLOR_CATEGORY_IDS = new Set([
+  "plate_base_color",
+  "road_line_color",
+  "chevron_bg_color",
+  "chevron_arrow_color",
+]);
+
+// label (lowercased) -> CSS color. Anything not listed here (e.g. "Varies
+// (state/province)") falls back to a striped pattern instead of a color.
+const COLOR_SWATCHES = {
+  white: "#f8fafc",
+  yellow: "#facc15",
+  black: "#18181b",
+  blue: "#3b82f6",
+  red: "#ef4444",
+  burgundy: "#7f1d3b",
+};
+
 const state = {
   countries: [],
   categories: [],
@@ -103,6 +123,7 @@ function renderFilters() {
     section.appendChild(heading);
 
     const isLetterCategory = LETTER_CATEGORY_IDS.has(category.id);
+    const isColorCategory = COLOR_CATEGORY_IDS.has(category.id);
     if (isLetterCategory && category.description) {
       const hint = document.createElement("p");
       hint.className = "filter-category-hint";
@@ -110,12 +131,11 @@ function renderFilters() {
       section.appendChild(hint);
     }
     const optionsList = document.createElement("div");
-    optionsList.className = isLetterCategory ? "letter-grid" : "filter-options";
+    optionsList.className = isLetterCategory || isColorCategory ? "tile-grid" : "filter-options";
 
     const optionsForCategory = state.options.filter((o) => o.category_id === category.id);
     for (const option of optionsForCategory) {
       const label = document.createElement("label");
-      label.className = isLetterCategory ? "letter-tile" : "filter-option";
       label.title = option.label;
 
       const checkbox = document.createElement("input");
@@ -131,11 +151,25 @@ function renderFilters() {
 
       label.appendChild(checkbox);
       if (isLetterCategory) {
+        label.className = "letter-tile";
         const glyph = document.createElement("span");
         glyph.className = "letter-glyph";
         glyph.textContent = option.label;
         label.appendChild(glyph);
+      } else if (isColorCategory) {
+        label.className = "color-swatch";
+        const swatch = COLOR_SWATCHES[option.label.toLowerCase()];
+        if (swatch) {
+          label.style.background = swatch;
+        } else {
+          label.classList.add("color-swatch-varies");
+        }
+        const check = document.createElement("span");
+        check.className = "color-swatch-check";
+        check.textContent = "✓";
+        label.appendChild(check);
       } else {
+        label.className = "filter-option";
         label.append(option.label);
       }
       optionsList.appendChild(label);

@@ -120,13 +120,14 @@ header h1 {
   margin: 0;
 }
 
-.letter-grid {
+.tile-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, 34px);
   gap: 6px;
 }
 
-.letter-tile {
+.letter-tile,
+.color-swatch {
   position: relative;
   width: 34px;
   height: 34px;
@@ -141,7 +142,8 @@ header h1 {
   user-select: none;
 }
 
-.letter-tile:hover {
+.letter-tile:hover,
+.color-swatch:hover {
   border-color: #334155;
 }
 
@@ -151,7 +153,8 @@ header h1 {
   color: #34d399;
 }
 
-.letter-tile input {
+.letter-tile input,
+.color-swatch input {
   position: absolute;
   opacity: 0;
   width: 100%;
@@ -164,6 +167,44 @@ header h1 {
   font-size: 16px;
   font-weight: 600;
   pointer-events: none;
+}
+
+/* Color swatches show the actual color as their background instead of a
+   text label. A checkmark (outlined so it reads against any color)
+   appears when selected, and a highlighted ring instead of a tint so the
+   true color stays visible. */
+.color-swatch {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.color-swatch:has(input:checked) {
+  box-shadow: 0 0 0 2px #34d399;
+  border-color: #34d399;
+}
+
+.color-swatch-varies {
+  background: repeating-linear-gradient(
+    45deg,
+    #f8fafc 0,
+    #f8fafc 6px,
+    #64748b 6px,
+    #64748b 12px
+  );
+}
+
+.color-swatch-check {
+  display: none;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow:
+    0 0 2px rgba(0, 0, 0, 0.9),
+    0 0 4px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+
+.color-swatch:has(input:checked) .color-swatch-check {
+  display: block;
 }
 
 .results-heading {
