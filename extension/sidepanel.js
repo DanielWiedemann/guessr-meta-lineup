@@ -88,6 +88,8 @@ const CATEGORIES = [
     hint: "Arrow colour on curve-warning chevrons." },
   { id: "currency_symbols", col: "currency_symbols", name: "Currency symbol", kind: "currency", match: "or", complete: true,
     hint: "The symbol on price boards, shopfronts and fuel signs." },
+  { id: "phone_codes", col: "phone_codes", name: "Phone code", kind: "currency", icon: "phone", match: "or", complete: true,
+    hint: "The +XX on phone numbers on shopfronts, vans and ads. Shared codes narrow to a group (+1, +44, +7)." },
   { id: "languages", col: "languages", name: "Language", kind: "pill", icon: "speech", match: "or", toggle: true,
     hint: "A language spoken here. OR = any of them; AND = all must be spoken." },
   { id: "scripts", col: "scripts", name: "Writing script", kind: "script", match: "or",
@@ -208,6 +210,11 @@ function sortOptions(cat, values) {
   if (cat.kind === "script") {
     return values.sort((a, b) => idx(SCRIPT_ORDER, a) - idx(SCRIPT_ORDER, b));
   }
+  if (cat.id === "phone_codes") {
+    // numeric order: +1, +7, +30, +31 ... +1868
+    const num = (v) => parseInt(v.replace(/[^0-9]/g, ""), 10) || 0;
+    return values.sort((a, b) => num(a) - num(b));
+  }
   if (cat.kind === "currency") {
     // most widely-shared symbols first ($, €, £...), then the distinctive
     // ones, so the common cases are easy to reach.
@@ -305,6 +312,9 @@ function headerIcon(kind) {
       break;
     case "currency": // banknote with a coin
       inner = `<rect x="1.5" y="4" width="13" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/>`;
+      break;
+    case "phone": // handset
+      inner = `<path d="M3.5 2.5c-.8.8-1 2.3-.3 4 1 2.5 3.8 5.3 6.3 6.3 1.7.7 3.2.5 4-.3l-2.2-2.6-1.9.8c-1.5-.7-2.8-2-3.6-3.6l.8-1.9z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>`;
       break;
     default:
       inner = "";
@@ -466,6 +476,18 @@ function renderFilters() {
       section.appendChild(hint);
     }
 
+    // Big lists (languages, currency symbols, road words, letters...) get a
+    // quick type-to-filter box. Matches against the option's label and its
+    // raw value, so "39" finds "+39" and "jal" finds "Jalan / Jl.".
+    let searchBox = null;
+    if (options.length >= 16) {
+      searchBox = document.createElement("input");
+      searchBox.type = "search";
+      searchBox.className = "option-search";
+      searchBox.placeholder = `Search ${options.length} options…`;
+      section.appendChild(searchBox);
+    }
+
     const usesTiles = cat.kind === "letter" || cat.kind === "road" || cat.kind === "chevron" || cat.kind === "stop" || cat.kind === "side" || cat.kind === "script" || cat.kind === "currency";
     const grid = document.createElement("div");
     grid.className = !usesTiles
@@ -479,6 +501,7 @@ function renderFilters() {
       const label = document.createElement("label");
       const nWith = state.countries.filter((c) => valuesFor(c, cat).includes(value)).length;
       label.title = `${optionLabel(cat, value)} - ${nWith} ${nWith === 1 ? "country" : "countries"}`;
+      label.dataset.search = `${optionLabel(cat, value)} ${value}`.toLowerCase();
 
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
@@ -536,6 +559,17 @@ function renderFilters() {
         label.append(optionLabel(cat, value));
       }
       grid.appendChild(label);
+    }
+
+    if (searchBox) {
+      searchBox.addEventListener("input", () => {
+        const q = searchBox.value.trim().toLowerCase();
+        for (const label of grid.children) {
+          label.style.display = !q || label.dataset.search.includes(q) ? "" : "none";
+        }
+      });
+      // Don't let typing spaces toggle the collapse button via key bubbling.
+      searchBox.addEventListener("keydown", (e) => e.stopPropagation());
     }
 
     section.appendChild(grid);

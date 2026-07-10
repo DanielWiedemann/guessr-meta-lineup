@@ -32,6 +32,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { currency } from "../data/currency";
+import { phoneNumbers } from "../data/phoneNumbers";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -54,6 +55,7 @@ type Facts = {
   scripts: string[];
   road_name_words: string[];
   currency_symbols: string[];
+  phone_codes: string[];
 };
 
 // ---------------------------------------------------------------------------
@@ -658,6 +660,31 @@ for (const entry of currency.countries) {
 }
 
 // ---------------------------------------------------------------------------
+// Phone country codes — straight from data/phoneNumbers.ts (GeoHints-
+// sourced). Shared codes are the point: +1 narrows to the NANP countries,
+// +44 to the UK and its crown dependencies, +7 to Russia/Kazakhstan.
+// ---------------------------------------------------------------------------
+
+// Values like "+44 (1624)" or "+1 (809, 829 or 849)" become the base code
+// PLUS one value per area code: ["+44", "+44 1624"] - so seeing just "+44"
+// matches the whole UK group, while the full "+44 1624" pins the Isle of
+// Man (players genuinely memorise the +1-XXX Caribbean/Pacific codes).
+const countryPhone: Record<string, string[]> = {};
+for (const entry of phoneNumbers.countries) {
+  const raw = entry.facts.find((f) => f.label === "Calling code")?.value?.trim();
+  const base = raw?.match(/^\+\d+/)?.[0];
+  if (!base) continue;
+  const vals = [base];
+  const paren = raw!.match(/\(([^)]+)\)/)?.[1];
+  if (paren) {
+    for (const area of paren.split(/,|\bor\b/).map((s) => s.trim()).filter((s) => /^\d+$/.test(s))) {
+      vals.push(`${base} ${area}`);
+    }
+  }
+  countryPhone[entry.code] = vals;
+}
+
+// ---------------------------------------------------------------------------
 // Merged web research is edited directly into the maps above once verified
 // — keeping a single source of truth per fact instead of a base + override
 // layering.
@@ -672,7 +699,7 @@ async function run() {
   const allMaps: Record<string, Record<string, unknown>> = {
     countryContinents, countryLanguages, latinLetters, cyrillicLetters,
     stopWording, roadLinesInner, roadLinesOuter, chevrons, countryScripts,
-    roadNameWords, countryCurrency,
+    roadNameWords, countryCurrency, countryPhone,
   };
   for (const [mapName, map] of Object.entries(allMaps)) {
     for (const code of Object.keys(map)) {
@@ -698,6 +725,7 @@ async function run() {
         scripts: scriptsFor(code),
         road_name_words: roadNameWords[code] ?? [],
         currency_symbols: countryCurrency[code] ?? [],
+        phone_codes: countryPhone[code] ?? [],
       },
     });
   }
@@ -726,6 +754,7 @@ async function run() {
   console.log(`scripts: ${counted("scripts")}/${updates.length}`);
   console.log(`road_name_words: ${counted("road_name_words")}/${updates.length}`);
   console.log(`currency_symbols: ${counted("currency_symbols")}/${updates.length}`);
+  console.log(`phone_codes: ${counted("phone_codes")}/${updates.length}`);
   console.log("Done.");
 }
 

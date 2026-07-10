@@ -379,6 +379,30 @@ body {
   margin: -4px 0 8px;
 }
 
+/* Type-to-filter box shown on large option lists. */
+.option-search {
+  display: block;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  border: 1px solid #1e293b;
+  background: #0f172a;
+  color: #f1f5f9;
+  font-size: 12px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.option-search::placeholder {
+  color: #475569;
+}
+
+.option-search:focus {
+  outline: none;
+  border-color: rgba(52, 211, 153, 0.5);
+}
+
 .filter-options {
   display: flex;
   flex-wrap: wrap;

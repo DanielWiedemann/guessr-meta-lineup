@@ -20,6 +20,16 @@ seeing (or hearing):
   with the most widely-shared ones first. Distinctive symbols pin a
   country instantly (₴ → Ukraine, ฿ → Thailand); shared ones like $ or €
   narrow to that currency zone. Sourced from `data/currency.ts`.
+- **Phone code** — the +XX on phone numbers plastered on shopfronts, vans
+  and ads, in numeric order. Unique codes pin a country (+39 → Italy);
+  shared ones narrow to their group (+1 → the 12 NANP countries, +44 →
+  UK/Isle of Man/Jersey, +7 → Russia/Kazakhstan) — and the area-code
+  variants are their own tiles too (+44 1624 → Isle of Man, +1 340 → US
+  Virgin Islands). Sourced from `data/phoneNumbers.ts`.
+
+Large option lists (phone codes, currency symbols, languages, road words,
+letters) have a type-to-filter search box — "39" finds +39, "jal" finds
+Jalan / Jl.
 - **Language** — a language spoken there. Has an OR/AND toggle in its
   heading: OR (default) matches any picked language, AND requires all of
   them (e.g. English + French → Canada / Rwanda / Vanuatu). Widely-spoken
