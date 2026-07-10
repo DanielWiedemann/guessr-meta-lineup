@@ -41,7 +41,7 @@ function flagUrl(code, flagCode) {
 // characters seen together in one word).
 const CATEGORIES = [
   { id: "driving_side", col: "driving_side", name: "Side of driving", kind: "side", match: "or",
-    hint: "Which side traffic drives on — the fastest clue to check first." },
+    hint: "Which side traffic drives on - the fastest clue to check first." },
   { id: "continents", col: "continents", name: "Continent", kind: "pill", match: "or",
     hint: "Pick several if you're between regions." },
   { id: "stop_sign_wording", col: "stop_sign_wording", name: "Stop sign", kind: "stop", match: "or",
@@ -59,7 +59,7 @@ const CATEGORIES = [
   { id: "scripts", col: "scripts", name: "Writing script", kind: "script", match: "or",
     hint: "Recognise the alphabet by its shape, even if you can't read it." },
   { id: "road_name_words", col: "road_name_words", name: "Road name words", kind: "pill", icon: "signpost", match: "or",
-    hint: "The street word on name plates — Jalan, ul., -straat, Rue, Calle…" },
+    hint: "The street word on name plates - Jalan, ul., -straat, Rue, Calle…" },
   { id: "special_letters_latin", col: "special_letters_latin", name: "Special letters (Latin)", kind: "letter", match: "and",
     hint: "Accented / extra Latin letters. Picking several needs ALL to appear." },
   { id: "special_letters_cyrillic", col: "special_letters_cyrillic", name: "Cyrillic letters", kind: "letter", match: "and",
@@ -438,7 +438,7 @@ function renderResults() {
   const matching = [...confirmed, ...uncertain.map((c) => ({ ...c, _uncertain: true }))];
 
   document.getElementById("results-summary").textContent = !hasAnyFilterSelected()
-    ? `Showing all ${state.countries.length} — pick filters above to narrow it down`
+    ? `Showing all ${state.countries.length} - pick filters above to narrow it down`
     : uncertain.length > 0
       ? `${confirmed.length} of ${state.countries.length} match · ${uncertain.length} unknown (no data yet)`
       : `${confirmed.length} of ${state.countries.length} possible matches`;
@@ -458,7 +458,7 @@ function renderResults() {
     const li = document.createElement("li");
     if (country._uncertain) {
       li.className = "uncertain";
-      li.title = "No data yet for one of your selected clues — still possible, not confirmed.";
+      li.title = "No data yet for one of your selected clues - still possible, not confirmed.";
     }
 
     const img = document.createElement("img");

@@ -524,7 +524,7 @@ function roadWord(word: string, codes: string[]) {
 
 roadWord("Jalan / Jl.", ["id", "my", "sg"]);
 roadWord("ul. / ulica / ulice", ["pl", "hr", "si", "rs", "me", "mk", "cz", "sk"]);
-roadWord("ул. / вул.", ["ru", "ua", "by", "bg", "kz", "kg"]); // Cyrillic "street"
+roadWord("ул. / вул. (Ulitsa)", ["ru", "ua", "by", "bg", "kz", "kg"]); // Cyrillic "street", romanized Ulitsa
 roadWord("-straße / Str.", ["de", "at", "ch", "li", "lu"]);
 roadWord("-straat", ["nl", "be", "za", "cw"]); // Dutch + Afrikaans
 roadWord("-weg", ["nl", "be", "de", "za"]);
