@@ -75,6 +75,23 @@ its small territories are deliberately left untagged for chevron colour —
 Plonk It's own research found no single national pattern, so inventing one
 would fabricate a signal rather than honestly reflect a gap.
 
+### Smart guidance
+
+- **Check next** - a green badge marks the unchecked filter section that
+  would narrow the current candidates the most (computed pessimistically:
+  countries with no data for a clue survive any observation). Hover it to
+  see the worst-case remaining count.
+- **Near-misses** - a country contradicting exactly *one* of your selected
+  clues doesn't silently vanish: it's listed dimmed below the matches with
+  the conflicting clue named in amber ("≠ Centre line colour"). Ranked so
+  countries that matched your *rarest* clues come first, capped at 8, and
+  only shown while 8 or fewer candidates are confirmed. One misread line
+  colour can no longer eliminate the correct country without trace.
+- **Clue cards** - click any result row to unfold that country's full
+  recorded profile (drive side, line colours, chevrons, stop sign,
+  currency, language, script, letters, road words) right in the panel;
+  the ↗ button opens its Meta Lineup page instead.
+
 ### What's different? (tie-breaker)
 
 When you narrow the list to between two and six confirmed candidates, a

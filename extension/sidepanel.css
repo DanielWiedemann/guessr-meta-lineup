@@ -689,9 +689,11 @@ body {
   justify-content: center;
 }
 
-/* Result rows open the country's Meta Lineup page. */
+/* Result rows expand into an inline clue card; the ↗ button opens the
+   country's Meta Lineup page. */
 #results li.result-row {
   cursor: pointer;
+  flex-wrap: wrap;
 }
 
 #results li.result-row:hover {
@@ -699,10 +701,105 @@ body {
   background: #131c2e;
 }
 
+#results.has-open-card {
+  max-height: 320px;
+}
+
+.result-row .cname {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-link {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: #475569;
+  cursor: pointer;
+  padding: 3px 4px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.row-link:hover {
+  color: #94a3b8;
+  background: #1e293b;
+}
+
+/* Inline clue card: the country's full recorded profile. */
+.clue-card {
+  width: 100%;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #1e293b;
+  cursor: default;
+}
+
+.cc-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.cc-cat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  width: 118px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #64748b;
+  padding-top: 2px;
+}
+
+.cc-none {
+  font-size: 11px;
+  color: #475569;
+  font-style: italic;
+}
+
 /* Countries kept only because a selected clue has no data for them yet —
    still possible, but visually secondary to confirmed matches. */
 #results li.uncertain {
   opacity: 0.5;
+}
+
+/* Near-misses: contradict exactly one selected clue. Dimmer than unknowns,
+   with the conflicting clue named in amber. */
+#results li.nearmiss {
+  opacity: 0.42;
+}
+
+#results li.nearmiss:hover,
+#results li.uncertain:hover,
+#results li.card-open {
+  opacity: 1;
+}
+
+.miss-note {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: #f59e0b;
+  white-space: nowrap;
+}
+
+/* "Check this next" badge on the most decisive unchecked category. */
+.next-badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #062018;
+  background: #34d399;
+  border-radius: 999px;
+  padding: 1.5px 7px;
 }
 
 .uncertain-badge {

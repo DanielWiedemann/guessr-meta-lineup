@@ -224,41 +224,42 @@ function idx(order, v) {
 }
 
 // --- Matching --------------------------------------------------------------
-// AND across categories. Within a category, OR by default, AND for letters.
-// Critically: a country with NO data for a selected category is treated as
-// "unknown, still possible" — never excluded. Excluding on missing data is
-// what silently dropped correct answers (Australia had no road-line colour,
-// so selecting any colour wrongly hid it). Countries kept only via such a
-// gap are returned as "uncertain" so the UI can dim them and list them
-// after the confirmed matches instead of flooding the list.
-function matchesFilters(country) {
-  let uncertain = false;
+// AND across categories. Within a category, OR by default, AND for letters
+// (or per the live AND/OR toggle). Two safety layers on top:
+//  * A country with NO data for a selected category is "unknown, still
+//    possible" — never excluded (unless the category is `complete`
+//    knowledge, where empty genuinely means "has none"). Excluding on
+//    missing data once silently hid correct answers.
+//  * Instead of a bare yes/no, this returns WHICH categories missed — so
+//    a country contradicting exactly one clue can be shown as a dimmed
+//    near-miss ("differs: edge line") rather than vanishing without
+//    trace. One misread clue in-game should never be able to silently
+//    remove the correct country.
+function evaluateCountry(country) {
+  const missCats = [];
+  const unknownCats = [];
+  let selectedCats = 0;
   for (const cat of CATEGORIES) {
     const selected = state.selected.get(cat.id);
     if (selected.size === 0) continue;
+    selectedCats++;
 
     const values = new Set(valuesFor(country, cat));
     if (values.size === 0) {
-      // `complete` categories are fully known: an empty value means
-      // "definitely none" (e.g. a Latin-alphabet country genuinely has no
-      // special Cyrillic letters), so a selected value here is a real
-      // mismatch — exclude it, don't flag it as uncertain. Only categories
-      // with genuine research gaps (road-line / chevron colours) fall
-      // through to the "unknown, still possible" branch.
-      if (cat.complete) return "no";
-      uncertain = true; // honest gap → still possible, but flagged
+      if (cat.complete) missCats.push(cat); // fully-known category: empty = definitely none
+      else unknownCats.push(cat); // honest gap → still possible, flagged
       continue;
     }
 
+    let ok;
     if (state.matchMode.get(cat.id) === "and") {
-      for (const v of selected) if (!values.has(v)) return "no";
+      ok = [...selected].every((v) => values.has(v));
     } else {
-      let ok = false;
-      for (const v of selected) if (values.has(v)) { ok = true; break; }
-      if (!ok) return "no";
+      ok = [...selected].some((v) => values.has(v));
     }
+    if (!ok) missCats.push(cat);
   }
-  return uncertain ? "uncertain" : "match";
+  return { missCats, unknownCats, selectedCats };
 }
 
 function hasAnyFilterSelected() {
@@ -398,6 +399,7 @@ function renderFilters() {
 
     const section = document.createElement("section");
     section.className = "filter-category";
+    section.dataset.catId = cat.id;
 
     const isCollapsed = state.collapsed.has(cat.id);
     const selectedCount = state.selected.get(cat.id)?.size ?? 0;
@@ -421,7 +423,7 @@ function renderFilters() {
       // the heading (icon + name) shrinks to content and the switch + the
       // collapse chevron follow it in a flex row; the chevron gets its own
       // click target so the whole row still collapses/expands.
-      heading.innerHTML = `<span class="heading-left">${headerIcon(cat.icon ?? cat.kind)}<span class="heading-name">${cat.name}${selectedCount ? ` (${selectedCount})` : ""}</span></span>`;
+      heading.innerHTML = `<span class="heading-left">${headerIcon(cat.icon ?? cat.kind)}<span class="heading-name">${cat.name}${selectedCount ? ` (${selectedCount})` : ""}</span><span class="next-badge" hidden></span></span>`;
       const mode = state.matchMode.get(cat.id);
       const toggle = document.createElement("button");
       toggle.type = "button";
@@ -448,7 +450,7 @@ function renderFilters() {
       section.appendChild(row);
     } else {
       heading.innerHTML =
-        `<span class="heading-left">${headerIcon(cat.icon ?? cat.kind)}<span class="heading-name">${cat.name}${selectedCount ? ` (${selectedCount})` : ""}</span></span>` + chevron;
+        `<span class="heading-left">${headerIcon(cat.icon ?? cat.kind)}<span class="heading-name">${cat.name}${selectedCount ? ` (${selectedCount})` : ""}</span><span class="next-badge" hidden></span></span>` + chevron;
       section.appendChild(heading);
     }
 
@@ -539,23 +541,71 @@ function renderFilters() {
     section.appendChild(grid);
     container.appendChild(section);
   }
+
+  // Re-applying after a rebuild (collapse/expand wipes the badge elements).
+  if (state.lastConfirmed) updateNextBadge(state.lastConfirmed);
 }
 
 function renderResults() {
+  // Three tiers:
+  //  * confirmed  - every selected clue fits recorded data
+  //  * uncertain  - fits everything that IS recorded, but some selected
+  //                 clue has no data for this country ("?")
+  //  * near-miss  - contradicts exactly ONE selected clue (only shown when
+  //                 2+ clues are selected) - the safety net against a
+  //                 single misread observation eliminating the answer
   const confirmed = [];
   const uncertain = [];
+  let nearMiss = [];
   for (const country of state.countries) {
-    const verdict = matchesFilters(country);
-    if (verdict === "match") confirmed.push(country);
-    else if (verdict === "uncertain") uncertain.push(country);
+    const r = evaluateCountry(country);
+    if (r.missCats.length === 0 && r.unknownCats.length === 0) confirmed.push(country);
+    else if (r.missCats.length === 0) uncertain.push({ country, unknownCats: r.unknownCats });
+    else if (r.missCats.length === 1 && r.selectedCats >= 2) nearMiss.push({ country, miss: r.missCats[0] });
   }
-  const matching = [...confirmed, ...uncertain.map((c) => ({ ...c, _uncertain: true }))];
 
+  // Near-misses can flood the list (with 2 clues picked, missing either one
+  // qualifies). Rank them by how RARE the clues they DID satisfy are - a
+  // country that matched a 2-country letter but contradicts a 50-country
+  // colour is a serious "did I misread that?" candidate; the reverse is
+  // noise - and show only the strongest few, only while the confirmed list
+  // is small enough that you're actually deciding.
+  if (confirmed.length > 8) {
+    nearMiss = [];
+  } else if (nearMiss.length > 0) {
+    const catMatchCount = new Map();
+    for (const cat of CATEGORIES) {
+      if (state.selected.get(cat.id).size === 0) continue;
+      let n = 0;
+      for (const c of state.countries) {
+        const values = new Set(valuesFor(c, cat));
+        if (values.size === 0) continue;
+        const sel = state.selected.get(cat.id);
+        const ok = state.matchMode.get(cat.id) === "and"
+          ? [...sel].every((v) => values.has(v))
+          : [...sel].some((v) => values.has(v));
+        if (ok) n++;
+      }
+      catMatchCount.set(cat.id, n);
+    }
+    const support = (nm) => {
+      let min = Infinity;
+      for (const [catId, n] of catMatchCount) {
+        if (catId === nm.miss.id) continue;
+        if (n < min) min = n;
+      }
+      return min;
+    };
+    nearMiss.sort((a, b) => support(a) - support(b));
+    nearMiss = nearMiss.slice(0, 8);
+  }
+
+  const parts = [`${confirmed.length} of ${state.countries.length} match`];
+  if (uncertain.length) parts.push(`${uncertain.length} unknown`);
+  if (nearMiss.length) parts.push(`${nearMiss.length} near (1 clue off)`);
   document.getElementById("results-summary").textContent = !hasAnyFilterSelected()
     ? `Showing all ${state.countries.length} - pick filters above to narrow it down`
-    : uncertain.length > 0
-      ? `${confirmed.length} of ${state.countries.length} match · ${uncertain.length} unknown (no data yet)`
-      : `${confirmed.length} of ${state.countries.length} possible matches`;
+    : parts.join(" · ");
 
   // Tie-breaker: when a handful of definite candidates remain, offer the
   // "What's different?" comparison so you know which clue to hunt for.
@@ -570,10 +620,20 @@ function renderResults() {
     else closeCompare();
   }
 
+  state.lastConfirmed = confirmed;
+  updateNextBadge(confirmed);
+
   const list = document.getElementById("results");
   list.innerHTML = "";
+  list.classList.remove("has-open-card");
 
-  if (matching.length === 0) {
+  const rows = [
+    ...confirmed.map((country) => ({ country })),
+    ...uncertain,
+    ...nearMiss,
+  ];
+
+  if (rows.length === 0) {
     const li = document.createElement("li");
     li.className = "empty";
     li.textContent = "No matches for this combination.";
@@ -581,17 +641,19 @@ function renderResults() {
     return;
   }
 
-  for (const country of matching) {
+  for (const row of rows) {
+    const country = row.country;
     const li = document.createElement("li");
     li.className = "result-row";
-    li.title = `Open ${country.name} on Meta Lineup`;
-    li.addEventListener("click", () => {
-      window.open(`${SITE_URL}/country/${country.code}`, "_blank", "noopener");
-    });
-    if (country._uncertain) {
+    li.title = `${country.name} - click to see its recorded clues`;
+    if (row.unknownCats) {
       li.classList.add("uncertain");
-      li.title = `${country.name} - no data yet for one of your selected clues. Click to open its Meta Lineup page.`;
+      li.title = `${country.name} - no data yet for: ${row.unknownCats.map((c) => c.name).join(", ")}. Click to see its recorded clues.`;
+    } else if (row.miss) {
+      li.classList.add("nearmiss");
+      li.title = `${country.name} - contradicts your ${row.miss.name} pick, all other clues fit. Click to see its recorded clues.`;
     }
+    li.addEventListener("click", () => toggleClueCard(li, country));
 
     const img = document.createElement("img");
     img.alt = "";
@@ -609,18 +671,106 @@ function renderResults() {
     li.appendChild(img);
 
     const span = document.createElement("span");
+    span.className = "cname";
     span.textContent = country.name;
     li.appendChild(span);
 
-    if (country._uncertain) {
+    if (row.miss) {
+      const note = document.createElement("span");
+      note.className = "miss-note";
+      note.textContent = `≠ ${row.miss.name}`;
+      li.appendChild(note);
+    } else if (row.unknownCats) {
       const q = document.createElement("span");
       q.className = "uncertain-badge";
       q.textContent = "?";
       li.appendChild(q);
     }
 
+    const link = document.createElement("button");
+    link.type = "button";
+    link.className = "row-link";
+    link.title = `Open ${country.name} on Meta Lineup`;
+    link.innerHTML = `<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M4.5 2H2v8h8V7.5M7 2h3v3M10 2 5.5 6.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    link.addEventListener("click", (e) => {
+      e.stopPropagation();
+      window.open(`${SITE_URL}/country/${country.code}`, "_blank", "noopener");
+    });
+    li.appendChild(link);
+
     list.appendChild(li);
   }
+}
+
+// --- "Check this next" guidance ---------------------------------------------
+// Among the categories with nothing selected, find the one whose clue would
+// narrow the current confirmed candidates the most, pessimistically: a
+// candidate with no data for the category survives any observation, so it
+// counts against every outcome. Badge that category's heading.
+function updateNextBadge(cands) {
+  for (const b of document.querySelectorAll(".next-badge")) b.hidden = true;
+  if (!cands || cands.length < 2) return;
+
+  let best = null;
+  for (const cat of CATEGORIES) {
+    if (state.selected.get(cat.id).size > 0) continue;
+    const groups = new Map();
+    let unknown = 0;
+    for (const c of cands) {
+      const vals = [...new Set(valuesFor(c, cat))].sort();
+      if (vals.length === 0) { unknown++; continue; }
+      const sig = vals.join("|");
+      groups.set(sig, (groups.get(sig) ?? 0) + 1);
+    }
+    if (groups.size < 2) continue;
+    const worst = Math.max(...groups.values()) + unknown;
+    if (worst >= cands.length) continue; // wouldn't actually narrow anything
+    if (!best || worst < best.worst || (worst === best.worst && groups.size > best.nGroups)) {
+      best = { cat, worst, nGroups: groups.size };
+    }
+  }
+  if (!best) return;
+
+  const badge = document.querySelector(`.filter-category[data-cat-id="${best.cat.id}"] .next-badge`);
+  if (badge) {
+    badge.hidden = false;
+    badge.textContent = "check next";
+    badge.title = `Best clue to check next - worst case leaves ${best.worst} of the ${cands.length} candidates.`;
+  }
+}
+
+// --- Inline clue cards -------------------------------------------------------
+// Click a result row to unfold that country's full recorded clue profile
+// right in the panel - no site visit needed to sanity-check a guess.
+function clueCard(country) {
+  const card = document.createElement("div");
+  card.className = "clue-card";
+  let html = "";
+  for (const cat of CATEGORIES) {
+    const vals = sortOptions(cat, [...new Set(valuesFor(country, cat))]);
+    if (vals.length === 0) continue;
+    html +=
+      `<div class="cc-row"><span class="cc-cat">${headerIcon(cat.icon ?? cat.kind)}<span>${cat.name}</span></span>` +
+      `<span class="cmp-chips">${compareValueChips(cat, vals, new Set())}</span></div>`;
+  }
+  card.innerHTML = html || `<div class="cc-none">No clue data recorded yet.</div>`;
+  return card;
+}
+
+function toggleClueCard(li, country) {
+  const wasOpen = !!li.querySelector(".clue-card");
+  for (const open of document.querySelectorAll("#results .clue-card")) {
+    open.parentElement.classList.remove("card-open");
+    open.remove();
+  }
+  const list = document.getElementById("results");
+  if (wasOpen) {
+    list.classList.remove("has-open-card");
+    return;
+  }
+  li.classList.add("card-open");
+  li.appendChild(clueCard(country));
+  list.classList.add("has-open-card");
 }
 
 // --- Tie-breaker "What's different?" overlay --------------------------------
