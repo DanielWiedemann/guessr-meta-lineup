@@ -244,16 +244,34 @@ const latinLetters: Record<string, string[]> = {
   za: ["ê", "ô"], // Afrikaans circumflexes appear on signage
 };
 
+// Distinctive Cyrillic letters per country — every non-core letter that
+// language's alphabet actually contains, so a letter matches ALL countries
+// that use it (not just the "most famous" one). Verified against each
+// alphabet's Wikipedia article. Key correctness points that were wrong
+// before: Belarusian/Kazakh/Kyrgyz/Mongolian all include the Russian
+// ё/ы/э (Kazakh/Kyrgyz/Mongolian also ъ), so those letters must match
+// them too, not Russia alone; Macedonian shares љ/њ/џ/ј with Serbian on
+// top of its unique ѓ/ќ/ѕ. Ukrainian genuinely does NOT use ё/ы/э/ъ (it
+// uses є/и/е and an apostrophe), so it correctly never matches those.
 const cyrillicLetters: Record<string, string[]> = {
-  by: ["ў", "і"],
-  bg: ["ъ"],
-  mk: ["ѓ", "ќ", "џ", "ѕ"],
+  // Russian: hard sign + the three letters Ukrainian/Serbian/Macedonian lack
   ru: ["ъ", "ы", "э", "ё"],
-  ua: ["ї", "і", "є", "ґ"],
-  rs: ["љ", "њ", "ђ", "ћ", "џ", "ј"],
-  kz: ["ә", "ғ", "қ", "ң", "ө", "ұ", "ү", "һ", "і"],
-  kg: ["ң", "ө", "ү"],
-  mn: ["ө", "ү"],
+  // Belarusian: unique ў + dotted і, and it keeps ё/ы/э (no ъ — uses an apostrophe)
+  by: ["ў", "і", "ё", "ы", "э"],
+  // Ukrainian: its four distinctive letters; no ё/ы/э/ъ at all
+  ua: ["є", "і", "ї", "ґ"],
+  // Bulgarian: ъ is a full vowel here; the rest of its alphabet is the shared core
+  bg: ["ъ"],
+  // Serbian: the six Serbian-specific letters
+  rs: ["ђ", "ј", "љ", "њ", "ћ", "џ"],
+  // Macedonian: unique ѓ/ќ/ѕ plus љ/њ/џ/ј shared with Serbian (uses ѓ/ќ where Serbian has ђ/ћ)
+  mk: ["ѓ", "ќ", "ѕ", "џ", "љ", "њ", "ј"],
+  // Kazakh: 9 Kazakh-specific letters + the full Russian set (incl. ё/ы/э/ъ)
+  kz: ["ә", "ғ", "қ", "ң", "ө", "ұ", "ү", "һ", "і", "ъ", "ы", "э", "ё"],
+  // Kyrgyz: ң/ө/ү + the full Russian set
+  kg: ["ң", "ө", "ү", "ъ", "ы", "э", "ё"],
+  // Mongolian: ө/ү + the full Russian set
+  mn: ["ө", "ү", "ъ", "ы", "э", "ё"],
 };
 
 // ---------------------------------------------------------------------------
