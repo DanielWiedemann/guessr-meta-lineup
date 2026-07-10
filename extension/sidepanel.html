@@ -6,20 +6,16 @@
     <link rel="stylesheet" href="sidepanel.css" />
   </head>
   <body>
-    <header>
-      <img src="icons/icon48.png" alt="" width="24" height="24" />
-      <h1>Meta Lineup Filter</h1>
-    </header>
-
     <p id="status">Loading countries and filters…</p>
 
     <div id="app" hidden>
-      <div id="results-summary"></div>
-      <button id="clear-btn" type="button">Clear all filters</button>
-
       <div id="filters"></div>
 
-      <h2 class="results-heading">Possible matches</h2>
+      <div class="results-header">
+        <h2 class="results-heading">Possible matches</h2>
+        <button id="clear-btn" type="button">Clear filters</button>
+      </div>
+      <div id="results-summary"></div>
       <ul id="results"></ul>
     </div>
 

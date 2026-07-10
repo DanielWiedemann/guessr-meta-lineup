@@ -11,9 +11,9 @@ body {
   height: 100%;
 }
 
-/* The panel is a fixed-height column: header on top, filters scrolling in
-   the middle, and the Possible matches section pinned (sticky) at the
-   bottom so it stays visible while you pick filters. */
+/* The panel is a fixed-height column: filters scroll in the middle, and
+   the Possible matches section (heading + Clear button + list) is pinned
+   at the bottom so it stays visible while you pick filters. */
 body {
   margin: 0;
   padding: 16px 16px 10px;
@@ -39,31 +39,12 @@ body {
   display: none;
 }
 
-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-header img {
-  border-radius: 4px;
-}
-
-header h1 {
-  font-size: 15px;
-  font-weight: 700;
-  margin: 0;
-}
-
 #status {
   color: #94a3b8;
+  padding: 8px 0;
 }
 
-/* Flex `order` moves the summary down into the sticky results area
-   (heading → summary → list) without touching the DOM. */
 #results-summary {
-  order: 3;
   font-size: 12px;
   color: #34d399;
   font-weight: 600;
@@ -72,19 +53,15 @@ header h1 {
 }
 
 #clear-btn {
-  order: 0;
-  display: block;
-  width: 100%;
-  margin-bottom: 12px;
-  padding: 6px 10px;
+  flex-shrink: 0;
+  padding: 4px 12px;
   border-radius: 999px;
   border: 1px solid #1e293b;
   background: #0f172a;
   color: #94a3b8;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  flex-shrink: 0;
 }
 
 #clear-btn:hover {
@@ -99,7 +76,6 @@ header h1 {
 
 /* The scrolling middle: all filter sections. */
 #filters {
-  order: 1;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -394,21 +370,28 @@ header h1 {
 
 /* The sticky bottom: heading, summary, and a results list capped at five
    rows (it scrolls past that, and simply shrinks when fewer match). */
-.results-heading {
-  order: 2;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: #64748b;
-  margin: 0 0 6px;
+/* Heading + Clear button share one row, pinned above the results list. */
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
   padding-top: 10px;
   border-top: 1px solid #1e293b;
   flex-shrink: 0;
 }
 
+.results-heading {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+  margin: 0;
+}
+
 #results {
-  order: 4;
   list-style: none;
   margin: 0;
   padding: 0;
