@@ -15,7 +15,11 @@ seeing (or hearing):
   tile).
 - **Chevron background** and **Chevron arrow** — drawn as curve-warning
   chevron signs in the actual colour scheme.
-- **Language** — a language spoken there.
+- **Language** — a language spoken there. Has an OR/AND toggle in its
+  heading: OR (default) matches any picked language, AND requires all of
+  them (e.g. English + French → Canada / Rwanda / Vanuatu). Widely-spoken
+  second languages count — Russian, for instance, is tagged for Ukraine
+  and the Baltics as well as Russia.
 - **Writing script** — recognise an alphabet by its *shape* even if you
   can't read it: each tile shows sample glyphs (Thai กสด vs the rounder
   Lao ກສດ, Khmer, Chinese characters, Japanese kana, Korean Hangul,
@@ -65,6 +69,17 @@ constrain those countries (see the missing-data rule above). The US and
 its small territories are deliberately left untagged for chevron colour —
 Plonk It's own research found no single national pattern, so inventing one
 would fabricate a signal rather than honestly reflect a gap.
+
+### What's different? (tie-breaker)
+
+When you narrow the list to between two and six confirmed candidates, a
+**⚖ What's different?** button appears next to the results. It opens a
+panel showing only the clue categories where those candidates actually
+*differ*, and highlights the values unique to a single country — the exact
+thing to look for in-game to break a 50/50 (e.g. among Cyrillic countries,
+`ў` means Belarus, `ґ/є/ї` means Ukraine, `гудамж` means Mongolia).
+Categories they all share are listed at the bottom so you don't waste time
+on them.
 
 No build step — plain HTML/CSS/JS with inline SVG icons, reading directly
 from the same Supabase project as

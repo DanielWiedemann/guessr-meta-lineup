@@ -145,15 +145,15 @@ const countryLanguages: Record<string, string[]> = {
   al: ["Albanian"], ad: ["Catalan"], at: ["German"], "pt-az": ["Portuguese"],
   by: ["Belarusian", "Russian"], be: ["Dutch", "French", "German"], bg: ["Bulgarian"],
   hr: ["Croatian"], cy: ["Greek", "Turkish"], cz: ["Czech"], dk: ["Danish"],
-  ee: ["Estonian"], fo: ["Faroese", "Danish"], fi: ["Finnish", "Swedish"], fr: ["French"],
+  ee: ["Estonian", "Russian"], fo: ["Faroese", "Danish"], fi: ["Finnish", "Swedish"], fr: ["French"],
   de: ["German"], gi: ["English"], gr: ["Greek"], hu: ["Hungarian"], is: ["Icelandic"],
   ie: ["English", "Irish"], im: ["English"], it: ["Italian"], je: ["English"],
-  lv: ["Latvian"], li: ["German"], lt: ["Lithuanian"], lu: ["Luxembourgish", "French", "German"],
+  lv: ["Latvian", "Russian"], li: ["German"], lt: ["Lithuanian"], lu: ["Luxembourgish", "French", "German"],
   "pt-ma": ["Portuguese"], mt: ["Maltese", "English"], mc: ["French"], me: ["Montenegrin"],
   nl: ["Dutch"], mk: ["Macedonian"], no: ["Norwegian"], pl: ["Polish"], pt: ["Portuguese"],
   ro: ["Romanian"], ru: ["Russian"], sm: ["Italian"], rs: ["Serbian"], sk: ["Slovak"],
   si: ["Slovenian"], es: ["Spanish"], sj: ["Norwegian"], se: ["Swedish"],
-  ch: ["German", "French", "Italian", "Romansh"], tr: ["Turkish"], ua: ["Ukrainian"],
+  ch: ["German", "French", "Italian", "Romansh"], tr: ["Turkish"], ua: ["Ukrainian", "Russian"],
   gb: ["English"],
   // Africa
   bw: ["English"], eg: ["Arabic"], sz: ["English"], gh: ["English"], ke: ["Swahili", "English"],
@@ -258,8 +258,11 @@ const cyrillicLetters: Record<string, string[]> = {
   ru: ["ъ", "ы", "э", "ё"],
   // Belarusian: unique ў + dotted і, and it keeps ё/ы/э (no ъ — uses an apostrophe)
   by: ["ў", "і", "ё", "ы", "э"],
-  // Ukrainian: its four distinctive letters; no ё/ы/э/ъ at all
-  ua: ["є", "і", "ї", "ґ"],
+  // Ukrainian: its four distinctive letters (є/і/ї/ґ). Russian is also
+  // widely spoken and written across Ukraine, and Russian-language signage,
+  // shopfronts and ads carry ъ/ы/э/ё - so those match Ukraine too, not just
+  // Russia. (The four Ukrainian-only letters still pin Ukraine uniquely.)
+  ua: ["є", "і", "ї", "ґ", "ъ", "ы", "э", "ё"],
   // Bulgarian: ъ is a full vowel here; the rest of its alphabet is the shared core
   bg: ["ъ"],
   // Serbian: the six Serbian-specific letters

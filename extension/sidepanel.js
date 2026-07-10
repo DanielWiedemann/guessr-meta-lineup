@@ -121,6 +121,8 @@ const state = {
   // category id -> "and" | "or" (mutable for categories with toggle: true)
   matchMode: new Map(),
   collapsed: new Set(),
+  // confirmed matches currently eligible for the "What's different?" compare
+  compareList: [],
 };
 
 function valuesFor(country, cat) {
@@ -492,6 +494,19 @@ function renderResults() {
       ? `${confirmed.length} of ${state.countries.length} match · ${uncertain.length} unknown (no data yet)`
       : `${confirmed.length} of ${state.countries.length} possible matches`;
 
+  // Tie-breaker: when a handful of definite candidates remain, offer the
+  // "What's different?" comparison so you know which clue to hunt for.
+  state.compareList = confirmed;
+  const cmpBtn = document.getElementById("compare-btn");
+  const eligible = confirmed.length >= 2 && confirmed.length <= 6;
+  cmpBtn.hidden = !eligible;
+  // Keep an open overlay live as filters change; close it once it no longer applies.
+  const overlay = document.getElementById("compare-overlay");
+  if (!overlay.hidden) {
+    if (eligible) renderCompare();
+    else closeCompare();
+  }
+
   const list = document.getElementById("results");
   list.innerHTML = "";
 
@@ -540,6 +555,94 @@ function renderResults() {
   }
 }
 
+// --- Tie-breaker "What's different?" overlay --------------------------------
+// Given the 2-6 confirmed candidates, show only the categories where they
+// DIFFER, and within each, highlight the value(s) unique to one country -
+// that's the clue to hunt for in-game to break the 50/50.
+
+function arraysEqual(a, b) {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
+function compareValueChips(cat, values, uniqueSet) {
+  if (values.length === 0) return `<span class="cmp-none">no data</span>`;
+  return values
+    .map((v) => {
+      const uniq = uniqueSet.has(v) ? " cmp-uniq" : "";
+      let dot = "";
+      if (cat.kind === "road" || cat.kind === "chevron") {
+        const hex = COLOR_HEX[v];
+        dot = hex
+          ? `<span class="cmp-dot" style="background:${hex}"></span>`
+          : `<span class="cmp-dot cmp-dot-none"></span>`;
+      }
+      return `<span class="cmp-chip${uniq}">${dot}${escapeXml(optionLabel(cat, v))}</span>`;
+    })
+    .join("");
+}
+
+function renderCompare() {
+  const countries = state.compareList;
+  const overlay = document.getElementById("compare-overlay");
+  if (countries.length < 2) {
+    overlay.hidden = true;
+    return;
+  }
+
+  const rows = [];
+  const shared = [];
+  for (const cat of CATEGORIES) {
+    const perCountry = countries.map((c) => sortOptions(cat, [...new Set(valuesFor(c, cat))]));
+    if (perCountry.every((v) => v.length === 0)) continue; // nothing recorded
+    const allSame = perCountry.every((v) => arraysEqual(v, perCountry[0]));
+    if (allSame) { shared.push(cat.name); continue; }
+    rows.push({ cat, perCountry });
+  }
+
+  const flag = (c) => `<img class="cmp-flag" src="${flagUrl(c.code, c.flag_code)}" alt="" />`;
+
+  let body;
+  if (rows.length === 0) {
+    body = `<p class="cmp-empty">These share every recorded clue - the data can't separate them.</p>`;
+  } else {
+    body = rows
+      .map(({ cat, perCountry }) => {
+        // a value is a giveaway if exactly one candidate has it
+        const counts = new Map();
+        for (const vals of perCountry) for (const v of vals) counts.set(v, (counts.get(v) ?? 0) + 1);
+        const cells = countries
+          .map((c, i) => {
+            const uniqueSet = new Set(perCountry[i].filter((v) => counts.get(v) === 1));
+            return `<div class="cmp-country">${flag(c)}<span class="cmp-cname">${escapeXml(c.name)}</span>` +
+              `<span class="cmp-chips">${compareValueChips(cat, perCountry[i], uniqueSet)}</span></div>`;
+          })
+          .join("");
+        return `<div class="cmp-row"><div class="cmp-cat">${headerIcon(cat.icon ?? cat.kind)}<span>${cat.name}</span></div>${cells}</div>`;
+      })
+      .join("");
+  }
+
+  const sharedNote = shared.length
+    ? `<p class="cmp-shared">Same across all: ${shared.join(", ")}.</p>`
+    : "";
+
+  overlay.innerHTML =
+    `<div class="cmp-card">` +
+    `<div class="cmp-head"><span>What's different? <span class="cmp-count">${countries.length} candidates</span></span>` +
+    `<button type="button" class="cmp-close" aria-label="Close">✕</button></div>` +
+    `<p class="cmp-sub">Highlighted values are unique to one country - spot that clue to break the tie.</p>` +
+    `<div class="cmp-body">${body}${sharedNote}</div>` +
+    `</div>`;
+
+  overlay.querySelector(".cmp-close").addEventListener("click", closeCompare);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeCompare(); });
+  overlay.hidden = false;
+}
+
+function closeCompare() {
+  document.getElementById("compare-overlay").hidden = true;
+}
+
 function updateClearButton() {
   document.getElementById("clear-btn").disabled = !hasAnyFilterSelected();
 }
@@ -560,6 +663,8 @@ async function init() {
     renderResults();
     updateClearButton();
     document.getElementById("clear-btn").addEventListener("click", clearFilters);
+    document.getElementById("compare-btn").addEventListener("click", renderCompare);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeCompare(); });
   } catch (err) {
     document.getElementById("status").textContent = `Couldn't load filter data: ${err.message}`;
   }
