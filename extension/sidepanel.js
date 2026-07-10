@@ -59,6 +59,8 @@ const CATEGORIES = [
     hint: "Background colour of curve-warning chevrons." },
   { id: "chevron_arrow_color", col: "chevron_arrow_color", name: "Chevron arrow", kind: "chevron", variant: "arrow", match: "or",
     hint: "Arrow colour on curve-warning chevrons." },
+  { id: "currency_symbols", col: "currency_symbols", name: "Currency symbol", kind: "currency", match: "or", complete: true,
+    hint: "The symbol on price boards, shopfronts and fuel signs." },
   { id: "languages", col: "languages", name: "Language", kind: "pill", icon: "speech", match: "or", toggle: true,
     hint: "A language spoken here. OR = any of them; AND = all must be spoken." },
   { id: "scripts", col: "scripts", name: "Writing script", kind: "script", match: "or",
@@ -165,6 +167,12 @@ function sortOptions(cat, values) {
   if (cat.kind === "script") {
     return values.sort((a, b) => idx(SCRIPT_ORDER, a) - idx(SCRIPT_ORDER, b));
   }
+  if (cat.kind === "currency") {
+    // most widely-shared symbols first ($, €, £...), then the distinctive
+    // ones, so the common cases are easy to reach.
+    const count = (v) => state.countries.filter((c) => valuesFor(c, cat).includes(v)).length;
+    return values.sort((a, b) => count(b) - count(a) || a.localeCompare(b, "en"));
+  }
   // letters + languages: locale-aware alphabetical
   return values.sort((a, b) => a.localeCompare(b, "en"));
 }
@@ -252,6 +260,9 @@ function headerIcon(kind) {
       break;
     case "speech": // speech bubble
       inner = `<path d="M2 3.5h12v7H8l-3 3v-3H2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>`;
+      break;
+    case "currency": // banknote with a coin
+      inner = `<rect x="1.5" y="4" width="13" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/>`;
       break;
     default:
       inner = "";
@@ -410,12 +421,13 @@ function renderFilters() {
       section.appendChild(hint);
     }
 
-    const usesTiles = cat.kind === "letter" || cat.kind === "road" || cat.kind === "chevron" || cat.kind === "stop" || cat.kind === "side" || cat.kind === "script";
+    const usesTiles = cat.kind === "letter" || cat.kind === "road" || cat.kind === "chevron" || cat.kind === "stop" || cat.kind === "side" || cat.kind === "script" || cat.kind === "currency";
     const grid = document.createElement("div");
     grid.className = !usesTiles
       ? "filter-options"
       : cat.kind === "side" ? "side-grid"
       : cat.kind === "script" ? "script-grid"
+      : cat.kind === "currency" ? "currency-grid"
       : "tile-grid";
 
     for (const value of options) {
@@ -440,6 +452,13 @@ function renderFilters() {
         label.className = "letter-tile";
         const glyph = document.createElement("span");
         glyph.className = "letter-glyph";
+        glyph.textContent = value;
+        label.appendChild(glyph);
+      } else if (cat.kind === "currency") {
+        label.className = "letter-tile currency-tile";
+        const glyph = document.createElement("span");
+        glyph.className = "currency-glyph";
+        if (value.length >= 3) glyph.classList.add("currency-glyph-long");
         glyph.textContent = value;
         label.appendChild(glyph);
       } else if (cat.kind === "side") {

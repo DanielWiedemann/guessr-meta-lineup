@@ -461,6 +461,30 @@ body {
   pointer-events: none;
 }
 
+/* Currency symbols vary in width (€ vs "лв" vs "CFA"), so they wrap in a
+   flex grid and each tile sizes to its symbol. */
+.currency-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.currency-tile {
+  width: auto;
+  min-width: 34px;
+  padding: 0 9px;
+}
+
+.currency-glyph {
+  font-size: 16px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.currency-glyph-long {
+  font-size: 13px;
+}
+
 /* SVG option tiles (road lines, chevrons, stop signs) — the icon *is* the
    label: a road segment with the coloured line, a chevron sign in that
    colour scheme, or a stop sign showing the actual wording/script. A ring

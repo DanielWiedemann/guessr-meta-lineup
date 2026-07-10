@@ -15,6 +15,11 @@ seeing (or hearing):
   tile).
 - **Chevron background** and **Chevron arrow** — drawn as curve-warning
   chevron signs in the actual colour scheme.
+- **Currency symbol** — the symbol on price boards, shopfronts and fuel
+  signs, as a tile per symbol (€, £, ₴, ฿, ₩, zł, Kč, R$, лв …), sorted
+  with the most widely-shared ones first. Distinctive symbols pin a
+  country instantly (₴ → Ukraine, ฿ → Thailand); shared ones like $ or €
+  narrow to that currency zone. Sourced from `data/currency.ts`.
 - **Language** — a language spoken there. Has an OR/AND toggle in its
   heading: OR (default) matches any picked language, AND requires all of
   them (e.g. English + French → Canada / Rwanda / Vanuatu). Widely-spoken

@@ -31,6 +31,7 @@
 // (after scripts/migrate-to-supabase.ts, which rebuilds the country rows).
 
 import { createClient } from "@supabase/supabase-js";
+import { currency } from "../data/currency";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -52,6 +53,7 @@ type Facts = {
   chevron_arrow_color: string[];
   scripts: string[];
   road_name_words: string[];
+  currency_symbols: string[];
 };
 
 // ---------------------------------------------------------------------------
@@ -608,6 +610,30 @@ roadWord("Lam", ["bt"]); // Thimphu street names (Norzin Lam, Chang Lam)
 roadWord("Lalana", ["mg"]); // Malagasy "street" alongside French Rue
 
 // ---------------------------------------------------------------------------
+// Currency symbols — derived straight from data/currency.ts (the same
+// GeoHints-sourced facts the website shows) so there's a single source of
+// truth. The "Symbol" field lists variants separated by " / " (e.g.
+// "$ / US$ / U$", "₽ / руб"); we split those, strip a trailing dot on
+// plain tokens (kr. -> kr) and collapse dollar-prefixed variants
+// (US$, C$, MX$, $U, ...) down to "$", so the filter shows one clean tile
+// per distinct symbol a player would actually see.
+function cleanCurrencySymbols(field: string): string[] {
+  const out: string[] = [];
+  for (let tok of field.split(/\s+\/\s+/).map((s) => s.trim()).filter(Boolean)) {
+    if (!tok.includes("/")) tok = tok.replace(/\.$/, ""); // kr. -> kr, but keep B/.
+    if (/^[A-Za-z]{0,3}\$$/.test(tok) || /^\$[A-Za-z]{0,2}$/.test(tok)) tok = "$";
+    if (tok && !out.includes(tok)) out.push(tok);
+  }
+  return out;
+}
+
+const countryCurrency: Record<string, string[]> = {};
+for (const entry of currency.countries) {
+  const symbol = entry.facts.find((f) => f.label === "Symbol")?.value ?? "";
+  countryCurrency[entry.code] = cleanCurrencySymbols(symbol);
+}
+
+// ---------------------------------------------------------------------------
 // Merged web research is edited directly into the maps above once verified
 // — keeping a single source of truth per fact instead of a base + override
 // layering.
@@ -622,7 +648,7 @@ async function run() {
   const allMaps: Record<string, Record<string, unknown>> = {
     countryContinents, countryLanguages, latinLetters, cyrillicLetters,
     stopWording, roadLinesInner, roadLinesOuter, chevrons, countryScripts,
-    roadNameWords,
+    roadNameWords, countryCurrency,
   };
   for (const [mapName, map] of Object.entries(allMaps)) {
     for (const code of Object.keys(map)) {
@@ -647,6 +673,7 @@ async function run() {
         chevron_arrow_color: chevrons[code]?.arrow ?? [],
         scripts: scriptsFor(code),
         road_name_words: roadNameWords[code] ?? [],
+        currency_symbols: countryCurrency[code] ?? [],
       },
     });
   }
@@ -674,6 +701,7 @@ async function run() {
   console.log(`chevron_bg_color: ${counted("chevron_bg_color")}/${updates.length}`);
   console.log(`scripts: ${counted("scripts")}/${updates.length}`);
   console.log(`road_name_words: ${counted("road_name_words")}/${updates.length}`);
+  console.log(`currency_symbols: ${counted("currency_symbols")}/${updates.length}`);
   console.log("Done.");
 }
 
