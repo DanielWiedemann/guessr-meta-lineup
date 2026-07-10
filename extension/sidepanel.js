@@ -438,7 +438,7 @@ function renderResults() {
   const matching = [...confirmed, ...uncertain.map((c) => ({ ...c, _uncertain: true }))];
 
   document.getElementById("results-summary").textContent = !hasAnyFilterSelected()
-    ? `Showing all ${state.countries.length} — pick filters below to narrow it down`
+    ? `Showing all ${state.countries.length} — pick filters above to narrow it down`
     : uncertain.length > 0
       ? `${confirmed.length} of ${state.countries.length} match · ${uncertain.length} unknown (no data yet)`
       : `${confirmed.length} of ${state.countries.length} possible matches`;

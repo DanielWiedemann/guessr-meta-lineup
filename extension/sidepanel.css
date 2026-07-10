@@ -6,14 +6,37 @@
   color-scheme: dark;
 }
 
+html,
+body {
+  height: 100%;
+}
+
+/* The panel is a fixed-height column: header on top, filters scrolling in
+   the middle, and the Possible matches section pinned (sticky) at the
+   bottom so it stays visible while you pick filters. */
 body {
   margin: 0;
-  padding: 16px;
+  padding: 16px 16px 10px;
   background: #020617;
   color: #f1f5f9;
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+#app[hidden] {
+  display: none;
 }
 
 header {
@@ -37,17 +60,22 @@ header h1 {
   color: #94a3b8;
 }
 
+/* Flex `order` moves the summary down into the sticky results area
+   (heading → summary → list) without touching the DOM. */
 #results-summary {
+  order: 3;
   font-size: 12px;
   color: #34d399;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
 }
 
 #clear-btn {
+  order: 0;
   display: block;
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid #1e293b;
@@ -56,6 +84,7 @@ header h1 {
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 #clear-btn:hover {
@@ -66,6 +95,15 @@ header h1 {
 #clear-btn:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+/* The scrolling middle: all filter sections. */
+#filters {
+  order: 1;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .filter-category {
@@ -352,24 +390,33 @@ header h1 {
   text-align: center;
 }
 
+/* The sticky bottom: heading, summary, and a results list capped at five
+   rows (it scrolls past that, and simply shrinks when fewer match). */
 .results-heading {
+  order: 2;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: #64748b;
-  margin: 4px 0 8px;
+  margin: 0 0 6px;
+  padding-top: 10px;
+  border-top: 1px solid #1e293b;
+  flex-shrink: 0;
 }
 
 #results {
+  order: 4;
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-height: 340px;
+  /* 5 rows × 31px + 4 gaps × 4px */
+  max-height: 172px;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 #results li {
@@ -421,9 +468,10 @@ header h1 {
 }
 
 footer {
-  margin-top: 16px;
-  padding-top: 12px;
+  margin-top: 8px;
+  padding-top: 6px;
   border-top: 1px solid #1e293b;
+  flex-shrink: 0;
 }
 
 footer a {
