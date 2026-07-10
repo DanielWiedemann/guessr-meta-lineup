@@ -46,19 +46,18 @@ Supabase.
 
 - [Next.js](https://nextjs.org) (App Router) + TypeScript + Tailwind CSS
 - [Supabase](https://supabase.com) (Postgres) is the single source of truth
-  for countries, metas, variants, facts, and the Chrome extension's filter
-  tags (`filter_categories` / `filter_options` / `country_filter_tags`) —
-  read by both the website and the extension via the public anon key (all
-  tables are public read-only reference data, enforced by RLS). Language
-  is one more filter category in that same table trio rather than its own
-  parallel `languages` table (an earlier version had one) — driving side,
-  language, and plate color are all "a country can have one or more tags
-  from a category," so they share one generic system instead of several
-  differently-shaped ones. When querying more than 1000 rows from a
-  PostgREST endpoint (true for `country_filter_tags` now), page through
-  with the `Range` header — a single unpaginated request silently
-  truncates at 1000, which is exactly what broke the Continent/Language
-  filters until caught during testing.
+  for countries, metas, variants, and facts — read by both the website and
+  the extension via the public anon key (all tables are public read-only
+  reference data, enforced by RLS). The Chrome extension's filter facts
+  (driving side, continent, language, stop-sign wording, road-line and
+  chevron colours, special letters) are **columns on the `countries` table
+  itself** — scalar for single-valued facts, `text[]` for multi-valued
+  ones — rather than a separate `filter_categories` / `filter_options` /
+  `country_filter_tags` trio (an earlier version had that). One robust
+  wide table, one row per country, is simpler to query and reason about
+  than three join tables. An empty array means "not yet researched," and
+  the extension treats that as "still possible," never as a mismatch — so
+  incomplete coverage can never silently exclude the correct answer.
   Content is still authored in version-controlled TypeScript files
   (`data/staticCountries.ts`, `data/staticMetas.ts`, and the per-meta files
   they aggregate) for git history and reviewability — after editing one,

@@ -96,6 +96,21 @@ header h1 {
   color: #94a3b8;
 }
 
+.heading-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.cat-icon {
+  flex-shrink: 0;
+  color: #475569;
+}
+
+.filter-category-heading:hover .cat-icon {
+  color: #64748b;
+}
+
 .filter-category:has(.filter-category-heading[aria-expanded="false"]) {
   margin-bottom: 8px;
 }
@@ -146,14 +161,15 @@ header h1 {
   margin: 0;
 }
 
+/* Tile grid holds letter tiles and the SVG option tiles (roads, chevrons,
+   stop signs). auto-fill keeps them wrapping neatly at any panel width. */
 .tile-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 34px);
-  gap: 6px;
+  grid-template-columns: repeat(auto-fill, 40px);
+  gap: 7px;
 }
 
-.letter-tile,
-.color-swatch {
+.letter-tile {
   position: relative;
   width: 34px;
   height: 34px;
@@ -165,18 +181,10 @@ header h1 {
   color: #cbd5e1;
   cursor: pointer;
   user-select: none;
-}
-
-.letter-tile {
   border-radius: 6px;
 }
 
-.color-swatch {
-  border-radius: 50%;
-}
-
-.letter-tile:hover,
-.color-swatch:hover {
+.letter-tile:hover {
   border-color: #334155;
 }
 
@@ -187,7 +195,8 @@ header h1 {
 }
 
 .letter-tile input,
-.color-swatch input {
+.opt-tile input,
+.side-tile input {
   position: absolute;
   opacity: 0;
   width: 100%;
@@ -202,42 +211,85 @@ header h1 {
   pointer-events: none;
 }
 
-/* Color swatches show the actual color as their background instead of a
-   text label. A checkmark (outlined so it reads against any color)
-   appears when selected, and a highlighted ring instead of a tint so the
-   true color stays visible. */
-.color-swatch {
-  border: 1px solid rgba(255, 255, 255, 0.25);
+/* SVG option tiles (road lines, chevrons, stop signs) — the icon *is* the
+   label: a road segment with the coloured line, a chevron sign in that
+   colour scheme, or a stop sign showing the actual wording/script. A ring
+   marks selection, leaving the icon itself fully visible. */
+.opt-tile {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: block;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px #1e293b;
 }
 
-.color-swatch:has(input:checked) {
+.opt-tile:hover {
+  box-shadow: 0 0 0 1px #334155;
+}
+
+.opt-tile:has(input:checked) {
   box-shadow: 0 0 0 2px #34d399;
-  border-color: #34d399;
 }
 
-.color-swatch-varies {
-  background: repeating-linear-gradient(
-    45deg,
-    #f8fafc 0,
-    #f8fafc 6px,
-    #64748b 6px,
-    #64748b 12px
-  );
-}
-
-.color-swatch-check {
-  display: none;
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
-  text-shadow:
-    0 0 2px rgba(0, 0, 0, 0.9),
-    0 0 4px rgba(0, 0, 0, 0.9);
+.opt-svg-wrap,
+.opt-svg {
+  display: block;
+  width: 40px;
+  height: 40px;
   pointer-events: none;
 }
 
-.color-swatch:has(input:checked) .color-swatch-check {
-  display: block;
+/* Side of driving — two wide tiles with a head-on road illustration. */
+.side-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.side-tile {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  background: #0f172a;
+  padding: 8px;
+}
+
+.side-tile:hover {
+  border-color: #334155;
+}
+
+.side-tile:has(input:checked) {
+  border-color: rgba(52, 211, 153, 0.5);
+  background: rgba(52, 211, 153, 0.12);
+}
+
+.side-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.side-inner .opt-svg-side {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.side-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.side-tile:has(input:checked) .side-label {
+  color: #34d399;
 }
 
 .results-heading {

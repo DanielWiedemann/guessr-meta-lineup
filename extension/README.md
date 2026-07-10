@@ -1,39 +1,61 @@
 # Meta Lineup Filter (Chrome extension)
 
 A sidebar extension for narrowing down GeoGuessr countries by what you're
-seeing (or hearing) — side of driving, continent, stop sign wording, road
-center line color, chevron colors (shown as round color swatches, not
-text labels), language, and special alphabet letters (accented Latin
-letters and Cyrillic-specific letters, shown as clickable square tiles —
-Greek, Thai, Korean, Arabic and other non-Latin/Cyrillic scripts are a
-future addition). Every filter section is collapsible and starts
-collapsed except Side of driving. Pick as many options as apply within a
-category (useful when two clues look similar, you're unsure which
-language it is, or you're between two continents) — except the two
-letter categories, where picking several requires a country's alphabet
-to contain *all* of them (you're describing letters seen together in the
-same word/sign, not alternatives). The matching country list updates
-live either way. (License plate color was removed pending a rework.)
+seeing (or hearing):
 
-Continent is a real geographic continent, not the same thing as the
-app's "region" grouping (which lumps Central America/the Caribbean into
-"Latin America" for navigation purposes) — Russia, Turkey, and Cyprus are
-tagged with both Europe and Asia since they're genuinely transcontinental.
+- **Side of driving** — left / right, shown as a head-on road tile with a car.
+- **Continent** — real geography (see below).
+- **Stop sign** — the actual wording *or script*, each drawn as a red
+  octagon: STOP, PARE, ALTO, DUR, ARRÊT, plus native-script signs like
+  Japan's 止まれ, China/Taiwan's 停, Korea's 정지, Thailand's หยุด and
+  Arabic قف.
+- **Centre line colour** and **Edge line colour** — the two road-line
+  colours are now *separate* filters, each drawn as a little asphalt tile
+  with the coloured line in the middle or along the edges (or a "no line"
+  tile).
+- **Chevron background** and **Chevron arrow** — drawn as curve-warning
+  chevron signs in the actual colour scheme.
+- **Language** — a language spoken there.
+- **Special letters (Latin)** and **Cyrillic letters** — accented / extra
+  alphabet letters as clickable glyph tiles. (Greek, Thai, Korean, Arabic
+  and other non-Latin/Cyrillic scripts aren't broken out as letter tiles
+  yet — but their countries are already reachable via the stop-sign script
+  and language filters.)
 
-Side of driving is tagged for all 137 countries and territories Plonk It
-documents. Stop-sign wording, road-line color, and chevron colors are
-currently tagged only for the Americas and Europe, where the underlying
-Plonk It research has actually been done — Africa/Asia/Oceania/Antarctica
-don't have these yet. A handful of small US territories (Alaska, Hawaii,
-Bermuda, the US Minor Outlying Islands, US Virgin Islands) and the US
-itself are also intentionally left untagged for chevron color — Plonk
-It's own research found no single distinctive national pattern there, so
-guessing one would fabricate a signal that doesn't exist rather than
-honestly reflect a gap.
+Every section is collapsible and starts collapsed except Side of driving.
+Pick as many options as apply within a category (useful when two clues
+look similar, you're unsure which language it is, or you're between two
+continents) — except the two letter categories, where picking several
+requires a country's alphabet to contain *all* of them (you're describing
+letters seen together in the same word/sign, not alternatives).
 
-No build step — plain HTML/CSS/JS, reading directly from the same Supabase
-project as [the website](https://guessr-meta-lineup.vercel.app) via its
-public anon key (all filter data is public read-only reference data).
+**Missing data never excludes a country.** If a country hasn't been
+researched for a given clue (e.g. Australia's road-line colour), it stays
+in the results no matter what you pick for that clue — it's shown as "still
+possible", not silently dropped. Filtering on a category only ever removes
+countries we *know* don't match. (An earlier version excluded on missing
+data, which once wrongly hid the correct answer and lost an 86-country
+streak.)
+
+Continent is a real geographic continent, not the same thing as the app's
+"region" grouping (which lumps Central America/the Caribbean into "Latin
+America" for navigation purposes) — Russia, Turkey, and Cyprus are tagged
+with both Europe and Asia since they're genuinely transcontinental.
+
+Coverage: side of driving, continent, language and stop-sign wording are
+tagged for (nearly) all 137 countries and territories. Road-line and
+chevron colours are most complete for the Americas and Europe, where the
+Plonk It research is done, plus the marquee Asian metas (Japan, Korea,
+China); the rest are being filled in and, until then, simply don't
+constrain those countries (see the missing-data rule above). The US and
+its small territories are deliberately left untagged for chevron colour —
+Plonk It's own research found no single national pattern, so inventing one
+would fabricate a signal rather than honestly reflect a gap.
+
+No build step — plain HTML/CSS/JS with inline SVG icons, reading directly
+from the same Supabase project as
+[the website](https://guessr-meta-lineup.vercel.app) via its public anon
+key (all data is public read-only reference data).
 
 ## Load it (unpacked, personal use)
 
@@ -43,10 +65,22 @@ public anon key (all filter data is public read-only reference data).
 4. Click the extension's icon in the toolbar to open the side panel (or
    pick it from the side-panel picker next to the address bar).
 
-## Updating filter data
+## Data model & updating
 
-Filter categories/options/tags are seeded from `scripts/seed-filters.ts` at
-the project root — edit there and re-run
+Every filterable fact is a column on the `countries` table itself — one
+row per country, with `text[]` array columns for anything multi-valued
+(`languages`, `continents`, `road_line_color_inner`,
+`road_line_color_outer`, `chevron_bg_color`, `chevron_arrow_color`,
+`stop_sign_wording`, `special_letters_latin`, `special_letters_cyrillic`)
+and a scalar `driving_side`. An empty array means "not yet researched,"
+never "this country has none." This replaced an older
+`filter_categories` / `filter_options` / `country_filter_tags` trio — one
+robust table instead of three, which is simpler to query and reason about.
+The extension derives its filter options client-side from whatever values
+are actually present.
+
+Facts are seeded from `scripts/seed-filters.ts` at the project root — edit
+there and re-run
 `npx tsx --env-file=.env.local scripts/seed-filters.ts` to update Supabase.
 The extension picks up changes on its next load automatically, no
 extension update needed.

@@ -1,11 +1,14 @@
 const SUPABASE_URL = "https://ofiiluzxhnyzkbjlqfgk.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_AfMMFkL2mEu48zpi1HjowQ_HYt511A3";
 
+// Every filterable fact now lives on the countries table itself (one row
+// per country, text[] columns for multi-valued facts) instead of the old
+// filter_categories / filter_options / country_filter_tags trio. 137 rows
+// is well under PostgREST's 1000-row cap, so a single request suffices —
+// but keep a Range-paginated helper anyway so this never silently
+// truncates if the table grows.
 const PAGE_SIZE = 1000;
 
-// PostgREST caps a single response at 1000 rows by default — with 137
-// countries this project already clears that on country_filter_tags, so
-// every query pages through with Range until a short page signals the end.
 async function sb(path) {
   const rows = [];
   let offset = 0;
@@ -30,128 +33,266 @@ function flagUrl(code, flagCode) {
   return `https://flagcdn.com/w80/${flagCode || code}.png`;
 }
 
-// These categories render as a grid of single-letter tiles instead of the
-// usual pill checkboxes — one click selects, another deselects, and any
-// number can be active at once.
-const LETTER_CATEGORY_IDS = new Set(["special_letters_latin", "special_letters_cyrillic"]);
+// --- Filter definitions ----------------------------------------------------
+// Each category maps to one column on the countries table. `match` is how
+// multiple selected options combine: "or" (any is enough — the default,
+// good for "these two colours look similar / I'm unsure") or "and" (all
+// required — only the letter categories, since you're describing several
+// characters seen together in one word).
+const CATEGORIES = [
+  { id: "driving_side", col: "driving_side", name: "Side of driving", kind: "side", match: "or",
+    hint: "Which side traffic drives on — the fastest clue to check first." },
+  { id: "continents", col: "continents", name: "Continent", kind: "pill", match: "or",
+    hint: "Pick several if you're between regions." },
+  { id: "stop_sign_wording", col: "stop_sign_wording", name: "Stop sign", kind: "stop", match: "or",
+    hint: "The word (or script) printed on the stop sign." },
+  { id: "road_line_color_inner", col: "road_line_color_inner", name: "Centre line colour", kind: "road", variant: "inner", match: "or",
+    hint: "Colour of the middle dividing line." },
+  { id: "road_line_color_outer", col: "road_line_color_outer", name: "Edge line colour", kind: "road", variant: "outer", match: "or",
+    hint: "Colour of the outer edge lines." },
+  { id: "chevron_bg_color", col: "chevron_bg_color", name: "Chevron background", kind: "chevron", variant: "bg", match: "or",
+    hint: "Background colour of curve-warning chevrons." },
+  { id: "chevron_arrow_color", col: "chevron_arrow_color", name: "Chevron arrow", kind: "chevron", variant: "arrow", match: "or",
+    hint: "Arrow colour on curve-warning chevrons." },
+  { id: "languages", col: "languages", name: "Language", kind: "pill", match: "or",
+    hint: "A language spoken here. Pick several if you're unsure." },
+  { id: "special_letters_latin", col: "special_letters_latin", name: "Special letters (Latin)", kind: "letter", match: "and",
+    hint: "Accented / extra Latin letters. Picking several needs ALL to appear." },
+  { id: "special_letters_cyrillic", col: "special_letters_cyrillic", name: "Cyrillic letters", kind: "letter", match: "and",
+    hint: "Letters specific to a country's Cyrillic alphabet. Picking several needs ALL to appear." },
+];
 
-// These categories render as actual color swatches instead of a text
-// label naming the color.
-const COLOR_CATEGORY_IDS = new Set(["road_line_color", "chevron_bg_color", "chevron_arrow_color"]);
+// Only the driving side starts open — everything else collapses to keep
+// the panel short until you need it.
+const EXPANDED_BY_DEFAULT = new Set(["driving_side"]);
 
-// Every category starts collapsed except this one, since it's the
-// fastest, most universal clue to check first.
-const EXPANDED_BY_DEFAULT = new Set(["side_of_driving"]);
-
-// label (lowercased) -> CSS color. Anything not listed here (e.g. "Varies
-// (state/province)") falls back to a striped pattern instead of a color.
-const COLOR_SWATCHES = {
-  white: "#f8fafc",
-  yellow: "#facc15",
-  black: "#18181b",
-  blue: "#3b82f6",
-  red: "#ef4444",
-  burgundy: "#7f1d3b",
+const COLOR_ORDER = ["white", "yellow", "black", "red", "blue", "burgundy", "none"];
+const COLOR_HEX = {
+  white: "#f8fafc", yellow: "#facc15", black: "#18181b",
+  red: "#ef4444", blue: "#3b82f6", burgundy: "#7f1d3b",
 };
+
+// Canonical display order for stop-sign wordings (most common first, then
+// native scripts); anything unlisted falls back to alphabetical after.
+const STOP_ORDER = ["STOP", "PARE", "ALTO", "DUR", "ARRÊT", "止まれ", "停", "정지", "หยุด", "قف"];
+const CONTINENT_ORDER = ["North America", "South America", "Europe", "Africa", "Asia", "Oceania", "Antarctica"];
 
 const state = {
   countries: [],
-  categories: [],
-  options: [],
-  // country_code -> Set<filter_option_id>
-  tagsByCountry: new Map(),
-  // category_id -> Set<filter_option_id> currently checked
+  // category id -> sorted array of option values present in the data
+  optionsByCat: new Map(),
+  // category id -> Set of currently checked values
   selected: new Map(),
+  collapsed: new Set(),
 };
 
-async function loadData() {
-  const [countries, categories, options, tags] = await Promise.all([
-    sb("countries?select=code,name,region,flag_code&order=name"),
-    sb("filter_categories?select=id,name,description,sort_order&order=sort_order"),
-    sb("filter_options?select=id,category_id,label,sort_order&order=sort_order"),
-    sb("country_filter_tags?select=country_code,filter_option_id"),
-  ]);
-
-  state.countries = countries;
-  state.categories = categories;
-  state.options = options;
-
-  state.tagsByCountry = new Map();
-  for (const tag of tags) {
-    if (!state.tagsByCountry.has(tag.country_code)) {
-      state.tagsByCountry.set(tag.country_code, new Set());
-    }
-    state.tagsByCountry.get(tag.country_code).add(tag.filter_option_id);
-  }
-
-  state.selected = new Map(categories.map((c) => [c.id, new Set()]));
-  state.collapsed = new Set(categories.filter((c) => !EXPANDED_BY_DEFAULT.has(c.id)).map((c) => c.id));
+function valuesFor(country, cat) {
+  const raw = country[cat.col];
+  if (raw == null) return [];
+  return Array.isArray(raw) ? raw : [raw];
 }
 
-// A country matches if, for every category with at least one option
-// checked, it satisfies that category's tags — AND across categories
-// always. Within a category it's normally OR (any checked option is
-// enough — useful when two colors look similar and you're unsure), except
-// the letter categories, where it's AND (you're describing letters you
-// saw together in the same word/sign, so the country's alphabet must
-// contain all of them).
-function matchesFilters(countryCode) {
-  const tags = state.tagsByCountry.get(countryCode) ?? new Set();
-  for (const [categoryId, selectedOptions] of state.selected) {
-    if (selectedOptions.size === 0) continue;
-    if (LETTER_CATEGORY_IDS.has(categoryId)) {
-      for (const optionId of selectedOptions) {
-        if (!tags.has(optionId)) return false;
-      }
+async function loadData() {
+  const cols = ["code", "name", "region", "flag_code", ...CATEGORIES.map((c) => c.col)];
+  const countries = await sb(`countries?select=${cols.join(",")}&order=name`);
+  state.countries = countries;
+
+  for (const cat of CATEGORIES) {
+    const present = new Set();
+    for (const c of countries) for (const v of valuesFor(c, cat)) present.add(v);
+    state.optionsByCat.set(cat.id, sortOptions(cat, [...present]));
+    state.selected.set(cat.id, new Set());
+  }
+  state.collapsed = new Set(CATEGORIES.filter((c) => !EXPANDED_BY_DEFAULT.has(c.id)).map((c) => c.id));
+}
+
+function sortOptions(cat, values) {
+  if (cat.kind === "road" || cat.kind === "chevron") {
+    return values.sort((a, b) => idx(COLOR_ORDER, a) - idx(COLOR_ORDER, b));
+  }
+  if (cat.kind === "stop") {
+    return values.sort((a, b) => {
+      const d = idx(STOP_ORDER, a) - idx(STOP_ORDER, b);
+      return d !== 0 ? d : a.localeCompare(b);
+    });
+  }
+  if (cat.id === "continents") {
+    return values.sort((a, b) => idx(CONTINENT_ORDER, a) - idx(CONTINENT_ORDER, b));
+  }
+  if (cat.kind === "side") {
+    return values.sort((a, b) => idx(["left", "right"], a) - idx(["left", "right"], b));
+  }
+  // letters + languages: locale-aware alphabetical
+  return values.sort((a, b) => a.localeCompare(b, "en"));
+}
+
+function idx(order, v) {
+  const i = order.indexOf(v);
+  return i === -1 ? order.length : i;
+}
+
+// --- Matching --------------------------------------------------------------
+// AND across categories. Within a category, OR by default, AND for letters.
+// Critically: a country with NO data for a selected category is treated as
+// "unknown, still possible" — never excluded. Excluding on missing data is
+// what silently dropped correct answers (Australia had no road-line colour,
+// so selecting any colour wrongly hid it).
+function matchesFilters(country) {
+  for (const cat of CATEGORIES) {
+    const selected = state.selected.get(cat.id);
+    if (selected.size === 0) continue;
+
+    const values = new Set(valuesFor(country, cat));
+    if (values.size === 0) continue; // honest gap → still possible
+
+    if (cat.match === "and") {
+      for (const v of selected) if (!values.has(v)) return false;
     } else {
-      let matchedThisCategory = false;
-      for (const optionId of selectedOptions) {
-        if (tags.has(optionId)) {
-          matchedThisCategory = true;
-          break;
-        }
-      }
-      if (!matchedThisCategory) return false;
+      let ok = false;
+      for (const v of selected) if (values.has(v)) { ok = true; break; }
+      if (!ok) return false;
     }
   }
   return true;
 }
 
 function hasAnyFilterSelected() {
-  for (const set of state.selected.values()) {
-    if (set.size > 0) return true;
-  }
+  for (const set of state.selected.values()) if (set.size > 0) return true;
   return false;
 }
 
+// --- SVG icon builders -----------------------------------------------------
+// All inline (no external assets — the extension's CSP blocks those) and
+// coloured with the actual clue colour so an option looks like the thing
+// it filters for.
+
+function headerIcon(kind) {
+  const p = (d) => `<path d="${d}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+  let inner;
+  switch (kind) {
+    case "side": // steering wheel
+      inner = `<circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="1.6" fill="currentColor"/>${p("M8 9.6V14")}${p("M6.6 7 2.4 5.4")}${p("M9.4 7l4.2-1.6")}`;
+      break;
+    case "pill": // globe
+      inner = `<circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/>${p("M2 8h12")}${p("M8 2c2.2 2 2.2 10 0 12")}${p("M8 2c-2.2 2-2.2 10 0 12")}`;
+      break;
+    case "stop": // octagon
+      inner = `<path d="M5.3 1.8h5.4L14.2 5.3v5.4L10.7 14.2H5.3L1.8 10.7V5.3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>`;
+      break;
+    case "road": // road narrowing to horizon with centre dashes
+      inner = `${p("M3 14 6.5 2")}${p("M13 14 9.5 2")}${p("M8 3.5v1.5")}${p("M8 7v1.5")}${p("M8 10.5V12")}`;
+      break;
+    case "chevron": // curve-warning chevrons
+      inner = `${p("M4 3l4 5-4 5")}${p("M8 3l4 5-4 5")}`;
+      break;
+    case "letter": // "Á"
+      inner = `<text x="8" y="12.5" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor" font-family="Georgia, serif">Á</text>`;
+      break;
+    default:
+      inner = "";
+  }
+  return `<svg class="cat-icon" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">${inner}</svg>`;
+}
+
+function optionSvg(cat, value) {
+  if (cat.kind === "road") return roadSvg(value, cat.variant);
+  if (cat.kind === "chevron") return chevronSvg(value, cat.variant);
+  if (cat.kind === "stop") return stopSvg(value);
+  if (cat.kind === "side") return sideSvg(value);
+  return "";
+}
+
+function roadSvg(color, variant) {
+  const hex = COLOR_HEX[color];
+  const asphalt = `<rect x="1.5" y="1.5" width="37" height="37" rx="6" fill="#3b4252"/>`;
+  let lines;
+  if (color === "none" || !hex) {
+    // no painted line — bare asphalt with a subtle strike-through
+    lines = `<line x1="11" y1="29" x2="29" y2="11" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>`;
+  } else if (variant === "inner") {
+    lines = `<line x1="20" y1="6" x2="20" y2="34" stroke="${hex}" stroke-width="3.4" stroke-dasharray="5 4" stroke-linecap="round"/>`;
+  } else {
+    lines = `<line x1="9" y1="5" x2="9" y2="35" stroke="${hex}" stroke-width="2.6" stroke-linecap="round"/>` +
+            `<line x1="31" y1="5" x2="31" y2="35" stroke="${hex}" stroke-width="2.6" stroke-linecap="round"/>`;
+  }
+  return `<svg class="opt-svg" viewBox="0 0 40 40" aria-hidden="true">${asphalt}${lines}</svg>`;
+}
+
+function chevronSvg(color, variant) {
+  const hex = COLOR_HEX[color] || "#94a3b8";
+  const bg = variant === "bg" ? hex : "#475569";
+  const arrow = variant === "arrow" ? hex : "#cbd5e1";
+  const sign = `<rect x="3" y="3" width="34" height="34" rx="5" fill="${bg}" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>`;
+  // two chevrons pointing right
+  const ch = (dx) =>
+    `<polyline points="${13 + dx},11 ${24 + dx},20 ${13 + dx},29" fill="none" stroke="${arrow}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+  return `<svg class="opt-svg" viewBox="0 0 40 40" aria-hidden="true">${sign}${ch(-4)}${ch(4)}</svg>`;
+}
+
+function stopSvg(text) {
+  const oct = `<polygon points="13.4,3 26.6,3 37,13.4 37,26.6 26.6,37 13.4,37 3,26.6 3,13.4" fill="#dc2626" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>`;
+  const isCJK = /[぀-ヿ一-鿿가-힯]/.test(text);
+  const isRTLorThai = /[؀-ۿ฀-๿]/.test(text);
+  let fs;
+  if (isCJK) fs = text.length <= 2 ? 15 : 11.5;
+  else if (isRTLorThai) fs = 13;
+  else if (text.length <= 3) fs = 12;
+  else if (text.length === 4) fs = 9.5;
+  else if (text.length === 5) fs = 8;
+  else fs = 6.8;
+  const label = `<text x="20" y="20" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="${fs}" font-weight="800" font-family="Arial, sans-serif">${escapeXml(text)}</text>`;
+  return `<svg class="opt-svg" viewBox="0 0 40 40" aria-hidden="true">${oct}${label}</svg>`;
+}
+
+function sideSvg(side) {
+  // a road viewed head-on with a car keeping to the correct side
+  const carX = side === "left" ? 9 : 22;
+  return `<svg class="opt-svg opt-svg-side" viewBox="0 0 40 40" aria-hidden="true">` +
+    `<rect x="1.5" y="1.5" width="37" height="37" rx="6" fill="#3b4252"/>` +
+    `<line x1="20" y1="5" x2="20" y2="35" stroke="#facc15" stroke-width="2.4" stroke-dasharray="4 4"/>` +
+    `<rect x="${carX}" y="14" width="9" height="12" rx="2" fill="#34d399"/>` +
+    `<rect x="${carX + 1.5}" y="16" width="6" height="3.5" rx="1" fill="#0f172a"/>` +
+    `</svg>`;
+}
+
+function escapeXml(s) {
+  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+// --- Labels ----------------------------------------------------------------
+function optionLabel(cat, value) {
+  if (cat.kind === "side") return value === "left" ? "Left" : "Right";
+  if (cat.kind === "road" || cat.kind === "chevron") {
+    return value === "none" ? "No line" : value[0].toUpperCase() + value.slice(1);
+  }
+  return value; // continents, languages, stop wordings, letters are already display-ready
+}
+
+// --- Rendering -------------------------------------------------------------
 function renderFilters() {
   const container = document.getElementById("filters");
   container.innerHTML = "";
 
-  for (const category of state.categories) {
+  for (const cat of CATEGORIES) {
+    const options = state.optionsByCat.get(cat.id) ?? [];
+    if (options.length === 0) continue; // nothing researched for this category yet
+
     const section = document.createElement("section");
     section.className = "filter-category";
 
-    const isCollapsed = state.collapsed.has(category.id);
-    const selectedCount = state.selected.get(category.id)?.size ?? 0;
+    const isCollapsed = state.collapsed.has(cat.id);
+    const selectedCount = state.selected.get(cat.id)?.size ?? 0;
 
     const heading = document.createElement("button");
     heading.type = "button";
     heading.className = "filter-category-heading";
     heading.setAttribute("aria-expanded", String(!isCollapsed));
-
-    const headingText = document.createElement("span");
-    headingText.textContent = category.name + (selectedCount > 0 ? ` (${selectedCount})` : "");
-    heading.appendChild(headingText);
-
-    const chevron = document.createElement("span");
-    chevron.className = "filter-category-chevron";
-    chevron.textContent = isCollapsed ? "▸" : "▾";
-    heading.appendChild(chevron);
-
+    heading.innerHTML =
+      `<span class="heading-left">${headerIcon(cat.kind)}<span class="heading-name">${cat.name}${selectedCount ? ` (${selectedCount})` : ""}</span></span>` +
+      `<span class="filter-category-chevron">${isCollapsed ? "▸" : "▾"}</span>`;
     heading.addEventListener("click", () => {
-      if (state.collapsed.has(category.id)) state.collapsed.delete(category.id);
-      else state.collapsed.add(category.id);
+      if (state.collapsed.has(cat.id)) state.collapsed.delete(cat.id);
+      else state.collapsed.add(cat.id);
       renderFilters();
     });
     section.appendChild(heading);
@@ -161,66 +302,67 @@ function renderFilters() {
       continue;
     }
 
-    const isLetterCategory = LETTER_CATEGORY_IDS.has(category.id);
-    const isColorCategory = COLOR_CATEGORY_IDS.has(category.id);
-    if (isLetterCategory && category.description) {
+    if (cat.hint) {
       const hint = document.createElement("p");
       hint.className = "filter-category-hint";
-      hint.textContent = category.description;
+      hint.textContent = cat.hint;
       section.appendChild(hint);
     }
-    const optionsList = document.createElement("div");
-    optionsList.className = isLetterCategory || isColorCategory ? "tile-grid" : "filter-options";
 
-    const optionsForCategory = state.options.filter((o) => o.category_id === category.id);
-    for (const option of optionsForCategory) {
+    const usesTiles = cat.kind === "letter" || cat.kind === "road" || cat.kind === "chevron" || cat.kind === "stop" || cat.kind === "side";
+    const grid = document.createElement("div");
+    grid.className = !usesTiles ? "filter-options" : cat.kind === "side" ? "side-grid" : "tile-grid";
+
+    for (const value of options) {
       const label = document.createElement("label");
-      label.title = option.label;
+      label.title = optionLabel(cat, value);
 
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
-      checkbox.checked = state.selected.get(category.id).has(option.id);
+      checkbox.checked = state.selected.get(cat.id).has(value);
       checkbox.addEventListener("change", () => {
-        const set = state.selected.get(category.id);
-        if (checkbox.checked) set.add(option.id);
-        else set.delete(option.id);
+        const set = state.selected.get(cat.id);
+        if (checkbox.checked) set.add(value);
+        else set.delete(value);
         renderResults();
         updateClearButton();
+        const name = heading.querySelector(".heading-name");
+        name.textContent = cat.name + (set.size ? ` (${set.size})` : "");
       });
-
       label.appendChild(checkbox);
-      if (isLetterCategory) {
+
+      if (cat.kind === "letter") {
         label.className = "letter-tile";
         const glyph = document.createElement("span");
         glyph.className = "letter-glyph";
-        glyph.textContent = option.label;
+        glyph.textContent = value;
         label.appendChild(glyph);
-      } else if (isColorCategory) {
-        label.className = "color-swatch";
-        const swatch = COLOR_SWATCHES[option.label.toLowerCase()];
-        if (swatch) {
-          label.style.background = swatch;
-        } else {
-          label.classList.add("color-swatch-varies");
-        }
-        const check = document.createElement("span");
-        check.className = "color-swatch-check";
-        check.textContent = "✓";
-        label.appendChild(check);
+      } else if (cat.kind === "side") {
+        label.className = "side-tile";
+        const wrap = document.createElement("span");
+        wrap.className = "side-inner";
+        wrap.innerHTML = optionSvg(cat, value) + `<span class="side-label">${optionLabel(cat, value)}</span>`;
+        label.appendChild(wrap);
+      } else if (usesTiles) {
+        label.className = "opt-tile";
+        const svg = document.createElement("span");
+        svg.className = "opt-svg-wrap";
+        svg.innerHTML = optionSvg(cat, value);
+        label.appendChild(svg);
       } else {
         label.className = "filter-option";
-        label.append(option.label);
+        label.append(optionLabel(cat, value));
       }
-      optionsList.appendChild(label);
+      grid.appendChild(label);
     }
 
-    section.appendChild(optionsList);
+    section.appendChild(grid);
     container.appendChild(section);
   }
 }
 
 function renderResults() {
-  const matching = state.countries.filter((c) => matchesFilters(c.code));
+  const matching = state.countries.filter(matchesFilters);
 
   document.getElementById("results-summary").textContent = hasAnyFilterSelected()
     ? `${matching.length} of ${state.countries.length} possible matches`
@@ -232,7 +374,7 @@ function renderResults() {
   if (matching.length === 0) {
     const li = document.createElement("li");
     li.className = "empty";
-    li.textContent = "No countries match this combination.";
+    li.textContent = "No matches for this combination.";
     list.appendChild(li);
     return;
   }
@@ -243,8 +385,6 @@ function renderResults() {
     const img = document.createElement("img");
     img.alt = "";
     img.src = flagUrl(country.code, country.flag_code);
-    // A handful of flags can transiently fail to load in a list this long;
-    // retry once before giving up and just hiding the broken-image icon.
     img.addEventListener("error", () => {
       if (!img.dataset.retried) {
         img.dataset.retried = "1";

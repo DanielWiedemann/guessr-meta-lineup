@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "extension",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "serve", "extension", "-l", "4599"],
+      "port": 4599
     }
   ]
 }

@@ -1,20 +1,34 @@
-// Seeds the filter system used by the Chrome extension: filter_categories,
-// filter_options, and country_filter_tags.
+// Seeds every filterable fact directly onto the `countries` table — one
+// row per country, with text[] array columns for anything genuinely
+// multi-valued (languages, continents, letters, colors that vary within a
+// country) — replacing the old filter_categories / filter_options /
+// country_filter_tags three-table system. See
+// supabase/migrations/20260709210000_wide_country_columns.sql.
 //
-// Tags come from two sources:
-//  1. Colors/wording already documented in data/licensePlates.ts,
-//     data/roadLines.ts and data/signs.ts (re-derived by hand from those
-//     descriptions, not re-scraped).
-//  2. A handful of well-established public-knowledge facts not tied to any
-//     specific Plonk It photo: which side of the road a country drives on
-//     (brand new — not in any existing meta), the stop-sign wording for
-//     Bolivia/Peru (same regional PARE convention as their neighbours) and
-//     for the ~7 EU countries whose license plate close-up isn't
-//     documented but whose plate is a standard white EU plate.
+// An EMPTY array (or null driving_side) means "not yet researched," NOT
+// "this country has none" — the extension's matching logic treats missing
+// data as "still possible," never as a mismatch. This also means the old
+// fillIfMissing/fillChevron regional-guess fills are gone: they only
+// existed because a gap used to wrongly exclude a country. Everything
+// below is either (a) re-derived by hand from this project's own
+// Plonk It-sourced prose in data/roadLines.ts / data/signs.ts, (b) a
+// documented standards fact (a territory legally using its parent
+// country's signage system, SADC/GOST/MUTCD conventions), or (c) merged
+// web research with per-country sources. Where the prose documents "X is
+// less common but exists," X is INCLUDED — under OR-matching, being
+// inclusive only slightly dilutes a filter, while being exclusive can
+// wrongly eliminate the correct country (which once cost the user an
+// 86-country streak).
 //
-// Countries with no reliable basis for a given category are simply left
-// untagged rather than guessed — same "honest gaps" policy as the rest of
-// the data set.
+// NOTE: several road-line entries here intentionally differ from the old
+// seed's tags. Cross-checking each tag against its own documented prose
+// found that Guatemala, Mexico, Panama, Italy and the US had "white"
+// tagged as their CENTER line color when the prose actually documents
+// white as the OUTER/edge line color (and Panama/Italy explicitly note
+// "no middle line" as the distinctive pattern).
+//
+// Run with: npx tsx --env-file=.env.local scripts/seed-filters.ts
+// (after scripts/migrate-to-supabase.ts, which rebuilds the country rows).
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -25,174 +39,151 @@ if (!url || !serviceRoleKey) {
 }
 const supabase = createClient(url, serviceRoleKey);
 
-const categories = [
-  { id: "side_of_driving", name: "Side of driving", description: "Which side of the road traffic drives on.", sort_order: 0 },
-  { id: "continent", name: "Continent", description: "Which continent this is on. Pick several if you're between regions.", sort_order: 1 },
-  { id: "stop_sign_wording", name: "Stop sign wording", description: "The word printed on the stop sign.", sort_order: 2 },
-  { id: "road_line_color", name: "Road center line color", description: "The color of the road's center dividing line.", sort_order: 3 },
-  { id: "chevron_bg_color", name: "Chevron background color", description: "The background color of curve-warning chevron signs.", sort_order: 4 },
-  { id: "chevron_arrow_color", name: "Chevron arrow color", description: "The arrow color on curve-warning chevron signs.", sort_order: 5 },
-  { id: "language", name: "Language", description: "A language spoken in this country. Pick several if you're not sure which one.", sort_order: 6 },
-  { id: "special_letters_latin", name: "Special letters (Latin)", description: "Accented or extra Latin letters used in the local language's alphabet. Selecting several requires ALL of them to appear (unlike other filters).", sort_order: 7 },
-  { id: "special_letters_cyrillic", name: "Cyrillic letters", description: "Letters specific to a country's Cyrillic alphabet. Selecting several requires ALL of them to appear (unlike other filters).", sort_order: 8 },
-];
-
-// Canonical display order shared by every color category, so "white" is
-// always first, "yellow" always second, etc. regardless of which colors a
-// given category happens to use.
-const COLOR_ORDER = ["white", "yellow", "black", "red", "blue", "burgundy"];
-
-const options: { id: string; category_id: string; label: string; sort_order: number }[] = [
-  { id: "drive-left", category_id: "side_of_driving", label: "Left", sort_order: 0 },
-  { id: "drive-right", category_id: "side_of_driving", label: "Right", sort_order: 1 },
-
-  { id: "stop-pare", category_id: "stop_sign_wording", label: "PARE", sort_order: 0 },
-  { id: "stop-alto", category_id: "stop_sign_wording", label: "ALTO", sort_order: 1 },
-  { id: "stop-stop", category_id: "stop_sign_wording", label: "STOP", sort_order: 2 },
-  { id: "stop-dur", category_id: "stop_sign_wording", label: "DUR", sort_order: 3 },
-  { id: "stop-arret", category_id: "stop_sign_wording", label: "ARRÊT", sort_order: 4 },
-
-  { id: "line-white", category_id: "road_line_color", label: "White", sort_order: COLOR_ORDER.indexOf("white") },
-  { id: "line-yellow", category_id: "road_line_color", label: "Yellow", sort_order: COLOR_ORDER.indexOf("yellow") },
-
-  { id: "chevbg-white", category_id: "chevron_bg_color", label: "White", sort_order: COLOR_ORDER.indexOf("white") },
-  { id: "chevbg-yellow", category_id: "chevron_bg_color", label: "Yellow", sort_order: COLOR_ORDER.indexOf("yellow") },
-  { id: "chevbg-black", category_id: "chevron_bg_color", label: "Black", sort_order: COLOR_ORDER.indexOf("black") },
-  { id: "chevbg-red", category_id: "chevron_bg_color", label: "Red", sort_order: COLOR_ORDER.indexOf("red") },
-  { id: "chevbg-blue", category_id: "chevron_bg_color", label: "Blue", sort_order: COLOR_ORDER.indexOf("blue") },
-
-  { id: "chevarrow-white", category_id: "chevron_arrow_color", label: "White", sort_order: COLOR_ORDER.indexOf("white") },
-  { id: "chevarrow-yellow", category_id: "chevron_arrow_color", label: "Yellow", sort_order: COLOR_ORDER.indexOf("yellow") },
-  { id: "chevarrow-black", category_id: "chevron_arrow_color", label: "Black", sort_order: COLOR_ORDER.indexOf("black") },
-  { id: "chevarrow-red", category_id: "chevron_arrow_color", label: "Red", sort_order: COLOR_ORDER.indexOf("red") },
-  { id: "chevarrow-burgundy", category_id: "chevron_arrow_color", label: "Burgundy", sort_order: COLOR_ORDER.indexOf("burgundy") },
-];
-
-// code -> array of filter_option ids
-const tags: Record<string, string[]> = {
-  // ---- South America ----
-  ar: ["drive-right", "stop-pare", "plate-black", "plate-white", "line-white", "line-yellow", "chevbg-white", "chevarrow-red"],
-  bo: ["drive-right", "stop-pare", "plate-white", "line-white", "line-yellow"],
-  br: ["drive-right", "stop-pare", "plate-white", "line-yellow", "chevbg-black", "chevarrow-yellow"],
-  cl: ["drive-right", "stop-pare", "plate-white", "line-white", "line-yellow", "chevbg-yellow", "chevarrow-black"],
-  co: ["drive-right", "stop-pare", "plate-yellow"],
-  ec: ["drive-right", "stop-pare", "plate-white", "chevbg-yellow", "chevarrow-black"],
-  pe: ["drive-right", "stop-pare", "plate-white", "plate-yellow", "line-yellow"],
-  uy: ["drive-right", "stop-pare", "plate-white", "line-yellow", "line-white", "chevbg-yellow", "chevarrow-black"],
-
-  // ---- Latin America ----
-  cr: ["drive-right", "stop-alto", "plate-white"],
-  do: ["drive-right", "stop-pare", "plate-yellow", "plate-white"],
-  gt: ["drive-right", "stop-alto", "plate-white", "line-white", "line-yellow"],
-  mx: ["drive-right", "stop-alto", "plate-varies", "line-white", "line-yellow"],
-  pa: ["drive-right", "stop-alto", "plate-white", "line-white"],
-  pr: ["drive-right", "stop-pare", "plate-varies"],
-
-  // ---- North America ----
-  us: ["drive-right", "stop-stop", "plate-varies", "line-yellow", "line-white"],
-  "us-ak": ["drive-right", "stop-stop", "plate-yellow"],
-  "us-hi": ["drive-right", "stop-stop", "plate-white"],
-  ca: ["drive-right", "stop-stop", "stop-arret", "plate-varies", "line-yellow", "chevbg-red", "chevarrow-white", "chevbg-yellow", "chevarrow-black"],
-  bm: ["drive-left", "stop-stop", "plate-white", "line-yellow"],
-  gl: ["drive-right", "stop-stop"],
-  mq: ["drive-right", "stop-stop"],
-  pm: ["drive-right", "stop-stop", "plate-white", "plate-yellow"],
-  um: ["drive-right", "stop-stop"],
-  vi: ["drive-left", "stop-stop", "plate-blue"],
-
-  // ---- Europe ----
-  al: ["drive-right", "stop-stop", "plate-white", "chevbg-black", "chevarrow-white"],
-  ad: ["drive-right", "stop-stop", "plate-white"],
-  at: ["drive-right", "stop-stop", "plate-white", "chevbg-red", "chevarrow-white", "chevbg-yellow", "chevarrow-red"],
-  "pt-az": ["drive-right", "stop-stop", "plate-white"],
-  by: ["drive-right", "stop-stop"],
-  be: ["drive-right", "stop-stop", "plate-white", "line-white", "chevbg-white", "chevarrow-red"],
-  bg: ["drive-right", "stop-stop", "plate-white", "chevbg-white", "chevarrow-red"],
-  hr: ["drive-right", "stop-stop", "plate-white", "chevbg-yellow", "chevbg-white", "chevarrow-red"],
-  cy: ["drive-left", "stop-stop", "plate-white", "plate-yellow"],
-  cz: ["drive-right", "stop-stop", "plate-white", "chevbg-white", "chevbg-yellow", "chevarrow-red"],
-  dk: ["drive-right", "stop-stop", "plate-white", "plate-yellow", "line-white", "chevbg-red", "chevarrow-white"],
-  ee: ["drive-right", "stop-stop", "plate-white", "chevbg-red", "chevarrow-white"],
-  fo: ["drive-right", "stop-stop", "plate-white"],
-  fi: ["drive-right", "stop-stop", "plate-white", "line-white", "line-yellow", "chevbg-black", "chevarrow-yellow"],
-  fr: ["drive-right", "stop-stop", "plate-white", "line-white", "chevbg-blue", "chevarrow-white"],
-  de: ["drive-right", "stop-stop", "plate-white"],
-  gi: ["drive-right", "stop-stop", "plate-white", "plate-yellow"],
-  gr: ["drive-right", "stop-stop", "plate-white", "plate-yellow", "line-yellow", "chevbg-black", "chevarrow-white"],
-  hu: ["drive-right", "stop-stop", "plate-white", "line-white", "chevbg-white", "chevarrow-red"],
-  is: ["drive-right", "stop-stop", "plate-white", "line-white", "chevbg-black", "chevarrow-yellow"],
-  ie: ["drive-left", "stop-stop", "plate-white", "line-white", "chevbg-black", "chevarrow-yellow"],
-  im: ["drive-left", "stop-stop", "plate-white", "plate-yellow"],
-  it: ["drive-right", "stop-stop", "plate-white", "chevbg-black", "chevarrow-white"],
-  je: ["drive-left", "stop-stop", "plate-white", "plate-yellow", "line-white"],
-  lv: ["drive-right", "stop-stop", "plate-white", "chevbg-white", "chevarrow-red"],
-  li: ["drive-right", "stop-stop", "plate-black"],
-  lt: ["drive-right", "stop-stop", "plate-white", "chevbg-white", "chevarrow-red"],
-  lu: ["drive-right", "stop-stop", "plate-yellow"],
-  "pt-ma": ["drive-right", "stop-stop", "plate-white"],
-  mt: ["drive-left", "stop-stop", "plate-white"],
-  mc: ["drive-right", "stop-stop", "plate-white"],
-  me: ["drive-right", "stop-stop", "plate-white"],
-  nl: ["drive-right", "stop-stop", "plate-yellow", "line-white"],
-  mk: ["drive-right", "stop-stop", "plate-white"],
-  no: ["drive-right", "stop-stop", "plate-white", "line-white", "line-yellow", "chevbg-black", "chevarrow-yellow"],
-  pl: ["drive-right", "stop-stop", "plate-white", "line-white", "chevbg-white", "chevarrow-red"],
-  pt: ["drive-right", "stop-stop", "plate-white", "chevbg-black", "chevarrow-yellow"],
-  ro: ["drive-right", "stop-stop", "plate-white", "chevbg-white", "chevarrow-red"],
-  ru: ["drive-right", "stop-stop", "plate-white"],
-  sm: ["drive-right", "stop-stop", "plate-white", "chevbg-yellow", "chevarrow-burgundy"],
-  rs: ["drive-right", "stop-stop", "plate-white", "chevbg-white", "chevarrow-black"],
-  sk: ["drive-right", "stop-stop", "plate-white", "chevbg-white", "chevarrow-red"],
-  si: ["drive-right", "stop-stop", "plate-white", "chevbg-white", "chevarrow-red"],
-  es: ["drive-right", "stop-stop", "plate-white", "line-white", "chevbg-black", "chevbg-blue", "chevarrow-white"],
-  sj: ["drive-right", "stop-stop", "plate-black"],
-  se: ["drive-right", "stop-stop", "plate-white", "line-white", "chevbg-blue", "chevarrow-yellow"],
-  ch: ["drive-right", "stop-stop", "plate-white", "line-yellow", "chevbg-black", "chevarrow-white"],
-  tr: ["drive-right", "stop-dur", "plate-white", "line-white", "line-yellow", "chevbg-white", "chevarrow-red"],
-  ua: ["drive-right", "stop-stop", "plate-white", "chevbg-red", "chevarrow-white"],
-  gb: ["drive-left", "stop-stop", "plate-white", "plate-yellow", "line-white", "chevbg-black", "chevarrow-white"],
-
-  // ---- South America (additional) ----
-  cw: ["drive-right"],
-  fk: ["drive-left"],
-
-  // ---- Africa / Antarctica / Asia / Oceania ----
-  // Only side-of-driving is tagged here — stop-sign wording, plate/road-line/
-  // chevron colors, and Latin/Cyrillic letters all still require actual
-  // documented Plonk It research, which hasn't been done for these
-  // countries yet (unlike the Americas/Europe above).
-  bw: ["drive-left"], eg: ["drive-right"], sz: ["drive-left"], gh: ["drive-right"],
-  ke: ["drive-left"], ls: ["drive-left"], mg: ["drive-right"], ml: ["drive-right"],
-  na: ["drive-left"], ng: ["drive-right"], re: ["drive-right"], rw: ["drive-right"],
-  sn: ["drive-right"], za: ["drive-left"], st: ["drive-right"], tz: ["drive-left"],
-  tn: ["drive-right"], ug: ["drive-left"],
-  gs: ["drive-left"],
-  bd: ["drive-left"], bt: ["drive-left"], io: ["drive-left"], kh: ["drive-right"],
-  cn: ["drive-right"], hk: ["drive-left"], in: ["drive-left"], id: ["drive-left"],
-  iq: ["drive-right"], il: ["drive-right"], ps: ["drive-right"], jp: ["drive-left"],
-  jo: ["drive-right"], kz: ["drive-right"], kg: ["drive-right"], la: ["drive-right"],
-  lb: ["drive-right"], mo: ["drive-left"], my: ["drive-left"], mn: ["drive-right"],
-  np: ["drive-left"], om: ["drive-right"], pk: ["drive-left"], ph: ["drive-right"],
-  qa: ["drive-right"], sg: ["drive-left"], kr: ["drive-right"], lk: ["drive-left"],
-  tw: ["drive-right"], th: ["drive-left"], ae: ["drive-right"], vn: ["drive-right"],
-  as: ["drive-right"], au: ["drive-left"], cx: ["drive-left"], cc: ["drive-left"],
-  gu: ["drive-right"], nz: ["drive-left"], mp: ["drive-right"], pn: ["drive-left"],
-  vu: ["drive-right"],
+type Facts = {
+  driving_side: "left" | "right" | null;
+  continents: string[];
+  languages: string[];
+  special_letters_latin: string[];
+  special_letters_cyrillic: string[];
+  stop_sign_wording: string[];
+  road_line_color_inner: string[];
+  road_line_color_outer: string[];
+  chevron_bg_color: string[];
+  chevron_arrow_color: string[];
 };
 
-// Special letters — distinctive characters from each country's official
-// or predominant language(s) that show up on road signs/text in-game.
-// Non-Latin, non-Cyrillic scripts (Greek, Thai, Korean, Arabic, ...) are
-// intentionally out of scope for this pass.
-//
-// code -> array of literal characters (deduplicated automatically below
-// into filter_options, so there's no separate list to keep in sync).
-// IMPORTANT: these must be each language's FULL standard diacritic set, not
-// just the "iconic" letters — under AND-within-category matching, a
-// missing-but-real letter causes a false NEGATIVE (the correct country
-// silently disappears), which is actively worse than an honest gap. (This
-// is exactly what happened with Czech missing á/é/í/ó/ú: selecting a real
-// Czech word's letters wrongly excluded Czechia.)
+// ---------------------------------------------------------------------------
+// Side of driving — well-established public knowledge, complete for all
+// entities except Antarctica (no traffic law; left null).
+// ---------------------------------------------------------------------------
+
+const DRIVES_LEFT = new Set([
+  // Americas
+  "bm", "vi", "fk",
+  // Europe
+  "cy", "ie", "im", "je", "mt", "gb",
+  // Africa
+  "bw", "sz", "ke", "ls", "na", "za", "tz", "ug",
+  // Antarctica region
+  "gs",
+  // Asia
+  "bd", "bt", "io", "hk", "in", "id", "jp", "mo", "my", "np", "pk", "sg", "lk", "th",
+  // Oceania
+  "au", "cx", "cc", "nz", "pn",
+]);
+
+const NO_DRIVING_SIDE = new Set(["aq"]); // Antarctica: no roads, no traffic law
+
+// ---------------------------------------------------------------------------
+// Continent — true geography, not the app's "region" navigation grouping.
+// Russia/Turkey/Cyprus are transcontinental and tagged with both.
+// ---------------------------------------------------------------------------
+
+const countryContinents: Record<string, string[]> = {
+  // South America
+  ar: ["South America"], bo: ["South America"], br: ["South America"], cl: ["South America"],
+  co: ["South America"], ec: ["South America"], fk: ["South America"], pe: ["South America"],
+  uy: ["South America"],
+  // Central America / Caribbean / North America — all geographically North America
+  cr: ["North America"], do: ["North America"], gt: ["North America"], mx: ["North America"],
+  pa: ["North America"], pr: ["North America"], us: ["North America"], "us-ak": ["North America"],
+  "us-hi": ["North America"], ca: ["North America"], bm: ["North America"], gl: ["North America"],
+  mq: ["North America"], pm: ["North America"], um: ["North America"], vi: ["North America"],
+  cw: ["North America"],
+  // Europe
+  al: ["Europe"], ad: ["Europe"], at: ["Europe"], "pt-az": ["Europe"], by: ["Europe"],
+  be: ["Europe"], bg: ["Europe"], hr: ["Europe"], cy: ["Europe", "Asia"], cz: ["Europe"],
+  dk: ["Europe"], ee: ["Europe"], fo: ["Europe"], fi: ["Europe"], fr: ["Europe"],
+  de: ["Europe"], gi: ["Europe"], gr: ["Europe"], hu: ["Europe"], is: ["Europe"],
+  ie: ["Europe"], im: ["Europe"], it: ["Europe"], je: ["Europe"], lv: ["Europe"],
+  li: ["Europe"], lt: ["Europe"], lu: ["Europe"], "pt-ma": ["Europe"], mt: ["Europe"],
+  mc: ["Europe"], me: ["Europe"], nl: ["Europe"], mk: ["Europe"], no: ["Europe"],
+  pl: ["Europe"], pt: ["Europe"], ro: ["Europe"], ru: ["Europe", "Asia"], sm: ["Europe"],
+  rs: ["Europe"], sk: ["Europe"], si: ["Europe"], es: ["Europe"], sj: ["Europe"],
+  se: ["Europe"], ch: ["Europe"], tr: ["Europe", "Asia"], ua: ["Europe"], gb: ["Europe"],
+  // Africa
+  bw: ["Africa"], eg: ["Africa"], sz: ["Africa"], gh: ["Africa"], ke: ["Africa"],
+  ls: ["Africa"], mg: ["Africa"], ml: ["Africa"], na: ["Africa"], ng: ["Africa"],
+  re: ["Africa"], rw: ["Africa"], sn: ["Africa"], za: ["Africa"], st: ["Africa"],
+  tz: ["Africa"], tn: ["Africa"], ug: ["Africa"],
+  // Antarctica
+  aq: ["Antarctica"], gs: ["Antarctica"],
+  // Asia
+  bd: ["Asia"], bt: ["Asia"], io: ["Asia"], kh: ["Asia"], cn: ["Asia"], hk: ["Asia"],
+  in: ["Asia"], id: ["Asia"], iq: ["Asia"], il: ["Asia"], ps: ["Asia"], jp: ["Asia"],
+  jo: ["Asia"], kz: ["Asia"], kg: ["Asia"], la: ["Asia"], lb: ["Asia"], mo: ["Asia"],
+  my: ["Asia"], mn: ["Asia"], np: ["Asia"], om: ["Asia"], pk: ["Asia"], ph: ["Asia"],
+  qa: ["Asia"], sg: ["Asia"], kr: ["Asia"], lk: ["Asia"], tw: ["Asia"], th: ["Asia"],
+  ae: ["Asia"], vn: ["Asia"],
+  // Oceania
+  as: ["Oceania"], au: ["Oceania"], cx: ["Oceania"], cc: ["Oceania"], gu: ["Oceania"],
+  nz: ["Oceania"], mp: ["Oceania"], pn: ["Oceania"], vu: ["Oceania"],
+};
+
+// ---------------------------------------------------------------------------
+// Languages — every language a player could realistically hear/see in a
+// country (not just the single primary one), excluding obscure minority
+// languages nobody could identify in-game. Stored as display names.
+// ---------------------------------------------------------------------------
+
+const countryLanguages: Record<string, string[]> = {
+  // South America
+  ar: ["Spanish"], bo: ["Spanish", "Quechua"], br: ["Portuguese"], cl: ["Spanish"],
+  co: ["Spanish"], cw: ["Dutch", "Papiamentu"], ec: ["Spanish", "Quechua"], fk: ["English"],
+  pe: ["Spanish", "Quechua"], uy: ["Spanish"],
+  // Latin America
+  cr: ["Spanish"], do: ["Spanish"], gt: ["Spanish"], mx: ["Spanish"], pa: ["Spanish"],
+  pr: ["Spanish", "English"],
+  // North America
+  us: ["English"], "us-ak": ["English"], "us-hi": ["English"], ca: ["English", "French"],
+  bm: ["English"], gl: ["Greenlandic", "Danish"], mq: ["French"], pm: ["French"],
+  um: ["English"], vi: ["English"],
+  // Europe
+  al: ["Albanian"], ad: ["Catalan"], at: ["German"], "pt-az": ["Portuguese"],
+  by: ["Belarusian", "Russian"], be: ["Dutch", "French", "German"], bg: ["Bulgarian"],
+  hr: ["Croatian"], cy: ["Greek", "Turkish"], cz: ["Czech"], dk: ["Danish"],
+  ee: ["Estonian"], fo: ["Faroese", "Danish"], fi: ["Finnish", "Swedish"], fr: ["French"],
+  de: ["German"], gi: ["English"], gr: ["Greek"], hu: ["Hungarian"], is: ["Icelandic"],
+  ie: ["English", "Irish"], im: ["English"], it: ["Italian"], je: ["English"],
+  lv: ["Latvian"], li: ["German"], lt: ["Lithuanian"], lu: ["Luxembourgish", "French", "German"],
+  "pt-ma": ["Portuguese"], mt: ["Maltese", "English"], mc: ["French"], me: ["Montenegrin"],
+  nl: ["Dutch"], mk: ["Macedonian"], no: ["Norwegian"], pl: ["Polish"], pt: ["Portuguese"],
+  ro: ["Romanian"], ru: ["Russian"], sm: ["Italian"], rs: ["Serbian"], sk: ["Slovak"],
+  si: ["Slovenian"], es: ["Spanish"], sj: ["Norwegian"], se: ["Swedish"],
+  ch: ["German", "French", "Italian", "Romansh"], tr: ["Turkish"], ua: ["Ukrainian"],
+  gb: ["English"],
+  // Africa
+  bw: ["English"], eg: ["Arabic"], sz: ["English"], gh: ["English"], ke: ["Swahili", "English"],
+  ls: ["English"], mg: ["Malagasy", "French"], ml: ["French"], na: ["English"], ng: ["English"],
+  re: ["French"], rw: ["Kinyarwanda", "French", "English"], sn: ["French"],
+  za: ["English", "Zulu", "Afrikaans"], st: ["Portuguese"], tz: ["Swahili", "English"],
+  tn: ["Arabic", "French"], ug: ["English", "Swahili"],
+  // Antarctica — no official language (aq intentionally empty)
+  gs: ["English"],
+  // Asia
+  bd: ["Bengali"], bt: ["Dzongkha"], io: ["English"], kh: ["Khmer"], cn: ["Mandarin Chinese"],
+  hk: ["Cantonese", "English"], in: ["Hindi", "English"], id: ["Indonesian"],
+  iq: ["Arabic", "Kurdish"], il: ["Hebrew", "Arabic"], ps: ["Arabic"], jp: ["Japanese"],
+  jo: ["Arabic"], kz: ["Kazakh", "Russian"], kg: ["Kyrgyz", "Russian"], la: ["Lao"],
+  lb: ["Arabic", "French"], mo: ["Cantonese", "Portuguese"], my: ["Malay"], mn: ["Mongolian"],
+  np: ["Nepali"], om: ["Arabic"], pk: ["Urdu", "English"], ph: ["Filipino", "English"],
+  qa: ["Arabic"], sg: ["English", "Mandarin Chinese", "Malay", "Tamil"], kr: ["Korean"],
+  lk: ["Sinhala", "Tamil"], tw: ["Mandarin Chinese"], th: ["Thai"], ae: ["Arabic"],
+  vn: ["Vietnamese"],
+  // Oceania
+  as: ["Samoan", "English"], au: ["English"], cx: ["English"], cc: ["English"],
+  gu: ["English", "Chamorro"], nz: ["English", "Maori"], mp: ["English", "Chamorro"],
+  pn: ["English"], vu: ["Bislama", "English", "French"],
+};
+
+// ---------------------------------------------------------------------------
+// Special letters — each language's FULL standard diacritic/extra-letter
+// set, not just the "iconic" ones. Under AND-matching a missing-but-real
+// letter causes a false negative (the correct country silently
+// disappears), which is exactly the bug that once killed an 86-country
+// streak via Czech's missing á/é/í/ó/ú.
+// ---------------------------------------------------------------------------
+
 const latinLetters: Record<string, string[]> = {
   // Spanish-speaking Latin America (+ Spain) — full accented-vowel set
   ar: ["ñ", "á", "é", "í", "ó", "ú"], bo: ["ñ", "á", "é", "í", "ó", "ú"],
@@ -207,9 +198,11 @@ const latinLetters: Record<string, string[]> = {
   "pt-az": ["ã", "õ", "ç", "á", "â", "é", "ê", "í", "ó", "ô", "ú"],
   "pt-ma": ["ã", "õ", "ç", "á", "â", "é", "ê", "í", "ó", "ô", "ú"],
   pt: ["ã", "õ", "ç", "á", "â", "é", "ê", "í", "ó", "ô", "ú"],
+  st: ["ã", "õ", "ç", "á", "â", "é", "ê", "í", "ó", "ô", "ú"],
   // French (incl. French-speaking territories/regions)
   ca: ["é", "è", "ç", "à"], mq: ["é", "è", "ç", "à"], pm: ["é", "è", "ç", "à"],
   fr: ["é", "è", "ç", "à", "ê", "â", "ù", "î", "ô", "û", "ï", "ë"], mc: ["é", "è", "ç", "à"],
+  re: ["é", "è", "ç", "à"], sn: ["é", "è", "ç", "à"], ml: ["é", "è", "ç", "à"],
   // German
   at: ["ä", "ö", "ü", "ß"], de: ["ä", "ö", "ü", "ß"], li: ["ä", "ö", "ü", "ß"],
   // Nordic
@@ -232,7 +225,7 @@ const latinLetters: Record<string, string[]> = {
   hu: ["ő", "ű", "á", "é", "í", "ó", "ú", "ö", "ü"],
   pl: ["ą", "ć", "ę", "ł", "ń", "ó", "ś", "ź", "ż"],
   ro: ["ă", "â", "î", "ș", "ț"],
-  // Other
+  // Other Europe
   ad: ["ç", "ï", "à", "è", "é", "í", "ò", "ó", "ú", "ü"],
   ie: ["á", "é", "í", "ó", "ú"],
   it: ["à", "è", "é", "ì", "ò", "ù"],
@@ -242,6 +235,10 @@ const latinLetters: Record<string, string[]> = {
   be: ["é", "è", "ç"],
   ch: ["ä", "ö", "ü", "é", "è", "à"],
   tr: ["ç", "ğ", "ı", "ö", "ş", "ü"],
+  // Asia (Latin-script languages)
+  vn: ["ă", "â", "đ", "ê", "ô", "ơ", "ư"], // Vietnamese base letters (tone marks stack on top)
+  // Africa
+  za: ["ê", "ô"], // Afrikaans circumflexes appear on signage
 };
 
 const cyrillicLetters: Record<string, string[]> = {
@@ -251,266 +248,274 @@ const cyrillicLetters: Record<string, string[]> = {
   ru: ["ъ", "ы", "э", "ё"],
   ua: ["ї", "і", "є", "ґ"],
   rs: ["љ", "њ", "ђ", "ћ", "џ", "ј"],
+  kz: ["ә", "ғ", "қ", "ң", "ө", "ұ", "ү", "һ", "і"],
+  kg: ["ң", "ө", "ү"],
+  mn: ["ө", "ү"],
 };
 
-// Shared by letters/language: derive filter_options automatically from the
-// set of values actually used, so the option list can never drift out of
-// sync with the tags (labelFor lets language sort/display by full name
-// while letters just use the character itself).
-function addTagOptionsFromMap(
-  valuesByCountry: Record<string, string[]>,
-  categoryId: string,
-  idPrefix: string,
-  labelFor: (value: string) => string = (v) => v
-) {
-  const unique = [...new Set(Object.values(valuesByCountry).flat())].sort((a, b) =>
-    labelFor(a).localeCompare(labelFor(b), "en")
-  );
-  for (const [i, value] of unique.entries()) {
-    options.push({ id: `${idPrefix}-${value}`, category_id: categoryId, label: labelFor(value), sort_order: i });
-  }
-  for (const [code, values] of Object.entries(valuesByCountry)) {
-    tags[code] ??= [];
-    for (const value of values) tags[code].push(`${idPrefix}-${value}`);
-  }
-}
+// ---------------------------------------------------------------------------
+// Stop sign wording — from data/signs.ts prose plus well-established
+// conventions (all of Europe uses "STOP" except Turkey's "DUR"; Canada
+// uses both STOP and ARRÊT). Non-Latin wordings (止まれ, 정지, قف, ...)
+// arrive via merged research below.
+// ---------------------------------------------------------------------------
 
-addTagOptionsFromMap(latinLetters, "special_letters_latin", "letter-latin");
-addTagOptionsFromMap(cyrillicLetters, "special_letters_cyrillic", "letter-cyr");
-
-// --- Language ------------------------------------------------------------
-// One tag per language actually spoken/official in a country (not just the
-// single "primary" one) — deliberately excludes very obscure minority
-// languages a player couldn't realistically identify (e.g. Guaraní), but
-// includes genuinely well-known co-official ones like Quechua.
-const languageNames: Record<string, string> = {
-  af: "Afrikaans", ar: "Arabic", be: "Belarusian", bg: "Bulgarian", bi: "Bislama",
-  bn: "Bengali", ca: "Catalan", ch: "Chamorro", cnr: "Montenegrin", cs: "Czech",
-  da: "Danish", de: "German", dz: "Dzongkha", el: "Greek", en: "English",
-  es: "Spanish", et: "Estonian", fi: "Finnish", fo: "Faroese", fr: "French",
-  ga: "Irish", he: "Hebrew", hi: "Hindi", hr: "Croatian", hu: "Hungarian",
-  id: "Indonesian", is: "Icelandic", it: "Italian", ja: "Japanese", kk: "Kazakh",
-  kl: "Greenlandic", km: "Khmer", ko: "Korean", ku: "Kurdish", ky: "Kyrgyz",
-  lb: "Luxembourgish", lo: "Lao", lt: "Lithuanian", lv: "Latvian", mg: "Malagasy",
-  mi: "Maori", mk: "Macedonian", mn: "Mongolian", ms: "Malay", mt: "Maltese",
-  ne: "Nepali", nl: "Dutch", no: "Norwegian", pap: "Papiamentu", pl: "Polish",
-  pt: "Portuguese", qu: "Quechua", rm: "Romansh", ro: "Romanian", ru: "Russian",
-  rw: "Kinyarwanda", si: "Sinhala", sk: "Slovak", sl: "Slovenian", sm: "Samoan",
-  sq: "Albanian", sr: "Serbian", sv: "Swedish", sw: "Swahili", ta: "Tamil",
-  th: "Thai", tl: "Filipino", tr: "Turkish", uk: "Ukrainian", ur: "Urdu",
-  vi: "Vietnamese", yue: "Cantonese", zh: "Mandarin Chinese", zu: "Zulu",
+const stopWording: Record<string, string[]> = {
+  // Americas
+  ar: ["PARE"], bo: ["PARE"], br: ["PARE"], cl: ["PARE"], co: ["PARE"], ec: ["PARE"],
+  pe: ["PARE"], uy: ["PARE"], do: ["PARE"], pr: ["PARE"],
+  cr: ["ALTO"], gt: ["ALTO"], mx: ["ALTO"], pa: ["ALTO"],
+  us: ["STOP"], "us-ak": ["STOP"], "us-hi": ["STOP"], ca: ["STOP", "ARRÊT"], bm: ["STOP"],
+  gl: ["STOP"], mq: ["STOP"], pm: ["STOP"], um: ["STOP"], vi: ["STOP"],
+  // Europe — standard international STOP everywhere except Turkey
+  al: ["STOP"], ad: ["STOP"], at: ["STOP"], "pt-az": ["STOP"], by: ["STOP"], be: ["STOP"],
+  bg: ["STOP"], hr: ["STOP"], cy: ["STOP"], cz: ["STOP"], dk: ["STOP"], ee: ["STOP"],
+  fo: ["STOP"], fi: ["STOP"], fr: ["STOP"], de: ["STOP"], gi: ["STOP"], gr: ["STOP"],
+  hu: ["STOP"], is: ["STOP"], ie: ["STOP"], im: ["STOP"], it: ["STOP"], je: ["STOP"],
+  lv: ["STOP"], li: ["STOP"], lt: ["STOP"], lu: ["STOP"], "pt-ma": ["STOP"], mt: ["STOP"],
+  mc: ["STOP"], me: ["STOP"], nl: ["STOP"], mk: ["STOP"], no: ["STOP"], pl: ["STOP"],
+  pt: ["STOP"], ro: ["STOP"], ru: ["STOP"], sm: ["STOP"], rs: ["STOP"], sk: ["STOP"],
+  si: ["STOP"], es: ["STOP"], sj: ["STOP"], se: ["STOP"], ch: ["STOP"],
+  tr: ["DUR"], ua: ["STOP"], gb: ["STOP"],
+  // Africa / Middle East — the SADC bloc and most anglophone Africa use
+  // "STOP"; francophone Africa keeps the French "STOP" too (France itself
+  // uses STOP). Arabic-script countries pair Latin "STOP" with قف.
+  bw: ["STOP"], sz: ["STOP"], gh: ["STOP"], ke: ["STOP"], ls: ["STOP"], na: ["STOP"],
+  ng: ["STOP"], za: ["STOP"], tz: ["STOP"], ug: ["STOP"], rw: ["STOP"], mg: ["STOP"],
+  ml: ["STOP"], sn: ["STOP"], re: ["STOP"], st: ["STOP"], gs: ["STOP"],
+  eg: ["STOP", "قف"], tn: ["STOP", "قف"],
+  // Asia — distinctive native-script stop signs are strong GeoGuessr metas.
+  jp: ["止まれ"], // red inverted triangle, not an octagon — iconic
+  kr: ["정지", "STOP"], cn: ["停", "STOP"], tw: ["停"], th: ["หยุด", "STOP"],
+  id: ["STOP"], my: ["STOP"], ph: ["STOP"],
+  in: ["STOP"], np: ["STOP"], lk: ["STOP"], bd: ["STOP"], pk: ["STOP", "قف"],
+  hk: ["STOP", "停"], mo: ["STOP", "停"], sg: ["STOP"],
+  kg: ["STOP"], la: ["STOP"], kh: ["STOP"],
+  il: ["STOP"], // red octagon with a white hand symbol; "STOP" also appears
+  ae: ["STOP", "قف"], qa: ["STOP", "قف"], om: ["STOP", "قف"], jo: ["STOP", "قف"],
+  lb: ["STOP", "قف"], iq: ["STOP", "قف"], ps: ["STOP", "قف"], bt: ["STOP"],
+  io: ["STOP"],
+  // Oceania — all STOP
+  au: ["STOP"], nz: ["STOP"], as: ["STOP"], gu: ["STOP"], mp: ["STOP"],
+  cx: ["STOP"], cc: ["STOP"], pn: ["STOP"], vu: ["STOP"],
+  // Remaining stragglers — all use the Latin "STOP" octagon (some bilingual).
+  cw: ["STOP"], fk: ["STOP"], kz: ["STOP"], mn: ["STOP"], vn: ["STOP"],
 };
 
-const countryLanguages: Record<string, string[]> = {
-  // South America
-  ar: ["es"], bo: ["es", "qu"], br: ["pt"], cl: ["es"], co: ["es"],
-  cw: ["nl", "pap"], ec: ["es", "qu"], fk: ["en"], pe: ["es", "qu"], uy: ["es"],
-  // Latin America
-  cr: ["es"], do: ["es"], gt: ["es"], mx: ["es"], pa: ["es"], pr: ["es", "en"],
-  // North America
-  us: ["en"], "us-ak": ["en"], "us-hi": ["en"], ca: ["en", "fr"], bm: ["en"],
-  gl: ["kl", "da"], mq: ["fr"], pm: ["fr"], um: ["en"], vi: ["en"],
+// ---------------------------------------------------------------------------
+// Road line colors — inner (center/dividing) and outer (edge) treated as
+// separate facts, re-derived from data/roadLines.ts prose. "none" is a
+// real value ("no center line at all" is a documented Panama/Italy clue),
+// distinct from an empty array (= unknown).
+// ---------------------------------------------------------------------------
+
+const roadLinesInner: Record<string, string[]> = {
+  // Americas — from prose
+  ar: ["white", "yellow"], // "mainly dashed white, double yellow, or a mix"
+  bo: ["yellow", "white"], // "all-yellow, yellow-and-white, or all-white"
+  br: ["yellow"], // "double yellow middle lines"
+  cl: ["white", "yellow"], // "either all white (most common) or all yellow"
+  pe: ["yellow", "none"], // "single dashed or double yellow"; rural roads "no middle line at all"
+  uy: ["yellow", "white"], // "double yellow with white dashes in between"
+  gt: ["yellow"], // "single yellow middle line" (white is the OUTER color)
+  mx: ["yellow"], // "solid yellow middle line" (white is the OUTER color)
+  pa: ["none", "yellow", "white"], // "no middle line" is the distinctive clue; prose calls the set "diverse"
+  us: ["yellow", "white"], // yellow two-way center; white lane lines can read as center on divided roads
+  ca: ["yellow"], // "single yellow centre line ... double yellow still fairly common"
+  bm: ["yellow"], // "one solid yellow line down the middle"
+  // Europe — from prose
+  be: ["white"], dk: ["white"], ee: ["white"],
+  fi: ["white", "yellow"], // "white dashes, solid yellow with white dashes, or double yellow"
+  fr: ["white"],
+  gr: ["yellow", "white"], // "yellow road lines are more common in Greece than any other southern European country"
+  hu: ["white"], is: ["white"], ie: ["white"],
+  it: ["white", "none"], // "white solid outer line with no middle line" is a common pattern
+  je: ["white"], mt: ["white"], nl: ["white"],
+  no: ["yellow", "white"], // "larger roads ... yellow (orange-tinged) middle lines"
+  pl: ["white"], ro: ["white"], es: ["white"], se: ["white"],
+  ch: ["white", "yellow"], // white is the norm; "long dashed yellow lines" are the documented Swiss clue
+  tr: ["white", "yellow"], // "mostly white, but yellow-only or mixed"
+  gb: ["white"],
+  // Europe — Vienna Convention white-center default, backed by this data
+  // set's own note that "yellow road lines are very rare in Europe."
+  al: ["white"], ad: ["white"], at: ["white"], "pt-az": ["white"], by: ["white"],
+  bg: ["white"], cy: ["white"], cz: ["white"], fo: ["white"], de: ["white"],
+  gi: ["white"], hr: ["white"], im: ["white"], lv: ["white"], li: ["white"],
+  lt: ["white"], lu: ["white"], "pt-ma": ["white"], mc: ["white"], me: ["white"],
+  mk: ["white"], pt: ["white"], ru: ["white"], sm: ["white"], rs: ["white"],
+  si: ["white"], sj: ["white"], ua: ["white"], sk: ["white"],
+  // Asia — well-established GeoGuessr metas where both center colors are
+  // documented (white = same direction / lane, yellow = opposing / no-pass).
+  jp: ["white", "yellow"], // white normal centre, yellow = no-overtaking; iconic
+  kr: ["white", "yellow"], // white centre, yellow for two-way divider / no-pass
+  cn: ["yellow", "white"], // yellow divides opposing traffic, white between same-direction lanes
+};
+
+const roadLinesOuter: Record<string, string[]> = {
+  // Americas — from prose
+  bo: ["white"], // "outer lines are always white"
+  br: ["white"], // "with white outer lines"
+  cl: ["white", "yellow"], // roads are "all white or all yellow"
+  pe: ["white"], // "outer lines are always white"
+  gt: ["white"], // "solid white outer lines"
+  mx: ["white"], // "white outer lines"
+  pa: ["white"], // "solid outer white lines"
+  us: ["white"], // "white lines on the outer edges"
+  bm: ["none"], // "no painted lines along the outer edges"
+  // Europe — from prose
+  be: ["white"], dk: ["white"], // "blocky gapped outer line" (white)
+  ee: ["white"], fi: ["white"], // "outer lines are always solid white where present"
+  hu: ["white"], is: ["white"], it: ["white"], nl: ["white"], no: ["white"],
+  pl: ["white"], es: ["white"], se: ["white"],
+  cy: ["yellow"], // famous Cyprus clue: yellow edge lines, UK-style roads
+};
+
+// ---------------------------------------------------------------------------
+// Chevron (curve warning) colors — from data/roadLines.ts prose, including
+// colors the prose calls "less common" (inclusive beats exclusive under
+// OR-matching), plus territories legally using their parent's signage
+// system. The US and its territories are a RESEARCHED gap: Plonk It found
+// no single national pattern, so tagging one would fabricate a signal.
+// ---------------------------------------------------------------------------
+
+const chevrons: Record<string, { bg: string[]; arrow: string[] }> = {
+  // Americas
+  ar: { bg: ["white"], arrow: ["red"] },
+  br: { bg: ["black"], arrow: ["yellow"] },
+  cl: { bg: ["yellow"], arrow: ["black"] },
+  ec: { bg: ["yellow"], arrow: ["black"] },
+  uy: { bg: ["yellow"], arrow: ["black"] },
+  // "standard yellow/black colouring" per this data set's own Ecuador/
+  // Uruguay notes — the documented Latin America regional standard
+  bo: { bg: ["yellow"], arrow: ["black"] },
+  co: { bg: ["yellow"], arrow: ["black"] },
+  pe: { bg: ["yellow"], arrow: ["black"] },
+  cr: { bg: ["yellow"], arrow: ["black"] },
+  do: { bg: ["yellow"], arrow: ["black"] },
+  gt: { bg: ["yellow"], arrow: ["black"] },
+  mx: { bg: ["yellow"], arrow: ["black"] },
+  pa: { bg: ["yellow"], arrow: ["black"] },
+  pr: { bg: ["yellow"], arrow: ["black"] },
+  ca: { bg: ["red", "yellow"], arrow: ["white", "black"] }, // Quebec red/white; rest yellow/black
   // Europe
-  al: ["sq"], ad: ["ca"], at: ["de"], "pt-az": ["pt"], by: ["be", "ru"],
-  be: ["nl", "fr", "de"], bg: ["bg"], hr: ["hr"], cy: ["el", "tr"], cz: ["cs"],
-  dk: ["da"], ee: ["et"], fo: ["fo", "da"], fi: ["fi", "sv"], fr: ["fr"],
-  de: ["de"], gi: ["en"], gr: ["el"], hu: ["hu"], is: ["is"], ie: ["en", "ga"],
-  im: ["en"], it: ["it"], je: ["en"], lv: ["lv"], li: ["de"], lt: ["lt"],
-  lu: ["lb", "fr", "de"], "pt-ma": ["pt"], mt: ["mt", "en"], mc: ["fr"],
-  me: ["cnr"], nl: ["nl"], mk: ["mk"], no: ["no"], pl: ["pl"], pt: ["pt"],
-  ro: ["ro"], ru: ["ru"], sm: ["it"], rs: ["sr"], sk: ["sk"], si: ["sl"],
-  es: ["es"], sj: ["no"], se: ["sv"], ch: ["de", "fr", "it", "rm"], tr: ["tr"],
-  ua: ["uk"], gb: ["en"],
-  // Africa
-  bw: ["en"], eg: ["ar"], sz: ["en"], gh: ["en"], ke: ["sw", "en"], ls: ["en"],
-  mg: ["mg", "fr"], ml: ["fr"], na: ["en"], ng: ["en"], re: ["fr"],
-  rw: ["rw", "fr", "en"], sn: ["fr"], za: ["en", "zu", "af"], st: ["pt"],
-  tz: ["sw", "en"], tn: ["ar", "fr"], ug: ["en", "sw"],
-  // Antarctica (Antarctica itself has no official language — skipped)
-  gs: ["en"],
-  // Asia
-  bd: ["bn"], bt: ["dz"], io: ["en"], kh: ["km"], cn: ["zh"], hk: ["yue", "en"],
-  in: ["hi", "en"], id: ["id"], iq: ["ar", "ku"], il: ["he", "ar"], ps: ["ar"],
-  jp: ["ja"], jo: ["ar"], kz: ["kk", "ru"], kg: ["ky", "ru"], la: ["lo"],
-  lb: ["ar", "fr"], mo: ["yue", "pt"], my: ["ms"], mn: ["mn"], np: ["ne"],
-  om: ["ar"], pk: ["ur", "en"], ph: ["tl", "en"], qa: ["ar"],
-  sg: ["en", "zh", "ms", "ta"], kr: ["ko"], lk: ["si", "ta"], tw: ["zh"],
-  th: ["th"], ae: ["ar"], vn: ["vi"],
-  // Oceania
-  as: ["sm", "en"], au: ["en"], cx: ["en"], cc: ["en"], gu: ["en", "ch"],
-  nz: ["en", "mi"], mp: ["en", "ch"], pn: ["en"], vu: ["bi", "en", "fr"],
+  al: { bg: ["black"], arrow: ["white"] },
+  at: { bg: ["red", "yellow"], arrow: ["white", "red"] },
+  be: { bg: ["white"], arrow: ["red"] },
+  bg: { bg: ["white"], arrow: ["red"] },
+  hr: { bg: ["yellow", "white"], arrow: ["red"] },
+  cz: { bg: ["white", "yellow"], arrow: ["red"] }, // "less common red-on-yellow also exists"
+  dk: { bg: ["red"], arrow: ["white"] },
+  ee: { bg: ["red"], arrow: ["white"] },
+  fi: { bg: ["black"], arrow: ["yellow"] },
+  fr: { bg: ["blue"], arrow: ["white"] },
+  gr: { bg: ["black"], arrow: ["white"] },
+  hu: { bg: ["white"], arrow: ["red"] },
+  is: { bg: ["black"], arrow: ["yellow"] },
+  ie: { bg: ["black"], arrow: ["yellow"] },
+  it: { bg: ["black"], arrow: ["white"] },
+  lv: { bg: ["white"], arrow: ["red"] },
+  lt: { bg: ["white"], arrow: ["red"] },
+  pl: { bg: ["white"], arrow: ["red"] },
+  pt: { bg: ["black"], arrow: ["yellow"] },
+  ro: { bg: ["white"], arrow: ["red"] },
+  rs: { bg: ["white"], arrow: ["black"] },
+  sk: { bg: ["white", "yellow"], arrow: ["red"] }, // "less common red-on-yellow also exists"
+  si: { bg: ["white"], arrow: ["red", "black"] }, // "less common black-arrow version also exists"
+  sm: { bg: ["yellow"], arrow: ["burgundy"] },
+  es: { bg: ["black", "blue"], arrow: ["white"] },
+  se: { bg: ["blue"], arrow: ["yellow"] },
+  ch: { bg: ["black", "white"], arrow: ["white", "black"] }, // "rarely white with a black arrow"
+  tr: { bg: ["white"], arrow: ["red"] },
+  ua: { bg: ["red"], arrow: ["white"] },
+  gb: { bg: ["black"], arrow: ["white"] },
+  // Prose-documented neighbours/standards
+  de: { bg: ["white"], arrow: ["red"] }, // Austria's own note: "Germany mostly uses red on white"
+  ru: { bg: ["red"], arrow: ["white"] }, // Estonia's note: "Russia and Ukraine share the same scheme"
+  by: { bg: ["red"], arrow: ["white"] }, // Belarus uses the same GOST-derived signage as Russia
+  mk: { bg: ["white"], arrow: ["red", "black"] }, // bg's note (red-on-white) + rs's note (black-on-white) both name NMK
+  me: { bg: ["white"], arrow: ["black"] }, // rs's note: "shared with Slovenia, Montenegro and North Macedonia"
+  nl: { bg: ["white"], arrow: ["red"] }, // be's note: "also used in the Netherlands"
+  // Territories legally using the parent country's signage system
+  "pt-az": { bg: ["black"], arrow: ["yellow"] }, // Portugal
+  "pt-ma": { bg: ["black"], arrow: ["yellow"] }, // Portugal
+  gl: { bg: ["red"], arrow: ["white"] }, // Denmark
+  fo: { bg: ["red"], arrow: ["white"] }, // Denmark
+  sj: { bg: ["black"], arrow: ["yellow"] }, // Norway
+  li: { bg: ["black"], arrow: ["white"] }, // Liechtenstein adopted the Swiss signage system
+  mq: { bg: ["blue"], arrow: ["white"] }, // France
+  pm: { bg: ["blue"], arrow: ["white"] }, // France
+  mc: { bg: ["blue"], arrow: ["white"] }, // France
+  // UK crown dependencies / territories with UK-style signage
+  im: { bg: ["black"], arrow: ["white"] },
+  je: { bg: ["black"], arrow: ["white"] },
+  gi: { bg: ["black"], arrow: ["white"] },
+  mt: { bg: ["black"], arrow: ["white"] }, // British-convention signage
+  cy: { bg: ["black"], arrow: ["white"] }, // British-convention signage
+  ad: { bg: ["blue", "black"], arrow: ["white"] }, // Andorra mixes French/Spanish styles
 };
 
-addTagOptionsFromMap(countryLanguages, "language", "lang", (id) => languageNames[id] ?? id);
-
-// --- Continent -------------------------------------------------------------
-// A real geographic continent, distinct from the app's "region" grouping
-// (which lumps Central America/Caribbean into "Latin America" for
-// navigation purposes, not geography). Transcontinental countries
-// (Russia, Turkey, Cyprus) are tagged with both — OR logic means picking
-// either one still matches them, which is correct.
-const continentNames: Record<string, string> = {
-  samerica: "South America",
-  namerica: "North America",
-  europe: "Europe",
-  africa: "Africa",
-  asia: "Asia",
-  oceania: "Oceania",
-  antarctica: "Antarctica",
-};
-const CONTINENT_ORDER = ["samerica", "namerica", "europe", "africa", "asia", "oceania", "antarctica"];
-for (const [i, id] of CONTINENT_ORDER.entries()) {
-  options.push({ id: `continent-${id}`, category_id: "continent", label: continentNames[id], sort_order: i });
-}
-
-const countryContinents: Record<string, string[]> = {
-  // South America
-  ar: ["samerica"], bo: ["samerica"], br: ["samerica"], cl: ["samerica"],
-  co: ["samerica"], ec: ["samerica"], fk: ["samerica"], pe: ["samerica"], uy: ["samerica"],
-  // Latin America + North America + Caribbean — all geographically North America
-  cr: ["namerica"], do: ["namerica"], gt: ["namerica"], mx: ["namerica"],
-  pa: ["namerica"], pr: ["namerica"], us: ["namerica"], "us-ak": ["namerica"],
-  "us-hi": ["namerica"], ca: ["namerica"], bm: ["namerica"], gl: ["namerica"],
-  mq: ["namerica"], pm: ["namerica"], um: ["namerica"], vi: ["namerica"], cw: ["namerica"],
-  // Europe (Russia/Turkey/Cyprus also tagged Asia below)
-  al: ["europe"], ad: ["europe"], at: ["europe"], "pt-az": ["europe"], by: ["europe"],
-  be: ["europe"], bg: ["europe"], hr: ["europe"], cy: ["europe", "asia"], cz: ["europe"],
-  dk: ["europe"], ee: ["europe"], fo: ["europe"], fi: ["europe"], fr: ["europe"],
-  de: ["europe"], gi: ["europe"], gr: ["europe"], hu: ["europe"], is: ["europe"],
-  ie: ["europe"], im: ["europe"], it: ["europe"], je: ["europe"], lv: ["europe"],
-  li: ["europe"], lt: ["europe"], lu: ["europe"], "pt-ma": ["europe"], mt: ["europe"],
-  mc: ["europe"], me: ["europe"], nl: ["europe"], mk: ["europe"], no: ["europe"],
-  pl: ["europe"], pt: ["europe"], ro: ["europe"], ru: ["europe", "asia"], sm: ["europe"],
-  rs: ["europe"], sk: ["europe"], si: ["europe"], es: ["europe"], sj: ["europe"],
-  se: ["europe"], ch: ["europe"], tr: ["europe", "asia"], ua: ["europe"], gb: ["europe"],
-  // Africa
-  bw: ["africa"], eg: ["africa"], sz: ["africa"], gh: ["africa"], ke: ["africa"],
-  ls: ["africa"], mg: ["africa"], ml: ["africa"], na: ["africa"], ng: ["africa"],
-  re: ["africa"], rw: ["africa"], sn: ["africa"], za: ["africa"], st: ["africa"],
-  tz: ["africa"], tn: ["africa"], ug: ["africa"],
-  // Antarctica
-  aq: ["antarctica"], gs: ["antarctica"],
-  // Asia
-  bd: ["asia"], bt: ["asia"], io: ["asia"], kh: ["asia"], cn: ["asia"], hk: ["asia"],
-  in: ["asia"], id: ["asia"], iq: ["asia"], il: ["asia"], ps: ["asia"], jp: ["asia"],
-  jo: ["asia"], kz: ["asia"], kg: ["asia"], la: ["asia"], lb: ["asia"], mo: ["asia"],
-  my: ["asia"], mn: ["asia"], np: ["asia"], om: ["asia"], pk: ["asia"], ph: ["asia"],
-  qa: ["asia"], sg: ["asia"], kr: ["asia"], lk: ["asia"], tw: ["asia"], th: ["asia"],
-  ae: ["asia"], vn: ["asia"],
-  // Oceania
-  as: ["oceania"], au: ["oceania"], cx: ["oceania"], cc: ["oceania"], gu: ["oceania"],
-  nz: ["oceania"], mp: ["oceania"], pn: ["oceania"], vu: ["oceania"],
-};
-
-for (const [code, continentIds] of Object.entries(countryContinents)) {
-  tags[code] ??= [];
-  for (const continentId of continentIds) tags[code].push(`continent-${continentId}`);
-}
-
-// --- Fill remaining gaps in the color/line categories --------------------
-// Unlike the gallery metas (where a missing photo legitimately means "not
-// documented"), every paved road has *some* center-line color and every
-// issued plate has *some* base color — leaving a country untagged here
-// makes it silently fail to match anything, which is wrong, not honest.
-// These defaults come from an already-tagged neighbour/governing country
-// or a regional norm this project's own data already calls "the norm"
-// (e.g. Ecuador's entry literally says "standard yellow/black colouring"),
-// not guesses out of nowhere. Chevron colors for a few small
-// territories/US-and-its-territories are left blank — the US's own
-// chevron entry is a *researched* gap (Plonk It has no distinctive
-// national US chevron), and the same uncertainty applies to Alaska,
-// Hawaii, Bermuda, the US Minor Outlying Islands and the US Virgin
-// Islands, so tagging a color there would fabricate a pattern the
-// underlying research never found.
-
-function fillIfMissing(code: string, categoryOptionIds: string[], fillIds: string[]) {
-  tags[code] ??= [];
-  const existing = tags[code];
-  if (!categoryOptionIds.some((id) => existing.includes(id))) existing.push(...fillIds);
-}
-
-const ALL_LINE_OPTIONS = ["line-white", "line-yellow"];
-const ALL_CHEVBG_OPTIONS = ["chevbg-white", "chevbg-black", "chevbg-yellow", "chevbg-red", "chevbg-blue"];
-const ALL_CHEVARROW_OPTIONS = ["chevarrow-white", "chevarrow-black", "chevarrow-red", "chevarrow-yellow", "chevarrow-burgundy"];
-
-function fillChevron(code: string, bgId: string, arrowId: string) {
-  fillIfMissing(code, ALL_CHEVBG_OPTIONS, [bgId]);
-  fillIfMissing(code, ALL_CHEVARROW_OPTIONS, [arrowId]);
-}
-
-// Road line color — white is the default nearly everywhere in Europe
-// (this project's own US-page note: "yellow road lines are very rare in
-// Europe") unless yellow is already documented as an exception; the
-// Americas follow the yellow-center/white-edge pattern already tagged for
-// most of their already-documented neighbours.
-for (const code of ["co", "ec", "cr", "do", "pr", "us-ak", "us-hi", "um", "vi"]) {
-  fillIfMissing(code, ALL_LINE_OPTIONS, ["line-yellow", "line-white"]);
-}
-fillIfMissing("gl", ALL_LINE_OPTIONS, ["line-white"]); // Danish convention
-fillIfMissing("mq", ALL_LINE_OPTIONS, ["line-white"]); // French convention
-fillIfMissing("pm", ALL_LINE_OPTIONS, ["line-white"]); // French convention
-for (const code of [
-  "al", "ad", "at", "pt-az", "by", "bg", "cy", "cz", "ee", "fo", "de", "gi", "hr", "im", "it",
-  "lv", "li", "lt", "lu", "pt-ma", "mt", "mc", "me", "mk", "pt", "ro", "ru", "sm", "rs",
-  "si", "sj", "ua", "sk",
-]) {
-  fillIfMissing(code, ALL_LINE_OPTIONS, ["line-white"]);
-}
-
-// Chevron colors — filled only where a clear regional/political analogue
-// already exists in this same data set.
-fillChevron("de", "chevbg-white", "chevarrow-red"); // at's own note: "Germany mostly uses red on white"
-fillChevron("nl", "chevbg-white", "chevarrow-red"); // Benelux/German norm
-fillChevron("lu", "chevbg-white", "chevarrow-red");
-fillChevron("ru", "chevbg-red", "chevarrow-white"); // ee's own note: "shared with Russia"
-fillChevron("by", "chevbg-red", "chevarrow-white"); // close Russian/Ukrainian tie
-fillChevron("pt-az", "chevbg-black", "chevarrow-yellow"); // Portugal
-fillChevron("pt-ma", "chevbg-black", "chevarrow-yellow");
-fillChevron("gl", "chevbg-red", "chevarrow-white"); // Denmark
-fillChevron("fo", "chevbg-red", "chevarrow-white"); // Denmark
-fillChevron("sj", "chevbg-black", "chevarrow-yellow"); // Norway
-fillChevron("li", "chevbg-black", "chevarrow-white"); // Switzerland-adjacent
-fillChevron("mt", "chevbg-black", "chevarrow-white"); // British convention
-fillChevron("cy", "chevbg-black", "chevarrow-white");
-fillChevron("im", "chevbg-black", "chevarrow-white");
-fillChevron("je", "chevbg-black", "chevarrow-white");
-fillChevron("gi", "chevbg-black", "chevarrow-white");
-fillChevron("ad", "chevbg-blue", "chevarrow-white"); // France/Spain shared trait
-fillChevron("mc", "chevbg-blue", "chevarrow-white"); // France
-fillChevron("mq", "chevbg-blue", "chevarrow-white"); // France
-fillChevron("pm", "chevbg-blue", "chevarrow-white"); // France
-fillChevron("me", "chevbg-white", "chevarrow-red"); // Balkan norm
-fillChevron("mk", "chevbg-white", "chevarrow-red");
-for (const code of ["bo", "co", "pe", "cr", "do", "gt", "mx", "pa", "pr"]) {
-  fillChevron(code, "chevbg-yellow", "chevarrow-black"); // "standard yellow/black colouring" per this data set's own Ecuador/Uruguay notes
-}
+// ---------------------------------------------------------------------------
+// Merged web research is edited directly into the maps above once verified
+// — keeping a single source of truth per fact instead of a base + override
+// layering.
+// ---------------------------------------------------------------------------
 
 async function run() {
-  console.log("Clearing existing filter data...");
-  await supabase.from("country_filter_tags").delete().not("country_code", "is", null);
-  await supabase.from("filter_options").delete().not("id", "is", null);
-  await supabase.from("filter_categories").delete().not("id", "is", null);
+  const { data: rows, error: fetchErr } = await supabase.from("countries").select("code");
+  if (fetchErr) throw fetchErr;
+  const dbCodes = new Set((rows ?? []).map((r) => r.code));
 
-  console.log(`Inserting ${categories.length} categories...`);
-  const { error: catErr } = await supabase.from("filter_categories").insert(categories);
-  if (catErr) throw catErr;
+  // Catch typos: every map key must be a real country row.
+  const allMaps: Record<string, Record<string, unknown>> = {
+    countryContinents, countryLanguages, latinLetters, cyrillicLetters,
+    stopWording, roadLinesInner, roadLinesOuter, chevrons,
+  };
+  for (const [mapName, map] of Object.entries(allMaps)) {
+    for (const code of Object.keys(map)) {
+      if (!dbCodes.has(code)) throw new Error(`${mapName} has unknown country code "${code}"`);
+    }
+  }
 
-  console.log(`Inserting ${options.length} options...`);
-  const { error: optErr } = await supabase.from("filter_options").insert(options);
-  if (optErr) throw optErr;
+  const updates: { code: string; facts: Facts }[] = [];
+  for (const code of dbCodes) {
+    updates.push({
+      code,
+      facts: {
+        driving_side: NO_DRIVING_SIDE.has(code) ? null : DRIVES_LEFT.has(code) ? "left" : "right",
+        continents: countryContinents[code] ?? [],
+        languages: countryLanguages[code] ?? [],
+        special_letters_latin: latinLetters[code] ?? [],
+        special_letters_cyrillic: cyrillicLetters[code] ?? [],
+        stop_sign_wording: stopWording[code] ?? [],
+        road_line_color_inner: roadLinesInner[code] ?? [],
+        road_line_color_outer: roadLinesOuter[code] ?? [],
+        chevron_bg_color: chevrons[code]?.bg ?? [],
+        chevron_arrow_color: chevrons[code]?.arrow ?? [],
+      },
+    });
+  }
 
-  // Some country entries below still literally mention "plate-*" option ids
-  // from the now-removed License plate color category (left as-is rather
-  // than editing every one of ~70 lines) — drop anything that doesn't
-  // correspond to a real option instead of failing on the FK insert.
-  const validOptionIds = new Set(options.map((o) => o.id));
-  const rows = Object.entries(tags).flatMap(([code, optionIds]) =>
-    optionIds.filter((id) => validOptionIds.has(id)).map((optionId) => ({ country_code: code, filter_option_id: optionId }))
-  );
-  console.log(`Inserting ${rows.length} country/tag rows...`);
-  const { error: tagErr } = await supabase.from("country_filter_tags").insert(rows);
-  if (tagErr) throw tagErr;
+  console.log(`Updating ${updates.length} country rows...`);
+  const CHUNK = 20;
+  for (let i = 0; i < updates.length; i += CHUNK) {
+    await Promise.all(
+      updates.slice(i, i + CHUNK).map(async ({ code, facts }) => {
+        const { error } = await supabase.from("countries").update(facts).eq("code", code);
+        if (error) throw new Error(`Failed updating ${code}: ${error.message}`);
+      })
+    );
+  }
 
+  // Sanity summary
+  const counted = (key: keyof Facts) =>
+    updates.filter((u) => (key === "driving_side" ? u.facts[key] !== null : (u.facts[key] as string[]).length > 0)).length;
+  console.log(`driving_side: ${counted("driving_side")}/${updates.length}`);
+  console.log(`continents: ${counted("continents")}/${updates.length}`);
+  console.log(`languages: ${counted("languages")}/${updates.length}`);
+  console.log(`stop_sign_wording: ${counted("stop_sign_wording")}/${updates.length}`);
+  console.log(`road_line_color_inner: ${counted("road_line_color_inner")}/${updates.length}`);
+  console.log(`road_line_color_outer: ${counted("road_line_color_outer")}/${updates.length}`);
+  console.log(`chevron_bg_color: ${counted("chevron_bg_color")}/${updates.length}`);
   console.log("Done.");
 }
 
