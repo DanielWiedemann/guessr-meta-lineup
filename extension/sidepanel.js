@@ -63,9 +63,9 @@ const CATEGORIES = [
     hint: "A language spoken here. OR = any of them; AND = all must be spoken." },
   { id: "scripts", col: "scripts", name: "Writing script", kind: "script", match: "or",
     hint: "Recognise the alphabet by its shape, even if you can't read it." },
-  { id: "special_letters_latin", col: "special_letters_latin", name: "Special letters (Latin)", kind: "letter", match: "and",
+  { id: "special_letters_latin", col: "special_letters_latin", name: "Special letters (Latin)", kind: "letter", match: "and", complete: true,
     hint: "Accented / extra Latin letters. Picking several needs ALL to appear." },
-  { id: "special_letters_cyrillic", col: "special_letters_cyrillic", name: "Cyrillic letters", kind: "letter", match: "and",
+  { id: "special_letters_cyrillic", col: "special_letters_cyrillic", name: "Cyrillic letters", kind: "letter", match: "and", complete: true,
     hint: "Letters specific to a country's Cyrillic alphabet. Picking several needs ALL to appear." },
   { id: "road_name_words", col: "road_name_words", name: "Road name words", kind: "pill", icon: "signpost", match: "or",
     hint: "The street word on name plates - Jalan, ul., -straat, Rue, Calle…" },
@@ -188,6 +188,13 @@ function matchesFilters(country) {
 
     const values = new Set(valuesFor(country, cat));
     if (values.size === 0) {
+      // `complete` categories are fully known: an empty value means
+      // "definitely none" (e.g. a Latin-alphabet country genuinely has no
+      // special Cyrillic letters), so a selected value here is a real
+      // mismatch — exclude it, don't flag it as uncertain. Only categories
+      // with genuine research gaps (road-line / chevron colours) fall
+      // through to the "unknown, still possible" branch.
+      if (cat.complete) return "no";
       uncertain = true; // honest gap → still possible, but flagged
       continue;
     }
