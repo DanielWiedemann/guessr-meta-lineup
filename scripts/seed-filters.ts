@@ -306,71 +306,73 @@ const stopWording: Record<string, string[]> = {
 };
 
 // ---------------------------------------------------------------------------
-// Road line colors — inner (center/dividing) and outer (edge) treated as
-// separate facts, re-derived from data/roadLines.ts prose. "none" is a
-// real value ("no center line at all" is a documented Panama/Italy clue),
-// distinct from an empty array (= unknown).
+// Road line colors — inner (center/dividing) and outer (edge) as separate
+// facts. Each value is the UNION of two sources: (1) this project's own
+// Plonk It-sourced prose in data/roadLines.ts, hand-verified, and (2) the
+// per-country road-line diagrams on geomastr.com (labelled "White Outside -
+// Yellow Inside" etc.). Union, not override: a country that either source
+// says uses a colour gets it. Under OR-matching that's the deliberate
+// "inclusive beats exclusive" policy — a false positive only slightly
+// dilutes a filter, while dropping a real colour can hide the correct
+// answer (the failure mode that once cost an 86-country streak). Territory
+// rows with no source of their own inherit their governing country's
+// national road-marking standard (French DOMs, US territories, Portuguese
+// islands, UK crown dependencies). "none" is a real value ("no centre line
+// at all" is a documented Panama/Italy clue); an empty/absent entry means
+// "not researched" and never excludes. Genuine no-source gaps (much of the
+// Middle East, Central Asia, and a few tiny territories) are left out
+// honestly rather than guessed.
 // ---------------------------------------------------------------------------
 
 const roadLinesInner: Record<string, string[]> = {
-  // Americas — from prose
-  ar: ["white", "yellow"], // "mainly dashed white, double yellow, or a mix"
-  bo: ["yellow", "white"], // "all-yellow, yellow-and-white, or all-white"
-  br: ["yellow"], // "double yellow middle lines"
-  cl: ["white", "yellow"], // "either all white (most common) or all yellow"
-  pe: ["yellow", "none"], // "single dashed or double yellow"; rural roads "no middle line at all"
-  uy: ["yellow", "white"], // "double yellow with white dashes in between"
-  gt: ["yellow"], // "single yellow middle line" (white is the OUTER color)
-  mx: ["yellow"], // "solid yellow middle line" (white is the OUTER color)
-  pa: ["none", "yellow", "white"], // "no middle line" is the distinctive clue; prose calls the set "diverse"
-  us: ["yellow", "white"], // yellow two-way center; white lane lines can read as center on divided roads
-  ca: ["yellow"], // "single yellow centre line ... double yellow still fairly common"
-  bm: ["yellow"], // "one solid yellow line down the middle"
-  // Europe — from prose
-  be: ["white"], dk: ["white"], ee: ["white"],
-  fi: ["white", "yellow"], // "white dashes, solid yellow with white dashes, or double yellow"
-  fr: ["white"],
-  gr: ["yellow", "white"], // "yellow road lines are more common in Greece than any other southern European country"
-  hu: ["white"], is: ["white"], ie: ["white"],
-  it: ["white", "none"], // "white solid outer line with no middle line" is a common pattern
-  je: ["white"], mt: ["white"], nl: ["white"],
-  no: ["yellow", "white"], // "larger roads ... yellow (orange-tinged) middle lines"
-  pl: ["white"], ro: ["white"], es: ["white"], se: ["white"],
-  ch: ["white", "yellow"], // white is the norm; "long dashed yellow lines" are the documented Swiss clue
-  tr: ["white", "yellow"], // "mostly white, but yellow-only or mixed"
-  gb: ["white"],
-  // Europe — Vienna Convention white-center default, backed by this data
-  // set's own note that "yellow road lines are very rare in Europe."
-  al: ["white"], ad: ["white"], at: ["white"], "pt-az": ["white"], by: ["white"],
-  bg: ["white"], cy: ["white"], cz: ["white"], fo: ["white"], de: ["white"],
-  gi: ["white"], hr: ["white"], im: ["white"], lv: ["white"], li: ["white"],
-  lt: ["white"], lu: ["white"], "pt-ma": ["white"], mc: ["white"], me: ["white"],
-  mk: ["white"], pt: ["white"], ru: ["white"], sm: ["white"], rs: ["white"],
-  si: ["white"], sj: ["white"], ua: ["white"], sk: ["white"],
-  // Asia — well-established GeoGuessr metas where both center colors are
-  // documented (white = same direction / lane, yellow = opposing / no-pass).
-  jp: ["white", "yellow"], // white normal centre, yellow = no-overtaking; iconic
-  kr: ["white", "yellow"], // white centre, yellow for two-way divider / no-pass
-  cn: ["yellow", "white"], // yellow divides opposing traffic, white between same-direction lanes
+  ad: ["white"], ae: ["white", "yellow"], al: ["white", "yellow"], ar: ["white", "yellow"],
+  as: ["yellow"], at: ["white"], au: ["white", "yellow"], bd: ["white"], be: ["white"],
+  bg: ["white"], bm: ["white", "yellow"], bo: ["white", "yellow"], br: ["white", "yellow"],
+  bt: ["white"], bw: ["white"], by: ["white"], ca: ["yellow"], cc: ["white", "yellow"],
+  ch: ["white", "yellow"], cl: ["white", "yellow"], cn: ["white", "yellow"], co: ["white", "yellow"],
+  cw: ["white"], cx: ["white"], cy: ["white"], cz: ["white"], de: ["white", "yellow"],
+  dk: ["white"], do: ["yellow"], ec: ["yellow"], ee: ["white"], es: ["white"],
+  fi: ["white", "yellow"], fo: ["white"], fr: ["white"], gb: ["white"], gh: ["white"],
+  gi: ["white"], gl: ["white"], gr: ["white", "yellow"], gt: ["yellow"], gu: ["yellow"],
+  hr: ["white"], hu: ["white"], id: ["white", "yellow"], ie: ["white"], il: ["white"],
+  im: ["white"], in: ["white", "yellow"], is: ["white"], it: ["white", "none"], je: ["white"],
+  jo: ["white"], jp: ["white", "yellow"], ke: ["yellow"], kg: ["white"], kh: ["yellow"],
+  kr: ["white", "yellow"], la: ["white"], li: ["white"], lk: ["white"], ls: ["white"],
+  lt: ["white"], lu: ["white"], lv: ["white"], mc: ["white"], me: ["white"], mg: ["white"],
+  mk: ["white", "yellow"], mn: ["white"], mp: ["yellow"], mq: ["white"], mt: ["white"],
+  mx: ["white", "yellow"], my: ["white"], ng: ["white"], nl: ["white"], no: ["white", "yellow"],
+  nz: ["white", "yellow"], pa: ["white", "yellow", "none"], pe: ["white", "yellow", "none"],
+  ph: ["white", "yellow"], pl: ["white"], pm: ["white"], pr: ["yellow"], pt: ["white"],
+  "pt-az": ["white"], "pt-ma": ["white"], qa: ["yellow"], re: ["white"], ro: ["white", "yellow"],
+  rs: ["white"], ru: ["white", "yellow"], rw: ["yellow"], se: ["white"], sg: ["white"],
+  si: ["white"], sj: ["white"], sk: ["white"], sm: ["white"], sn: ["white"],
+  sz: ["white", "yellow"], th: ["yellow"], tn: ["white"], tr: ["white", "yellow"], tw: ["yellow"],
+  ua: ["white"], ug: ["white", "yellow"], us: ["white", "yellow"], "us-ak": ["white", "yellow"],
+  "us-hi": ["white", "yellow"], uy: ["white", "yellow"], vi: ["yellow"], za: ["white"],
 };
 
 const roadLinesOuter: Record<string, string[]> = {
-  // Americas — from prose
-  bo: ["white"], // "outer lines are always white"
-  br: ["white"], // "with white outer lines"
-  cl: ["white", "yellow"], // roads are "all white or all yellow"
-  pe: ["white"], // "outer lines are always white"
-  gt: ["white"], // "solid white outer lines"
-  mx: ["white"], // "white outer lines"
-  pa: ["white"], // "solid outer white lines"
-  us: ["white"], // "white lines on the outer edges"
-  bm: ["none"], // "no painted lines along the outer edges"
-  // Europe — from prose
-  be: ["white"], dk: ["white"], // "blocky gapped outer line" (white)
-  ee: ["white"], fi: ["white"], // "outer lines are always solid white where present"
-  hu: ["white"], is: ["white"], it: ["white"], nl: ["white"], no: ["white"],
-  pl: ["white"], es: ["white"], se: ["white"],
-  cy: ["yellow"], // famous Cyprus clue: yellow edge lines, UK-style roads
+  ad: ["white"], ae: ["yellow"], al: ["white"], ar: ["white"], as: ["white"], at: ["white"],
+  au: ["white", "yellow"], bd: ["white"], be: ["white"], bg: ["white"], bm: ["white", "none"],
+  bo: ["white"], br: ["white"], bt: ["white"], bw: ["yellow"], ca: ["white"], cc: ["white", "yellow"],
+  ch: ["white"], cl: ["white", "yellow"], co: ["white", "yellow"], cw: ["white"], cx: ["white"],
+  cy: ["yellow"], cz: ["white"], de: ["white", "yellow"], dk: ["white"], do: ["white"],
+  ec: ["white"], ee: ["white"], es: ["white", "yellow"], fi: ["white"], fo: ["white"],
+  fr: ["white"], gb: ["white", "yellow"], gh: ["white"], gi: ["white", "yellow"], gl: ["white"],
+  gr: ["white"], gt: ["white"], gu: ["white"], hr: ["white"], hu: ["white"], id: ["white"],
+  ie: ["yellow"], il: ["yellow"], im: ["white", "yellow"], in: ["white", "yellow"], is: ["white"],
+  it: ["white"], je: ["yellow"], jo: ["yellow"], jp: ["white"], ke: ["white"], kg: ["white"],
+  kh: ["white"], kr: ["white"], la: ["white"], lk: ["white", "yellow"], ls: ["yellow"],
+  lt: ["white", "yellow"], lu: ["white"], lv: ["white"], mc: ["white"], me: ["white", "yellow"],
+  mg: ["white"], mk: ["white", "yellow"], mn: ["white"], mp: ["white"], mq: ["white"], mt: ["white"],
+  mx: ["white", "yellow"], my: ["white"], ng: ["yellow"], nl: ["white"], no: ["white"],
+  nz: ["white", "yellow"], pa: ["white"], pe: ["white"], ph: ["white"], pl: ["white"], pm: ["white"],
+  pr: ["white"], pt: ["white", "yellow"], "pt-az": ["white", "yellow"], "pt-ma": ["white", "yellow"],
+  qa: ["white"], re: ["white"], ro: ["white", "yellow"], rs: ["white"], ru: ["white", "yellow"],
+  rw: ["white"], se: ["white"], sg: ["white", "yellow"], si: ["white"], sk: ["white"], sm: ["white"],
+  sn: ["white"], sz: ["yellow"], th: ["white"], tn: ["white"], tr: ["white", "yellow"], tw: ["white"],
+  ua: ["white"], ug: ["white"], us: ["white"], "us-ak": ["white"], "us-hi": ["white"], vi: ["white"],
+  za: ["yellow"],
 };
 
 // ---------------------------------------------------------------------------
@@ -540,7 +542,10 @@ roadWord("tänav / tee / mnt", ["ee"]);
 roadWord("utca / út", ["hu"]);
 roadWord("Strada / Str.", ["ro"]);
 roadWord("Rruga / Rr.", ["al"]); // Albanian "street"
-roadWord("Carrer", ["ad"]); // Catalan "street"
+// Catalan "street": Andorra, plus bilingual signage in Spain's Catalan-
+// speaking regions (Catalonia, Balearics, Valencia) and in France's
+// Roussillon / Perpignan, where official street plaques are French-Catalan.
+roadWord("Carrer", ["ad", "es", "fr"]);
 roadWord("Rue", [
   "fr", "be", "lu", "ch", "mc", "mq", "pm", "re", "sn", "ml", "tn", "lb",
   "mg", // francophone Madagascar
