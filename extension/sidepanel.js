@@ -39,31 +39,36 @@ function flagUrl(code, flagCode) {
 // good for "these two colours look similar / I'm unsure") or "and" (all
 // required — only the letter categories, since you're describing several
 // characters seen together in one word).
+// Order is deliberately grouped: quick geography first, then road markings,
+// then road signs, then the language/writing cluster (language → script →
+// Latin letters → Cyrillic letters → road-name words) so related clues sit
+// together. `match` is the DEFAULT combine mode; categories with
+// `toggle: true` let the user flip AND/OR live from the heading.
 const CATEGORIES = [
   { id: "driving_side", col: "driving_side", name: "Side of driving", kind: "side", match: "or",
     hint: "Which side traffic drives on - the fastest clue to check first." },
   { id: "continents", col: "continents", name: "Continent", kind: "pill", match: "or",
     hint: "Pick several if you're between regions." },
-  { id: "stop_sign_wording", col: "stop_sign_wording", name: "Stop sign", kind: "stop", match: "or",
-    hint: "The word (or script) printed on the stop sign." },
   { id: "road_line_color_inner", col: "road_line_color_inner", name: "Centre line colour", kind: "road", variant: "inner", match: "or",
     hint: "Colour of the middle dividing line." },
   { id: "road_line_color_outer", col: "road_line_color_outer", name: "Edge line colour", kind: "road", variant: "outer", match: "or",
     hint: "Colour of the outer edge lines." },
+  { id: "stop_sign_wording", col: "stop_sign_wording", name: "Stop sign", kind: "stop", match: "or",
+    hint: "The word (or script) printed on the stop sign." },
   { id: "chevron_bg_color", col: "chevron_bg_color", name: "Chevron background", kind: "chevron", variant: "bg", match: "or",
     hint: "Background colour of curve-warning chevrons." },
   { id: "chevron_arrow_color", col: "chevron_arrow_color", name: "Chevron arrow", kind: "chevron", variant: "arrow", match: "or",
     hint: "Arrow colour on curve-warning chevrons." },
-  { id: "languages", col: "languages", name: "Language", kind: "pill", icon: "speech", match: "or",
-    hint: "A language spoken here. Pick several if you're unsure." },
+  { id: "languages", col: "languages", name: "Language", kind: "pill", icon: "speech", match: "or", toggle: true,
+    hint: "A language spoken here. OR = any of them; AND = all must be spoken." },
   { id: "scripts", col: "scripts", name: "Writing script", kind: "script", match: "or",
     hint: "Recognise the alphabet by its shape, even if you can't read it." },
-  { id: "road_name_words", col: "road_name_words", name: "Road name words", kind: "pill", icon: "signpost", match: "or",
-    hint: "The street word on name plates - Jalan, ul., -straat, Rue, Calle…" },
   { id: "special_letters_latin", col: "special_letters_latin", name: "Special letters (Latin)", kind: "letter", match: "and",
     hint: "Accented / extra Latin letters. Picking several needs ALL to appear." },
   { id: "special_letters_cyrillic", col: "special_letters_cyrillic", name: "Cyrillic letters", kind: "letter", match: "and",
     hint: "Letters specific to a country's Cyrillic alphabet. Picking several needs ALL to appear." },
+  { id: "road_name_words", col: "road_name_words", name: "Road name words", kind: "pill", icon: "signpost", match: "or",
+    hint: "The street word on name plates - Jalan, ul., -straat, Rue, Calle…" },
 ];
 
 // Only the driving side starts open — everything else collapses to keep
@@ -113,6 +118,8 @@ const state = {
   optionsByCat: new Map(),
   // category id -> Set of currently checked values
   selected: new Map(),
+  // category id -> "and" | "or" (mutable for categories with toggle: true)
+  matchMode: new Map(),
   collapsed: new Set(),
 };
 
@@ -132,6 +139,7 @@ async function loadData() {
     for (const c of countries) for (const v of valuesFor(c, cat)) present.add(v);
     state.optionsByCat.set(cat.id, sortOptions(cat, [...present]));
     state.selected.set(cat.id, new Set());
+    state.matchMode.set(cat.id, cat.match);
   }
   state.collapsed = new Set(CATEGORIES.filter((c) => !EXPANDED_BY_DEFAULT.has(c.id)).map((c) => c.id));
 }
@@ -184,7 +192,7 @@ function matchesFilters(country) {
       continue;
     }
 
-    if (cat.match === "and") {
+    if (state.matchMode.get(cat.id) === "and") {
       for (const v of selected) if (!values.has(v)) return "no";
     } else {
       let ok = false;
@@ -333,19 +341,53 @@ function renderFilters() {
     const isCollapsed = state.collapsed.has(cat.id);
     const selectedCount = state.selected.get(cat.id)?.size ?? 0;
 
+    const collapseToggle = () => {
+      if (state.collapsed.has(cat.id)) state.collapsed.delete(cat.id);
+      else state.collapsed.add(cat.id);
+      renderFilters();
+    };
+    const chevron = `<span class="filter-category-chevron">${isCollapsed ? "▸" : "▾"}</span>`;
+
     const heading = document.createElement("button");
     heading.type = "button";
     heading.className = "filter-category-heading";
     heading.setAttribute("aria-expanded", String(!isCollapsed));
-    heading.innerHTML =
-      `<span class="heading-left">${headerIcon(cat.icon ?? cat.kind)}<span class="heading-name">${cat.name}${selectedCount ? ` (${selectedCount})` : ""}</span></span>` +
-      `<span class="filter-category-chevron">${isCollapsed ? "▸" : "▾"}</span>`;
-    heading.addEventListener("click", () => {
-      if (state.collapsed.has(cat.id)) state.collapsed.delete(cat.id);
-      else state.collapsed.add(cat.id);
-      renderFilters();
-    });
-    section.appendChild(heading);
+    heading.addEventListener("click", collapseToggle);
+
+    if (cat.toggle) {
+      // AND/OR switch sits right next to the title. It's a real button, so
+      // the heading (icon + name) shrinks to content and the switch + the
+      // collapse chevron follow it in a flex row; the chevron gets its own
+      // click target so the whole row still collapses/expands.
+      heading.innerHTML = `<span class="heading-left">${headerIcon(cat.icon ?? cat.kind)}<span class="heading-name">${cat.name}${selectedCount ? ` (${selectedCount})` : ""}</span></span>`;
+      const mode = state.matchMode.get(cat.id);
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "match-toggle";
+      toggle.title = "How multiple picks combine: OR = any of them, AND = all must match";
+      toggle.innerHTML =
+        `<span class="${mode === "or" ? "on" : ""}">OR</span><span class="${mode === "and" ? "on" : ""}">AND</span>`;
+      toggle.addEventListener("click", () => {
+        state.matchMode.set(cat.id, mode === "or" ? "and" : "or");
+        renderFilters();
+        renderResults();
+      });
+      const chev = document.createElement("button");
+      chev.type = "button";
+      chev.className = "filter-category-heading chevron-only";
+      chev.setAttribute("aria-label", (isCollapsed ? "Expand " : "Collapse ") + cat.name);
+      chev.innerHTML = chevron;
+      chev.addEventListener("click", collapseToggle);
+
+      const row = document.createElement("div");
+      row.className = "filter-category-row";
+      row.append(heading, toggle, chev);
+      section.appendChild(row);
+    } else {
+      heading.innerHTML =
+        `<span class="heading-left">${headerIcon(cat.icon ?? cat.kind)}<span class="heading-name">${cat.name}${selectedCount ? ` (${selectedCount})` : ""}</span></span>` + chevron;
+      section.appendChild(heading);
+    }
 
     if (isCollapsed) {
       container.appendChild(section);

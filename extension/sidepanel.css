@@ -111,6 +111,60 @@ body {
   color: #94a3b8;
 }
 
+/* Heading row used when a category has an AND/OR toggle: title shrinks to
+   content, the toggle sits right beside it, chevron pushed to the far
+   right. */
+.filter-category-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.filter-category:has(.filter-category-heading[aria-expanded="false"]) .filter-category-row {
+  margin-bottom: 0;
+}
+
+.filter-category-row .filter-category-heading {
+  width: auto;
+  margin: 0;
+}
+
+.filter-category-row .chevron-only {
+  width: auto;
+  margin: 0 0 0 auto;
+  padding: 0;
+}
+
+.match-toggle {
+  display: inline-flex;
+  border: 1px solid #1e293b;
+  border-radius: 999px;
+  overflow: hidden;
+  padding: 0;
+  background: #0f172a;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.match-toggle span {
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #475569;
+}
+
+.match-toggle span.on {
+  background: #34d399;
+  color: #062018;
+}
+
+.match-toggle:hover span:not(.on) {
+  color: #94a3b8;
+}
+
 .heading-left {
   display: flex;
   align-items: center;
