@@ -689,6 +689,16 @@ body {
   justify-content: center;
 }
 
+/* Result rows open the country's Meta Lineup page. */
+#results li.result-row {
+  cursor: pointer;
+}
+
+#results li.result-row:hover {
+  border-color: #334155;
+  background: #131c2e;
+}
+
 /* Countries kept only because a selected clue has no data for them yet —
    still possible, but visually secondary to confirmed matches. */
 #results li.uncertain {

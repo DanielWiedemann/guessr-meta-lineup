@@ -33,6 +33,33 @@ function flagUrl(code, flagCode) {
   return `https://flagcdn.com/w80/${flagCode || code}.png`;
 }
 
+const SITE_URL = "https://guessr-meta-lineup.vercel.app";
+
+// Panel-level preferences (which sections are open, AND/OR choices)
+// survive the side panel closing between rounds. Selections deliberately
+// do NOT persist - each round starts from a clean slate.
+const PREFS_KEY = "meta-lineup-prefs";
+
+function loadPrefs() {
+  try {
+    return JSON.parse(localStorage.getItem(PREFS_KEY)) ?? {};
+  } catch {
+    return {};
+  }
+}
+
+function savePrefs() {
+  const prefs = {
+    collapsed: [...state.collapsed],
+    matchMode: Object.fromEntries(state.matchMode),
+  };
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  } catch {
+    // storage full/unavailable - preferences just won't stick
+  }
+}
+
 // --- Filter definitions ----------------------------------------------------
 // Each category maps to one column on the countries table. `match` is how
 // multiple selected options combine: "or" (any is enough — the default,
@@ -146,6 +173,20 @@ async function loadData() {
     state.matchMode.set(cat.id, cat.match);
   }
   state.collapsed = new Set(CATEGORIES.filter((c) => !EXPANDED_BY_DEFAULT.has(c.id)).map((c) => c.id));
+
+  // Restore remembered collapsed/AND-OR preferences (validated against the
+  // current category list so stale ids from old versions are dropped).
+  const prefs = loadPrefs();
+  const validIds = new Set(CATEGORIES.map((c) => c.id));
+  if (Array.isArray(prefs.collapsed)) {
+    state.collapsed = new Set(prefs.collapsed.filter((id) => validIds.has(id)));
+  }
+  if (prefs.matchMode && typeof prefs.matchMode === "object") {
+    for (const cat of CATEGORIES) {
+      const m = prefs.matchMode[cat.id];
+      if (cat.toggle && (m === "and" || m === "or")) state.matchMode.set(cat.id, m);
+    }
+  }
 }
 
 function sortOptions(cat, values) {
@@ -364,6 +405,7 @@ function renderFilters() {
     const collapseToggle = () => {
       if (state.collapsed.has(cat.id)) state.collapsed.delete(cat.id);
       else state.collapsed.add(cat.id);
+      savePrefs();
       renderFilters();
     };
     const chevron = `<span class="filter-category-chevron">${isCollapsed ? "▸" : "▾"}</span>`;
@@ -389,6 +431,7 @@ function renderFilters() {
         `<span class="${mode === "or" ? "on" : ""}">OR</span><span class="${mode === "and" ? "on" : ""}">AND</span>`;
       toggle.addEventListener("click", () => {
         state.matchMode.set(cat.id, mode === "or" ? "and" : "or");
+        savePrefs();
         renderFilters();
         renderResults();
       });
@@ -432,7 +475,8 @@ function renderFilters() {
 
     for (const value of options) {
       const label = document.createElement("label");
-      label.title = optionLabel(cat, value);
+      const nWith = state.countries.filter((c) => valuesFor(c, cat).includes(value)).length;
+      label.title = `${optionLabel(cat, value)} - ${nWith} ${nWith === 1 ? "country" : "countries"}`;
 
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
@@ -539,9 +583,14 @@ function renderResults() {
 
   for (const country of matching) {
     const li = document.createElement("li");
+    li.className = "result-row";
+    li.title = `Open ${country.name} on Meta Lineup`;
+    li.addEventListener("click", () => {
+      window.open(`${SITE_URL}/country/${country.code}`, "_blank", "noopener");
+    });
     if (country._uncertain) {
-      li.className = "uncertain";
-      li.title = "No data yet for one of your selected clues - still possible, not confirmed.";
+      li.classList.add("uncertain");
+      li.title = `${country.name} - no data yet for one of your selected clues. Click to open its Meta Lineup page.`;
     }
 
     const img = document.createElement("img");

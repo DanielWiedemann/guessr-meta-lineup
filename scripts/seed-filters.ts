@@ -357,21 +357,30 @@ const roadLinesInner: Record<string, string[]> = {
   dk: ["white"], do: ["yellow"], ec: ["yellow"], ee: ["white"], es: ["white"],
   fi: ["white", "yellow"], fo: ["white"], fr: ["white"], gb: ["white"], gh: ["white"],
   gi: ["white"], gl: ["white"], gr: ["white", "yellow"], gt: ["yellow"], gu: ["yellow"],
+  hk: ["white"], // Plonk It: "white centre lines and white or yellow outer lines"
   hr: ["white"], hu: ["white"], id: ["white", "yellow"], ie: ["white"], il: ["white"],
   im: ["white"], in: ["white", "yellow"], is: ["white"], it: ["white", "none"], je: ["white"],
   jo: ["white"], jp: ["white", "yellow"], ke: ["yellow"], kg: ["white"], kh: ["yellow"],
-  kr: ["white", "yellow"], la: ["white"], li: ["white"], lk: ["white"], ls: ["white"],
+  kr: ["white", "yellow"],
+  kz: ["white"], // Plonk It: "all white road lines", "single white middle road line"
+  la: ["white"], li: ["white"], lk: ["white"], ls: ["white"],
   lt: ["white"], lu: ["white"], lv: ["white"], mc: ["white"], me: ["white"], mg: ["white"],
   mk: ["white", "yellow"], mn: ["white"], mp: ["yellow"], mq: ["white"], mt: ["white"],
-  mx: ["white", "yellow"], my: ["white"], ng: ["white"], nl: ["white"], no: ["white", "yellow"],
-  nz: ["white", "yellow"], pa: ["white", "yellow", "none"], pe: ["white", "yellow", "none"],
+  mx: ["white", "yellow"], my: ["white"],
+  na: ["white"], // Plonk It: "single yellow outer lines and white centre lines"
+  ng: ["white"], nl: ["white"], no: ["white", "yellow"],
+  nz: ["white", "yellow"],
+  om: ["white"], // Plonk It: "yellow outer and white middle lines"
+  pa: ["white", "yellow", "none"], pe: ["white", "yellow", "none"],
   ph: ["white", "yellow"], pl: ["white"], pm: ["white"], pr: ["yellow"], pt: ["white"],
   "pt-az": ["white"], "pt-ma": ["white"], qa: ["yellow"], re: ["white"], ro: ["white", "yellow"],
   rs: ["white"], ru: ["white", "yellow"], rw: ["yellow"], se: ["white"], sg: ["white"],
   si: ["white"], sj: ["white"], sk: ["white"], sm: ["white"], sn: ["white"],
   sz: ["white", "yellow"], th: ["yellow"], tn: ["white"], tr: ["white", "yellow"], tw: ["yellow"],
   ua: ["white"], ug: ["white", "yellow"], us: ["white", "yellow"], "us-ak": ["white", "yellow"],
-  "us-hi": ["white", "yellow"], uy: ["white", "yellow"], vi: ["yellow"], za: ["white"],
+  "us-hi": ["white", "yellow"], uy: ["white", "yellow"], vi: ["yellow"],
+  vn: ["yellow", "white"], // Plonk It: "short yellow middle dashes particularly common"; lines "both white and yellow"
+  za: ["white"],
 };
 
 const roadLinesOuter: Record<string, string[]> = {
@@ -382,19 +391,29 @@ const roadLinesOuter: Record<string, string[]> = {
   cy: ["yellow"], cz: ["white"], de: ["white", "yellow"], dk: ["white"], do: ["white"],
   ec: ["white"], ee: ["white"], es: ["white", "yellow"], fi: ["white"], fo: ["white"],
   fr: ["white"], gb: ["white", "yellow"], gh: ["white"], gi: ["white", "yellow"], gl: ["white"],
-  gr: ["white"], gt: ["white"], gu: ["white"], hr: ["white"], hu: ["white"], id: ["white"],
+  gr: ["white"], gt: ["white"], gu: ["white"],
+  hk: ["white", "yellow"], // Plonk It: "white or yellow outer lines"; yellow = no-stopping on small roads
+  hr: ["white"], hu: ["white"], id: ["white"],
   ie: ["yellow"], il: ["yellow"], im: ["white", "yellow"], in: ["white", "yellow"], is: ["white"],
   it: ["white"], je: ["yellow"], jo: ["yellow"], jp: ["white"], ke: ["white"], kg: ["white"],
-  kh: ["white"], kr: ["white"], la: ["white"], lk: ["white", "yellow"], ls: ["yellow"],
+  kh: ["white"], kr: ["white"],
+  kz: ["white", "yellow"], // Plonk It: "all white road lines"; M36 highway "yellow outer lines"
+  la: ["white"], lk: ["white", "yellow"], ls: ["yellow"],
   lt: ["white", "yellow"], lu: ["white"], lv: ["white"], mc: ["white"], me: ["white", "yellow"],
   mg: ["white"], mk: ["white", "yellow"], mn: ["white"], mp: ["white"], mq: ["white"], mt: ["white"],
-  mx: ["white", "yellow"], my: ["white"], ng: ["yellow"], nl: ["white"], no: ["white"],
-  nz: ["white", "yellow"], pa: ["white"], pe: ["white"], ph: ["white"], pl: ["white"], pm: ["white"],
+  mx: ["white", "yellow"], my: ["white"],
+  na: ["yellow", "white"], // Plonk It: "single yellow outer lines" (some B1 sections white-only)
+  ng: ["yellow"], nl: ["white"], no: ["white"],
+  np: ["yellow"], // Plonk It: "commonly uses outer yellow road lines"
+  nz: ["white", "yellow"],
+  om: ["yellow"], // Plonk It: "yellow outer and white middle lines"
+  pa: ["white"], pe: ["white"], ph: ["white"], pl: ["white"], pm: ["white"],
   pr: ["white"], pt: ["white", "yellow"], "pt-az": ["white", "yellow"], "pt-ma": ["white", "yellow"],
   qa: ["white"], re: ["white"], ro: ["white", "yellow"], rs: ["white"], ru: ["white", "yellow"],
   rw: ["white"], se: ["white"], sg: ["white", "yellow"], si: ["white"], sk: ["white"], sm: ["white"],
   sn: ["white"], sz: ["yellow"], th: ["white"], tn: ["white"], tr: ["white", "yellow"], tw: ["white"],
   ua: ["white"], ug: ["white"], us: ["white"], "us-ak": ["white"], "us-hi": ["white"], vi: ["white"],
+  vn: ["white", "yellow"], // Plonk It: "multiple different types of road lines, both white and yellow"
   za: ["yellow"],
 };
 
@@ -480,6 +499,10 @@ const chevrons: Record<string, { bg: string[]; arrow: string[] }> = {
   mt: { bg: ["black"], arrow: ["white"] }, // British-convention signage
   cy: { bg: ["black"], arrow: ["white"] }, // British-convention signage
   ad: { bg: ["blue", "black"], arrow: ["white"] }, // Andorra mixes French/Spanish styles
+  // Plonk It country-guide prose (fetched directly from the guides)
+  kz: { bg: ["yellow", "red"], arrow: ["black", "white"] }, // "primarily yellow and black chevrons, except on T intersections ... red and white"
+  om: { bg: ["yellow"], arrow: ["black"] }, // "black-and-yellow chevrons that have an unusually large number of arrows"
+  vn: { bg: ["yellow", "red"], arrow: ["black", "white"] }, // "either black on yellow or white on red"
 };
 
 // ---------------------------------------------------------------------------
@@ -613,15 +636,16 @@ roadWord("Lalana", ["mg"]); // Malagasy "street" alongside French Rue
 // Currency symbols — derived straight from data/currency.ts (the same
 // GeoHints-sourced facts the website shows) so there's a single source of
 // truth. The "Symbol" field lists variants separated by " / " (e.g.
-// "$ / US$ / U$", "₽ / руб"); we split those, strip a trailing dot on
-// plain tokens (kr. -> kr) and collapse dollar-prefixed variants
-// (US$, C$, MX$, $U, ...) down to "$", so the filter shows one clean tile
-// per distinct symbol a player would actually see.
+// "$ / US$ / U$", "₽ / руб"); we split those and strip a trailing dot on
+// plain tokens (kr. -> kr, but keep Panama's B/.). Variants are kept
+// as-is, NOT collapsed: an earlier version folded every letter+$ form
+// into "$", which erased Brazil's R$ - its one true symbol (bare $ is
+// never used there) - along with Uruguay's $U and the DR's RD$. Distinct
+// prefixed forms are exactly the giveaways a player sees on price tags.
 function cleanCurrencySymbols(field: string): string[] {
   const out: string[] = [];
   for (let tok of field.split(/\s+\/\s+/).map((s) => s.trim()).filter(Boolean)) {
     if (!tok.includes("/")) tok = tok.replace(/\.$/, ""); // kr. -> kr, but keep B/.
-    if (/^[A-Za-z]{0,3}\$$/.test(tok) || /^\$[A-Za-z]{0,2}$/.test(tok)) tok = "$";
     if (tok && !out.includes(tok)) out.push(tok);
   }
   return out;
