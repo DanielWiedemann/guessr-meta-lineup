@@ -21,7 +21,7 @@ seeing (or hearing):
   Lao ກສດ, Khmer, Chinese characters, Japanese kana, Korean Hangul,
   Devanagari, Bengali, Tamil, Telugu, Kannada, Gujarati, Sinhala, Tibetan,
   Arabic, Hebrew, Greek, plus plain Latin/Cyrillic). Script coverage is
-  complete for all 137 countries, so this filter is fully discriminating —
+  complete for all 136 countries, so this filter is fully discriminating —
   one click on Telugu narrows to India, Thai to Thailand, Khmer to
   Cambodia.
 - **Road name words** — the street-designator words on name plates and
@@ -56,7 +56,8 @@ America" for navigation purposes) — Russia, Turkey, and Cyprus are tagged
 with both Europe and Asia since they're genuinely transcontinental.
 
 Coverage: side of driving, continent, language and stop-sign wording are
-tagged for (nearly) all 137 countries and territories. Road-line and
+tagged for all 136 countries and territories, as are road-name words and
+writing scripts — so those filters are fully discriminating. Road-line and
 chevron colours are most complete for the Americas and Europe, where the
 Plonk It research is done, plus the marquee Asian metas (Japan, Korea,
 China); the rest are being filled in and, until then, simply don't

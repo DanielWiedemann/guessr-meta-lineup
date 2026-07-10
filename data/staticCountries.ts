@@ -125,8 +125,8 @@ export const staticCountries: StaticCountry[] = [
   { code: "tn", name: "Tunisia", region: "Africa" },
   { code: "ug", name: "Uganda", region: "Africa" },
 
-  // Antarctica
-  { code: "aq", name: "Antarctica", region: "Antarctica" },
+  // Antarctica region (Antarctica itself is deliberately NOT listed — it
+  // doesn't appear in GeoGuessr play)
   { code: "gs", name: "South Georgia and the South Sandwich Islands", region: "Antarctica", flagCode: "gb" },
 
   // Asia

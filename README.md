@@ -4,7 +4,7 @@ A free, no-login GeoGuessr/WorldGuessr helper. Instead of clicking into one
 country's guide at a time, browse every documented variant of a meta side by
 side and match it to what you're seeing in-game.
 
-Covers **137 countries and territories** across every Plonk It region —
+Covers **136 countries and territories** across every Plonk It region —
 South America, Latin America, North America, Europe, Africa, Asia,
 Oceania, and Antarctica. The image-based metas (Bollards, Poles, License
 plates, Road lines/Chevrons, Signs) are currently researched for the

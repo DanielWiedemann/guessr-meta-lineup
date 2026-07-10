@@ -169,24 +169,30 @@ function idx(order, v) {
 // Critically: a country with NO data for a selected category is treated as
 // "unknown, still possible" — never excluded. Excluding on missing data is
 // what silently dropped correct answers (Australia had no road-line colour,
-// so selecting any colour wrongly hid it).
+// so selecting any colour wrongly hid it). Countries kept only via such a
+// gap are returned as "uncertain" so the UI can dim them and list them
+// after the confirmed matches instead of flooding the list.
 function matchesFilters(country) {
+  let uncertain = false;
   for (const cat of CATEGORIES) {
     const selected = state.selected.get(cat.id);
     if (selected.size === 0) continue;
 
     const values = new Set(valuesFor(country, cat));
-    if (values.size === 0) continue; // honest gap → still possible
+    if (values.size === 0) {
+      uncertain = true; // honest gap → still possible, but flagged
+      continue;
+    }
 
     if (cat.match === "and") {
-      for (const v of selected) if (!values.has(v)) return false;
+      for (const v of selected) if (!values.has(v)) return "no";
     } else {
       let ok = false;
       for (const v of selected) if (values.has(v)) { ok = true; break; }
-      if (!ok) return false;
+      if (!ok) return "no";
     }
   }
-  return true;
+  return uncertain ? "uncertain" : "match";
 }
 
 function hasAnyFilterSelected() {
@@ -422,11 +428,20 @@ function renderFilters() {
 }
 
 function renderResults() {
-  const matching = state.countries.filter(matchesFilters);
+  const confirmed = [];
+  const uncertain = [];
+  for (const country of state.countries) {
+    const verdict = matchesFilters(country);
+    if (verdict === "match") confirmed.push(country);
+    else if (verdict === "uncertain") uncertain.push(country);
+  }
+  const matching = [...confirmed, ...uncertain.map((c) => ({ ...c, _uncertain: true }))];
 
-  document.getElementById("results-summary").textContent = hasAnyFilterSelected()
-    ? `${matching.length} of ${state.countries.length} possible matches`
-    : `Showing all ${state.countries.length} — pick filters below to narrow it down`;
+  document.getElementById("results-summary").textContent = !hasAnyFilterSelected()
+    ? `Showing all ${state.countries.length} — pick filters below to narrow it down`
+    : uncertain.length > 0
+      ? `${confirmed.length} of ${state.countries.length} match · ${uncertain.length} unknown (no data yet)`
+      : `${confirmed.length} of ${state.countries.length} possible matches`;
 
   const list = document.getElementById("results");
   list.innerHTML = "";
@@ -441,6 +456,10 @@ function renderResults() {
 
   for (const country of matching) {
     const li = document.createElement("li");
+    if (country._uncertain) {
+      li.className = "uncertain";
+      li.title = "No data yet for one of your selected clues — still possible, not confirmed.";
+    }
 
     const img = document.createElement("img");
     img.alt = "";
@@ -460,6 +479,13 @@ function renderResults() {
     const span = document.createElement("span");
     span.textContent = country.name;
     li.appendChild(span);
+
+    if (country._uncertain) {
+      const q = document.createElement("span");
+      q.className = "uncertain-badge";
+      q.textContent = "?";
+      li.appendChild(q);
+    }
 
     list.appendChild(li);
   }

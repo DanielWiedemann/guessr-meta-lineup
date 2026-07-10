@@ -74,7 +74,8 @@ const DRIVES_LEFT = new Set([
   "au", "cx", "cc", "nz", "pn",
 ]);
 
-const NO_DRIVING_SIDE = new Set(["aq"]); // Antarctica: no roads, no traffic law
+// (Antarctica itself was removed from the app entirely — it doesn't appear
+// in GeoGuessr play — so every remaining entity has a driving side.)
 
 // ---------------------------------------------------------------------------
 // Continent — true geography, not the app's "region" navigation grouping.
@@ -108,8 +109,8 @@ const countryContinents: Record<string, string[]> = {
   ls: ["Africa"], mg: ["Africa"], ml: ["Africa"], na: ["Africa"], ng: ["Africa"],
   re: ["Africa"], rw: ["Africa"], sn: ["Africa"], za: ["Africa"], st: ["Africa"],
   tz: ["Africa"], tn: ["Africa"], ug: ["Africa"],
-  // Antarctica
-  aq: ["Antarctica"], gs: ["Antarctica"],
+  // Antarctica region
+  gs: ["Antarctica"],
   // Asia
   bd: ["Asia"], bt: ["Asia"], io: ["Asia"], kh: ["Asia"], cn: ["Asia"], hk: ["Asia"],
   in: ["Asia"], id: ["Asia"], iq: ["Asia"], il: ["Asia"], ps: ["Asia"], jp: ["Asia"],
@@ -160,7 +161,7 @@ const countryLanguages: Record<string, string[]> = {
   re: ["French"], rw: ["Kinyarwanda", "French", "English"], sn: ["French"],
   za: ["English", "Zulu", "Afrikaans"], st: ["Portuguese"], tz: ["Swahili", "English"],
   tn: ["Arabic", "French"], ug: ["English", "Swahili"],
-  // Antarctica — no official language (aq intentionally empty)
+  // Antarctica region
   gs: ["English"],
   // Asia
   bd: ["Bengali"], bt: ["Dzongkha"], io: ["English"], kh: ["Khmer"], cn: ["Mandarin Chinese"],
@@ -527,7 +528,7 @@ roadWord("ул. / вул.", ["ru", "ua", "by", "bg", "kz", "kg"]); // Cyrillic "
 roadWord("-straße / Str.", ["de", "at", "ch", "li", "lu"]);
 roadWord("-straat", ["nl", "be", "za", "cw"]); // Dutch + Afrikaans
 roadWord("-weg", ["nl", "be", "de", "za"]);
-roadWord("-vej", ["dk"]);
+roadWord("-vej", ["dk", "gl"]); // Danish street names also appear in Greenland
 roadWord("-veien / -vegen", ["no", "sj"]);
 roadWord("-vägen / -gatan", ["se"]);
 roadWord("-vegur", ["is", "fo"]);
@@ -538,7 +539,14 @@ roadWord("g. / gatvė", ["lt"]);
 roadWord("tänav / tee / mnt", ["ee"]);
 roadWord("utca / út", ["hu"]);
 roadWord("Strada / Str.", ["ro"]);
-roadWord("Rue", ["fr", "be", "lu", "ch", "mc", "mq", "pm", "re", "sn", "ml", "tn", "lb"]);
+roadWord("Rruga / Rr.", ["al"]); // Albanian "street"
+roadWord("Carrer", ["ad"]); // Catalan "street"
+roadWord("Rue", [
+  "fr", "be", "lu", "ch", "mc", "mq", "pm", "re", "sn", "ml", "tn", "lb",
+  "mg", // francophone Madagascar
+  "la", // Vientiane keeps French street names (Rue Setthathirath, ...)
+  "vu", // Port Vila mixes French and English street names
+]);
 roadWord("Calle", ["es", "ar", "bo", "cl", "co", "ec", "pe", "uy", "cr", "do", "gt", "mx", "pa", "pr"]);
 roadWord("Rua", ["pt", "br", "pt-az", "pt-ma", "st", "mo"]); // Macau keeps Portuguese street names
 roadWord("Via", ["it", "sm", "ch"]);
@@ -546,12 +554,32 @@ roadWord("Street / Road / Rd", [
   "us", "us-ak", "us-hi", "ca", "gb", "ie", "au", "nz", "za", "ke", "ng", "gh", "ug", "tz",
   "in", "pk", "ph", "sg", "hk", "mt", "cy", "gi", "im", "je", "bm", "vi", "fk", "as", "gu",
   "mp", "bw", "na", "ls", "sz",
+  // English designators also standard on signage in:
+  "rw", // Kigali's KG/KN/KK Ave/Rd/St street-code system
+  "um", "io", "cx", "cc", "pn", "gs", // US/UK/AU small territories
+  "bd", // Dhaka's numbered "Road 5" system
+  "kh", // Phnom Penh's numbered "Street 271" system
+  "lk", // "Galle Road" etc. alongside Mawatha
+  "il", // bilingual Hebrew/English signs
+  "eg", "jo", "om", "qa", "ae", // bilingual Arabic/English signs
+  "tw", // Taipei's bilingual Rd/St suffixes
+  "vu",
 ]);
 roadWord("Caddesi / Cd. / Sokak", ["tr"]);
 roadWord("Οδός", ["gr", "cy"]); // Greek "street"
-roadWord("ถนน (Thanon)", ["th"]);
+roadWord("ถนน / ຖະໜົນ (Thanon)", ["th", "la"]); // same word in Thai and Lao
 roadWord("Đường", ["vn"]);
 roadWord("-ro / -gil", ["kr"]); // romanized on virtually every Korean street sign
+roadWord("شارع (Sharia)", ["eg", "iq", "jo", "ps", "qa", "ae", "om", "lb"]); // Arabic "street"
+roadWord("רחוב (Rehov)", ["il"]); // Hebrew "street"
+roadWord("路 / 街 / 道 (Lù/Jiē/Dào)", ["cn", "tw", "hk", "mo"]); // Chinese road/street/avenue
+roadWord("通り (-dōri)", ["jp"]); // the named-street word Japan does use
+roadWord("гудамж (Gudamj)", ["mn"]); // Mongolian "street"
+roadWord("ផ្លូវ (Phlauv)", ["kh"]); // Khmer "street"
+roadWord("Marg", ["in", "np"]); // Devanagari-belt "road" (Janpath Marg, Durbar Marg)
+roadWord("Mawatha / Mw", ["lk"]); // Sri Lanka's distinctive street word
+roadWord("Lam", ["bt"]); // Thimphu street names (Norzin Lam, Chang Lam)
+roadWord("Lalana", ["mg"]); // Malagasy "street" alongside French Rue
 
 // ---------------------------------------------------------------------------
 // Merged web research is edited directly into the maps above once verified
@@ -581,7 +609,7 @@ async function run() {
     updates.push({
       code,
       facts: {
-        driving_side: NO_DRIVING_SIDE.has(code) ? null : DRIVES_LEFT.has(code) ? "left" : "right",
+        driving_side: DRIVES_LEFT.has(code) ? "left" : "right",
         continents: countryContinents[code] ?? [],
         languages: countryLanguages[code] ?? [],
         special_letters_latin: latinLetters[code] ?? [],

@@ -399,6 +399,27 @@ header h1 {
   justify-content: center;
 }
 
+/* Countries kept only because a selected clue has no data for them yet —
+   still possible, but visually secondary to confirmed matches. */
+#results li.uncertain {
+  opacity: 0.5;
+}
+
+.uncertain-badge {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  border: 1px solid #334155;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 footer {
   margin-top: 16px;
   padding-top: 12px;
