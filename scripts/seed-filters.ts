@@ -50,6 +50,8 @@ type Facts = {
   road_line_color_outer: string[];
   chevron_bg_color: string[];
   chevron_arrow_color: string[];
+  scripts: string[];
+  road_name_words: string[];
 };
 
 // ---------------------------------------------------------------------------
@@ -287,7 +289,7 @@ const stopWording: Record<string, string[]> = {
   // Asia — distinctive native-script stop signs are strong GeoGuessr metas.
   jp: ["止まれ"], // red inverted triangle, not an octagon — iconic
   kr: ["정지", "STOP"], cn: ["停", "STOP"], tw: ["停"], th: ["หยุด", "STOP"],
-  id: ["STOP"], my: ["STOP"], ph: ["STOP"],
+  id: ["STOP", "BERHENTI"], my: ["BERHENTI", "STOP"], ph: ["STOP"],
   in: ["STOP"], np: ["STOP"], lk: ["STOP"], bd: ["STOP"], pk: ["STOP", "قف"],
   hk: ["STOP", "停"], mo: ["STOP", "停"], sg: ["STOP"],
   kg: ["STOP"], la: ["STOP"], kh: ["STOP"],
@@ -455,6 +457,103 @@ const chevrons: Record<string, { bg: string[]; arrow: string[] }> = {
 };
 
 // ---------------------------------------------------------------------------
+// Writing scripts — the writing systems a player will see on local signage,
+// so an unfamiliar alphabet's *shape* identifies the country even when it
+// can't be read. Stored as display names; the extension pairs each with
+// sample glyphs. Latin and Cyrillic aren't listed here — they have their
+// own letter-tile categories. Notes on lookalikes:
+//  * Thai vs Lao: same family; Lao is rounder with fewer serif "combs".
+//  * Devanagari (Hindi/Nepali) has the connecting top bar; Bengali's top
+//    bar has more angular hooks below it.
+//  * Telugu/Kannada are round with check-mark headstrokes (south India);
+//    Tamil is boxier with more right angles.
+//  * Chinese characters include Japanese kanji — Japan is also tagged with
+//    kana, which is the giveaway that it's Japan and not China/Taiwan.
+// ---------------------------------------------------------------------------
+
+const countryScripts: Record<string, string[]> = {
+  // Southeast Asia
+  th: ["Thai"], la: ["Lao"], kh: ["Khmer"],
+  // East Asia
+  cn: ["Chinese characters"], tw: ["Chinese characters"], hk: ["Chinese characters"],
+  mo: ["Chinese characters"], sg: ["Chinese characters", "Tamil"],
+  jp: ["Japanese kana", "Chinese characters"],
+  kr: ["Korean Hangul"],
+  // South Asia
+  in: ["Devanagari", "Bengali", "Tamil", "Telugu", "Kannada", "Gujarati"],
+  np: ["Devanagari"], bd: ["Bengali"], lk: ["Sinhala", "Tamil"],
+  bt: ["Tibetan (Dzongkha)"],
+  // Middle East / North Africa (Urdu uses the Perso-Arabic script)
+  eg: ["Arabic"], tn: ["Arabic"], iq: ["Arabic"], jo: ["Arabic"], lb: ["Arabic"],
+  om: ["Arabic"], qa: ["Arabic"], ae: ["Arabic"], ps: ["Arabic"],
+  il: ["Hebrew", "Arabic"], pk: ["Arabic"],
+  // Europe
+  gr: ["Greek"], cy: ["Greek"],
+};
+
+// Unlike the other categories, script coverage is COMPLETE knowledge — we
+// know France's signage is Latin, so an empty array would be a fake
+// "unknown" that stops the filter from excluding anything. Every country
+// gets Latin unless its signage is predominantly Cyrillic-only, plus
+// Cyrillic where that's what's on the signs. (Serbia/Montenegro/North
+// Macedonia/Kazakhstan genuinely use both scripts on signage; Greece,
+// the Middle East and most of Asia romanize major road signs, so they
+// keep Latin alongside their native script.)
+const CYRILLIC_SIGNAGE = new Set(["ru", "ua", "by", "bg", "kg", "mn", "kz", "rs", "me", "mk"]);
+const CYRILLIC_ONLY_SIGNAGE = new Set(["ru", "ua", "by", "bg", "kg", "mn"]);
+
+function scriptsFor(code: string): string[] {
+  const scripts = [...(countryScripts[code] ?? [])];
+  if (CYRILLIC_SIGNAGE.has(code)) scripts.push("Cyrillic");
+  if (!CYRILLIC_ONLY_SIGNAGE.has(code)) scripts.push("Latin");
+  return scripts;
+}
+
+// ---------------------------------------------------------------------------
+// Road-name designator words — the street-word prefixes/suffixes seen on
+// name plates and signs ("Jalan Sudirman", "ul. Nowa", "Kirkevej",
+// "Hauptstraße", "Rue de la Paix"). A country gets every designator a
+// player will commonly see there. OR-matched in the extension.
+// ---------------------------------------------------------------------------
+
+const roadNameWords: Record<string, string[]> = {};
+function roadWord(word: string, codes: string[]) {
+  for (const code of codes) (roadNameWords[code] ??= []).push(word);
+}
+
+roadWord("Jalan / Jl.", ["id", "my", "sg"]);
+roadWord("ul. / ulica / ulice", ["pl", "hr", "si", "rs", "me", "mk", "cz", "sk"]);
+roadWord("ул. / вул.", ["ru", "ua", "by", "bg", "kz", "kg"]); // Cyrillic "street"
+roadWord("-straße / Str.", ["de", "at", "ch", "li", "lu"]);
+roadWord("-straat", ["nl", "be", "za", "cw"]); // Dutch + Afrikaans
+roadWord("-weg", ["nl", "be", "de", "za"]);
+roadWord("-vej", ["dk"]);
+roadWord("-veien / -vegen", ["no", "sj"]);
+roadWord("-vägen / -gatan", ["se"]);
+roadWord("-vegur", ["is", "fo"]);
+roadWord("-gata", ["is", "no"]);
+roadWord("-tie / -katu", ["fi"]);
+roadWord("iela", ["lv"]);
+roadWord("g. / gatvė", ["lt"]);
+roadWord("tänav / tee / mnt", ["ee"]);
+roadWord("utca / út", ["hu"]);
+roadWord("Strada / Str.", ["ro"]);
+roadWord("Rue", ["fr", "be", "lu", "ch", "mc", "mq", "pm", "re", "sn", "ml", "tn", "lb"]);
+roadWord("Calle", ["es", "ar", "bo", "cl", "co", "ec", "pe", "uy", "cr", "do", "gt", "mx", "pa", "pr"]);
+roadWord("Rua", ["pt", "br", "pt-az", "pt-ma", "st", "mo"]); // Macau keeps Portuguese street names
+roadWord("Via", ["it", "sm", "ch"]);
+roadWord("Street / Road / Rd", [
+  "us", "us-ak", "us-hi", "ca", "gb", "ie", "au", "nz", "za", "ke", "ng", "gh", "ug", "tz",
+  "in", "pk", "ph", "sg", "hk", "mt", "cy", "gi", "im", "je", "bm", "vi", "fk", "as", "gu",
+  "mp", "bw", "na", "ls", "sz",
+]);
+roadWord("Caddesi / Cd. / Sokak", ["tr"]);
+roadWord("Οδός", ["gr", "cy"]); // Greek "street"
+roadWord("ถนน (Thanon)", ["th"]);
+roadWord("Đường", ["vn"]);
+roadWord("-ro / -gil", ["kr"]); // romanized on virtually every Korean street sign
+
+// ---------------------------------------------------------------------------
 // Merged web research is edited directly into the maps above once verified
 // — keeping a single source of truth per fact instead of a base + override
 // layering.
@@ -468,7 +567,8 @@ async function run() {
   // Catch typos: every map key must be a real country row.
   const allMaps: Record<string, Record<string, unknown>> = {
     countryContinents, countryLanguages, latinLetters, cyrillicLetters,
-    stopWording, roadLinesInner, roadLinesOuter, chevrons,
+    stopWording, roadLinesInner, roadLinesOuter, chevrons, countryScripts,
+    roadNameWords,
   };
   for (const [mapName, map] of Object.entries(allMaps)) {
     for (const code of Object.keys(map)) {
@@ -491,6 +591,8 @@ async function run() {
         road_line_color_outer: roadLinesOuter[code] ?? [],
         chevron_bg_color: chevrons[code]?.bg ?? [],
         chevron_arrow_color: chevrons[code]?.arrow ?? [],
+        scripts: scriptsFor(code),
+        road_name_words: roadNameWords[code] ?? [],
       },
     });
   }
@@ -516,6 +618,8 @@ async function run() {
   console.log(`road_line_color_inner: ${counted("road_line_color_inner")}/${updates.length}`);
   console.log(`road_line_color_outer: ${counted("road_line_color_outer")}/${updates.length}`);
   console.log(`chevron_bg_color: ${counted("chevron_bg_color")}/${updates.length}`);
+  console.log(`scripts: ${counted("scripts")}/${updates.length}`);
+  console.log(`road_name_words: ${counted("road_name_words")}/${updates.length}`);
   console.log("Done.");
 }
 

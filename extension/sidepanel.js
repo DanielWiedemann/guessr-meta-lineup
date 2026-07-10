@@ -54,8 +54,12 @@ const CATEGORIES = [
     hint: "Background colour of curve-warning chevrons." },
   { id: "chevron_arrow_color", col: "chevron_arrow_color", name: "Chevron arrow", kind: "chevron", variant: "arrow", match: "or",
     hint: "Arrow colour on curve-warning chevrons." },
-  { id: "languages", col: "languages", name: "Language", kind: "pill", match: "or",
+  { id: "languages", col: "languages", name: "Language", kind: "pill", icon: "speech", match: "or",
     hint: "A language spoken here. Pick several if you're unsure." },
+  { id: "scripts", col: "scripts", name: "Writing script", kind: "script", match: "or",
+    hint: "Recognise the alphabet by its shape, even if you can't read it." },
+  { id: "road_name_words", col: "road_name_words", name: "Road name words", kind: "pill", icon: "signpost", match: "or",
+    hint: "The street word on name plates — Jalan, ul., -straat, Rue, Calle…" },
   { id: "special_letters_latin", col: "special_letters_latin", name: "Special letters (Latin)", kind: "letter", match: "and",
     hint: "Accented / extra Latin letters. Picking several needs ALL to appear." },
   { id: "special_letters_cyrillic", col: "special_letters_cyrillic", name: "Cyrillic letters", kind: "letter", match: "and",
@@ -74,8 +78,34 @@ const COLOR_HEX = {
 
 // Canonical display order for stop-sign wordings (most common first, then
 // native scripts); anything unlisted falls back to alphabetical after.
-const STOP_ORDER = ["STOP", "PARE", "ALTO", "DUR", "ARRÊT", "止まれ", "停", "정지", "หยุด", "قف"];
+const STOP_ORDER = ["STOP", "PARE", "ALTO", "DUR", "BERHENTI", "ARRÊT", "止まれ", "停", "정지", "หยุด", "قف"];
 const CONTINENT_ORDER = ["North America", "South America", "Europe", "Africa", "Asia", "Oceania", "Antarctica"];
+
+// Writing scripts: sample glyphs so the tile shows the alphabet's *shape*
+// (the thing you actually recognise in-game), with the name underneath.
+// Ordered by rough region so lookalikes sit next to each other.
+const SCRIPT_SAMPLES = {
+  "Latin": "ABc",
+  "Cyrillic": "БЖД",
+  "Thai": "กสด",
+  "Lao": "ກສດ",
+  "Khmer": "កសដ",
+  "Chinese characters": "中文字",
+  "Japanese kana": "あのか",
+  "Korean Hangul": "한글",
+  "Devanagari": "कमल",
+  "Bengali": "বকল",
+  "Tamil": "தமழ",
+  "Telugu": "తలవ",
+  "Kannada": "ಕಬಳ",
+  "Gujarati": "ગમળ",
+  "Sinhala": "සකම",
+  "Tibetan (Dzongkha)": "ཀཁག",
+  "Arabic": "ابع",
+  "Hebrew": "אבש",
+  "Greek": "αβΩ",
+};
+const SCRIPT_ORDER = Object.keys(SCRIPT_SAMPLES);
 
 const state = {
   countries: [],
@@ -121,6 +151,9 @@ function sortOptions(cat, values) {
   }
   if (cat.kind === "side") {
     return values.sort((a, b) => idx(["left", "right"], a) - idx(["left", "right"], b));
+  }
+  if (cat.kind === "script") {
+    return values.sort((a, b) => idx(SCRIPT_ORDER, a) - idx(SCRIPT_ORDER, b));
   }
   // letters + languages: locale-aware alphabetical
   return values.sort((a, b) => a.localeCompare(b, "en"));
@@ -188,6 +221,15 @@ function headerIcon(kind) {
     case "letter": // "Á"
       inner = `<text x="8" y="12.5" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor" font-family="Georgia, serif">Á</text>`;
       break;
+    case "script": // "あ"
+      inner = `<text x="8" y="12.5" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor">あ</text>`;
+      break;
+    case "signpost": // road-name sign on a post
+      inner = `<rect x="2" y="3" width="12" height="5.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/>${p("M8 8.5V14")}${p("M5.5 14h5")}`;
+      break;
+    case "speech": // speech bubble
+      inner = `<path d="M2 3.5h12v7H8l-3 3v-3H2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>`;
+      break;
     default:
       inner = "";
   }
@@ -239,7 +281,9 @@ function stopSvg(text) {
   else if (text.length <= 3) fs = 12;
   else if (text.length === 4) fs = 9.5;
   else if (text.length === 5) fs = 8;
-  else fs = 6.8;
+  else if (text.length <= 7) fs = 6.8;
+  else fs = 5.8; // BERHENTI
+
   const label = `<text x="20" y="20" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="${fs}" font-weight="800" font-family="Arial, sans-serif">${escapeXml(text)}</text>`;
   return `<svg class="opt-svg" viewBox="0 0 40 40" aria-hidden="true">${oct}${label}</svg>`;
 }
@@ -288,7 +332,7 @@ function renderFilters() {
     heading.className = "filter-category-heading";
     heading.setAttribute("aria-expanded", String(!isCollapsed));
     heading.innerHTML =
-      `<span class="heading-left">${headerIcon(cat.kind)}<span class="heading-name">${cat.name}${selectedCount ? ` (${selectedCount})` : ""}</span></span>` +
+      `<span class="heading-left">${headerIcon(cat.icon ?? cat.kind)}<span class="heading-name">${cat.name}${selectedCount ? ` (${selectedCount})` : ""}</span></span>` +
       `<span class="filter-category-chevron">${isCollapsed ? "▸" : "▾"}</span>`;
     heading.addEventListener("click", () => {
       if (state.collapsed.has(cat.id)) state.collapsed.delete(cat.id);
@@ -309,9 +353,13 @@ function renderFilters() {
       section.appendChild(hint);
     }
 
-    const usesTiles = cat.kind === "letter" || cat.kind === "road" || cat.kind === "chevron" || cat.kind === "stop" || cat.kind === "side";
+    const usesTiles = cat.kind === "letter" || cat.kind === "road" || cat.kind === "chevron" || cat.kind === "stop" || cat.kind === "side" || cat.kind === "script";
     const grid = document.createElement("div");
-    grid.className = !usesTiles ? "filter-options" : cat.kind === "side" ? "side-grid" : "tile-grid";
+    grid.className = !usesTiles
+      ? "filter-options"
+      : cat.kind === "side" ? "side-grid"
+      : cat.kind === "script" ? "script-grid"
+      : "tile-grid";
 
     for (const value of options) {
       const label = document.createElement("label");
@@ -342,6 +390,18 @@ function renderFilters() {
         const wrap = document.createElement("span");
         wrap.className = "side-inner";
         wrap.innerHTML = optionSvg(cat, value) + `<span class="side-label">${optionLabel(cat, value)}</span>`;
+        label.appendChild(wrap);
+      } else if (cat.kind === "script") {
+        label.className = "script-tile";
+        const wrap = document.createElement("span");
+        wrap.className = "script-inner";
+        const glyphs = document.createElement("span");
+        glyphs.className = "script-glyphs";
+        glyphs.textContent = SCRIPT_SAMPLES[value] ?? value.slice(0, 3);
+        const name = document.createElement("span");
+        name.className = "script-name";
+        name.textContent = value;
+        wrap.append(glyphs, name);
         label.appendChild(wrap);
       } else if (usesTiles) {
         label.className = "opt-tile";

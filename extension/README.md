@@ -6,9 +6,9 @@ seeing (or hearing):
 - **Side of driving** — left / right, shown as a head-on road tile with a car.
 - **Continent** — real geography (see below).
 - **Stop sign** — the actual wording *or script*, each drawn as a red
-  octagon: STOP, PARE, ALTO, DUR, ARRÊT, plus native-script signs like
-  Japan's 止まれ, China/Taiwan's 停, Korea's 정지, Thailand's หยุด and
-  Arabic قف.
+  octagon: STOP, PARE, ALTO, DUR, BERHENTI (Indonesia/Malaysia), ARRÊT,
+  plus native-script signs like Japan's 止まれ, China/Taiwan's 停, Korea's
+  정지, Thailand's หยุด and Arabic قف.
 - **Centre line colour** and **Edge line colour** — the two road-line
   colours are now *separate* filters, each drawn as a little asphalt tile
   with the coloured line in the middle or along the edges (or a "no line"
@@ -16,6 +16,19 @@ seeing (or hearing):
 - **Chevron background** and **Chevron arrow** — drawn as curve-warning
   chevron signs in the actual colour scheme.
 - **Language** — a language spoken there.
+- **Writing script** — recognise an alphabet by its *shape* even if you
+  can't read it: each tile shows sample glyphs (Thai กสด vs the rounder
+  Lao ກສດ, Khmer, Chinese characters, Japanese kana, Korean Hangul,
+  Devanagari, Bengali, Tamil, Telugu, Kannada, Gujarati, Sinhala, Tibetan,
+  Arabic, Hebrew, Greek, plus plain Latin/Cyrillic). Script coverage is
+  complete for all 137 countries, so this filter is fully discriminating —
+  one click on Telugu narrows to India, Thai to Thailand, Khmer to
+  Cambodia.
+- **Road name words** — the street-designator words on name plates and
+  signs: Jalan/Jl., ul./ulica, ул./вул., -straße, -straat, -weg, -vej,
+  -veien, -vägen, -vegur, -tie/-katu, iela, gatvė, utca, Strada, Rue,
+  Calle, Rua, Via, Street/Road, Caddesi/Sokak, Οδός, ถนน, Đường, Korea's
+  romanized -ro/-gil, and more.
 - **Special letters (Latin)** and **Cyrillic letters** — accented / extra
   alphabet letters as clickable glyph tiles. (Greek, Thai, Korean, Arabic
   and other non-Latin/Cyrillic scripts aren't broken out as letter tiles
