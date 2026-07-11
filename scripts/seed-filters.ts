@@ -600,7 +600,10 @@ roadWord("Rue", [
   "la", // Vientiane keeps French street names (Rue Setthathirath, ...)
   "vu", // Port Vila mixes French and English street names
 ]);
-roadWord("Calle", ["es", "ar", "bo", "cl", "co", "ec", "pe", "uy", "cr", "do", "gt", "mx", "pa", "pr"]);
+const SPANISH_SPEAKING = ["es", "ar", "bo", "cl", "co", "ec", "pe", "uy", "cr", "do", "gt", "mx", "pa", "pr"];
+roadWord("Calle / Cl.", SPANISH_SPEAKING); // Cl. is the standard Calle abbreviation on address signs
+roadWord("Carretera / Ctra.", SPANISH_SPEAKING); // the Spanish word for "highway"
+roadWord("Cra. / Carrera", ["co"]); // Colombia's grid: Calle (E-W) × Carrera (N-S), a strong ID
 roadWord("Rua", ["pt", "br", "pt-az", "pt-ma", "st", "mo"]); // Macau keeps Portuguese street names
 roadWord("Via", ["it", "sm", "ch"]);
 roadWord("Street / Road / Rd", [
