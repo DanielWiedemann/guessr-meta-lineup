@@ -2,7 +2,9 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { fetchCountries } from "@/data/countries";
 import { getCountryProfile } from "@/data/countryProfile";
+import { getCountryClues } from "@/data/countryClues";
 import CountryProfile from "@/components/CountryProfile";
+import CountryClues from "@/components/CountryClues";
 import CountryFlag from "@/components/CountryFlag";
 
 export async function generateStaticParams() {
@@ -26,7 +28,10 @@ export default async function CountryPage(props: {
   const countries = await fetchCountries();
   const country = countries.find((c) => c.code === code);
   if (!country) notFound();
-  const sections = await getCountryProfile(code);
+  const [sections, clues] = await Promise.all([
+    getCountryProfile(code),
+    getCountryClues(code),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-8 sm:px-6">
@@ -38,7 +43,10 @@ export default async function CountryPage(props: {
         </div>
       </header>
 
-      <CountryProfile sections={sections} />
+      <div className="space-y-10">
+        {clues && <CountryClues clues={clues} />}
+        <CountryProfile sections={sections} />
+      </div>
     </main>
   );
 }
