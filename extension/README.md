@@ -9,7 +9,7 @@ seeing (or hearing):
   octagon: STOP, PARE, ALTO, DUR, BERHENTI (Indonesia/Malaysia), ARRÊT,
   plus native-script signs like Japan's 止まれ, China/Taiwan's 停, Korea's
   정지, Thailand's หยุด and Arabic قف.
-- **Centre line colour** and **Edge line colour** — the two road-line
+- **Center line colour** and **Edge line colour** — the two road-line
   colours are now *separate* filters, each drawn as a little asphalt tile
   with the coloured line in the middle or along the edges (or a "no line"
   tile).
@@ -93,7 +93,7 @@ would fabricate a signal rather than honestly reflect a gap.
   see the worst-case remaining count.
 - **Near-misses** - a country contradicting exactly *one* of your selected
   clues doesn't silently vanish: it's listed dimmed below the matches with
-  the conflicting clue named in amber ("≠ Centre line colour"). Ranked so
+  the conflicting clue named in amber ("≠ Center line colour"). Ranked so
   countries that matched your *rarest* clues come first, capped at 8, and
   only shown while 8 or fewer candidates are confirmed. One misread line
   colour can no longer eliminate the correct country without trace.

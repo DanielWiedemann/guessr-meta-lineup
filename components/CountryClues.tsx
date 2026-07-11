@@ -234,7 +234,7 @@ export default function CountryClues({ clues }: { clues: CountryClues }) {
   }
   if (clues.road_line_color_inner.length) {
     rows.push(
-      <ClueRow key="inner" label="Centre line">
+      <ClueRow key="inner" label="Center line">
         {clues.road_line_color_inner.map((c) => (
           <ColorChip key={c} color={c} />
         ))}

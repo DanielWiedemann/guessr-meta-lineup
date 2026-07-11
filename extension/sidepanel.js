@@ -76,7 +76,7 @@ const CATEGORIES = [
     hint: "Which side traffic drives on - the fastest clue to check first." },
   { id: "continents", col: "continents", name: "Continent", kind: "pill", match: "or",
     hint: "Pick several if you're between regions." },
-  { id: "road_line_color_inner", col: "road_line_color_inner", name: "Centre line colour", kind: "road", variant: "inner", match: "or",
+  { id: "road_line_color_inner", col: "road_line_color_inner", name: "Center line colour", kind: "road", variant: "inner", match: "or",
     hint: "Colour of the middle dividing line." },
   { id: "road_line_color_outer", col: "road_line_color_outer", name: "Edge line colour", kind: "road", variant: "outer", match: "or",
     hint: "Colour of the outer edge lines." },
@@ -752,13 +752,28 @@ function renderResults() {
 // narrow the current confirmed candidates the most, pessimistically: a
 // candidate with no data for the category survives any observation, so it
 // counts against every outcome. Badge that category's heading.
+// Preferred order to suggest clues in - roughly how you actually read a
+// scene: side of driving, then continent, then the road lines, then the
+// language/script. Anything not listed is considered afterwards in its
+// normal order. Within this, only categories that would ACTUALLY narrow
+// the current candidates are eligible, so a clue that can't split them
+// (e.g. everyone left drives on the same side) is skipped to the next.
+const NEXT_PRIORITY = [
+  "driving_side",
+  "continents",
+  "road_line_color_inner",
+  "road_line_color_outer",
+  "languages",
+  "scripts",
+];
+
 function updateNextBadge(cands) {
   for (const b of document.querySelectorAll(".next-badge")) b.hidden = true;
   if (!cands || cands.length < 2) return;
 
-  let best = null;
-  for (const cat of CATEGORIES) {
-    if (state.selected.get(cat.id).size > 0) continue;
+  // Would this category split the candidates, and what's the worst case?
+  const splitInfo = (cat) => {
+    if (state.selected.get(cat.id).size > 0) return null;
     const groups = new Map();
     let unknown = 0;
     for (const c of cands) {
@@ -767,20 +782,38 @@ function updateNextBadge(cands) {
       const sig = vals.join("|");
       groups.set(sig, (groups.get(sig) ?? 0) + 1);
     }
-    if (groups.size < 2) continue;
+    if (groups.size < 2) return null;
     const worst = Math.max(...groups.values()) + unknown;
-    if (worst >= cands.length) continue; // wouldn't actually narrow anything
-    if (!best || worst < best.worst || (worst === best.worst && groups.size > best.nGroups)) {
-      best = { cat, worst, nGroups: groups.size };
+    if (worst >= cands.length) return null; // wouldn't actually narrow
+    return { worst, nGroups: groups.size };
+  };
+
+  // 1. First eligible category in the preferred order.
+  let pick = null;
+  for (const id of NEXT_PRIORITY) {
+    const cat = CATEGORIES.find((c) => c.id === id);
+    const info = cat && splitInfo(cat);
+    if (info) { pick = { cat, ...info }; break; }
+  }
+
+  // 2. Fall back to the most decisive of the remaining categories.
+  if (!pick) {
+    for (const cat of CATEGORIES) {
+      if (NEXT_PRIORITY.includes(cat.id)) continue;
+      const info = splitInfo(cat);
+      if (!info) continue;
+      if (!pick || info.worst < pick.worst || (info.worst === pick.worst && info.nGroups > pick.nGroups)) {
+        pick = { cat, ...info };
+      }
     }
   }
-  if (!best) return;
+  if (!pick) return;
 
-  const badge = document.querySelector(`.filter-category[data-cat-id="${best.cat.id}"] .next-badge`);
+  const badge = document.querySelector(`.filter-category[data-cat-id="${pick.cat.id}"] .next-badge`);
   if (badge) {
     badge.hidden = false;
     badge.textContent = "check next";
-    badge.title = `Best clue to check next - worst case leaves ${best.worst} of the ${cands.length} candidates.`;
+    badge.title = `Best clue to check next - worst case leaves ${pick.worst} of the ${cands.length} candidates.`;
   }
 }
 

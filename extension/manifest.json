@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Meta Lineup Filter",
-  "version": "1.2.9",
+  "version": "1.2.10",
   "description": "Narrow down GeoGuessr countries by the visual clues you're seeing - side of driving, stop sign wording, road line and chevron colors, special alphabet letters and more.",
   "action": {
     "default_title": "Open Meta Lineup Filter",
