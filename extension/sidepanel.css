@@ -644,6 +644,23 @@ body {
   color: #34d399;
 }
 
+/* Second line: real sign-style text (greeting / city / street word) so the
+   tile shows the script the way it actually appears in-game. */
+.script-more {
+  font-size: 13px;
+  line-height: 1.35;
+  color: #94a3b8;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.script-tile:has(input:checked) .script-more {
+  color: #6ee7b7;
+}
+
 .script-name {
   font-size: 10px;
   color: #64748b;

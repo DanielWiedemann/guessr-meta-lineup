@@ -117,29 +117,32 @@ const COLOR_HEX = {
 const STOP_ORDER = ["STOP", "PARE", "ALTO", "DUR", "BERHENTI", "ARRÊT", "止まれ", "停", "정지", "หยุด", "قف"];
 const CONTINENT_ORDER = ["North America", "South America", "Europe", "Africa", "Asia", "Oceania", "Antarctica"];
 
-// Writing scripts: sample glyphs so the tile shows the alphabet's *shape*
-// (the thing you actually recognise in-game), with the name underneath.
-// Ordered by rough region so lookalikes sit next to each other.
+// Writing scripts: each tile shows big sample glyphs PLUS a line of real
+// sign-style text (greetings, city names, street words) so the tile looks
+// like what you actually see in-game - including the tone marks, stacked
+// vowels and digits that dominate real signage (a bare 3-letter sample
+// wasn't enough to recognise a busy Thai shopfront). Ordered by rough
+// region so lookalikes sit next to each other.
 const SCRIPT_SAMPLES = {
-  "Latin": "ABc",
-  "Cyrillic": "БЖД",
-  "Thai": "กสด",
-  "Lao": "ກສດ",
-  "Khmer": "កសដ",
-  "Chinese characters": "中文字",
-  "Japanese kana": "あのか",
-  "Korean Hangul": "한글",
-  "Devanagari": "कमल",
-  "Bengali": "বকল",
-  "Tamil": "தமழ",
-  "Telugu": "తలవ",
-  "Kannada": "ಕಬಳ",
-  "Gujarati": "ગમળ",
-  "Sinhala": "සකම",
-  "Tibetan (Dzongkha)": "ཀཁག",
-  "Arabic": "ابع",
-  "Hebrew": "אבש",
-  "Greek": "αβΩ",
+  "Latin": { glyphs: "ABc", more: "Street · Straße" },
+  "Cyrillic": { glyphs: "БЖД", more: "улица Москва" },
+  "Thai": { glyphs: "กสด", more: "สวัสดี ถนน ๑๒๓" },
+  "Lao": { glyphs: "ກສດ", more: "ສະບາຍດີ ຖະໜົນ" },
+  "Khmer": { glyphs: "កសដ", more: "ភ្នំពេញ សួស្ដី" },
+  "Chinese characters": { glyphs: "中文字", more: "北京 上海 路" },
+  "Japanese kana": { glyphs: "あのか", more: "こんにちは カナ" },
+  "Korean Hangul": { glyphs: "한글", more: "서울 안녕하세요" },
+  "Devanagari": { glyphs: "कमल", more: "नमस्ते मार्ग" },
+  "Bengali": { glyphs: "বকল", more: "ঢাকা সড়ক" },
+  "Tamil": { glyphs: "தமழ", more: "சென்னை வீதி" },
+  "Telugu": { glyphs: "తలవ", more: "హైదరాబాద్" },
+  "Kannada": { glyphs: "ಕಬಳ", more: "ಬೆಂಗಳೂರು" },
+  "Gujarati": { glyphs: "ગમળ", more: "અમદાવાદ" },
+  "Sinhala": { glyphs: "සකම", more: "කොළඹ පාර" },
+  "Tibetan (Dzongkha)": { glyphs: "ཀཁག", more: "ཐིམ་ཕུག" },
+  "Arabic": { glyphs: "ابع", more: "شارع قف" },
+  "Hebrew": { glyphs: "אבש", more: "רחוב שלום" },
+  "Greek": { glyphs: "αβΩ", more: "Οδός Αθήνα" },
 };
 const SCRIPT_ORDER = Object.keys(SCRIPT_SAMPLES);
 
@@ -540,13 +543,21 @@ function renderFilters() {
         label.className = "script-tile";
         const wrap = document.createElement("span");
         wrap.className = "script-inner";
+        const sample = SCRIPT_SAMPLES[value];
         const glyphs = document.createElement("span");
         glyphs.className = "script-glyphs";
-        glyphs.textContent = SCRIPT_SAMPLES[value] ?? value.slice(0, 3);
+        glyphs.textContent = sample?.glyphs ?? value.slice(0, 3);
+        wrap.appendChild(glyphs);
+        if (sample?.more) {
+          const more = document.createElement("span");
+          more.className = "script-more";
+          more.textContent = sample.more;
+          wrap.appendChild(more);
+        }
         const name = document.createElement("span");
         name.className = "script-name";
         name.textContent = value;
-        wrap.append(glyphs, name);
+        wrap.appendChild(name);
         label.appendChild(wrap);
       } else if (usesTiles) {
         label.className = "opt-tile";
