@@ -601,9 +601,13 @@ roadWord("Chaussée", ["be", "fr"]); // distinctive in Belgian French
 roadWord("-vej / -gade", ["dk", "gl"]); // Danish (also Greenland)
 roadWord("-vei / -veien", ["no", "sj"]); // Norwegian Bokmål (+ Svalbard)
 roadWord("-veg / -vegen", ["no"]); // Norwegian Nynorsk
-roadWord("-vägen", ["se"]); // Swedish
-roadWord("-gatan", ["se"]); // Swedish definite - very distinctive
-roadWord("-gränd", ["se"]);
+// Swedish definite forms appear in Sweden AND in bilingual Finland, where
+// Swedish is co-official and signs on the (southern/western) coast are
+// Finnish+Swedish - e.g. Helsinki's Alexandersgatan / Mannerheimvägen.
+// The leak is one-way: Finnish -tie/-katu don't show up in Sweden.
+roadWord("-vägen", ["se", "fi"]); // Swedish "the road"
+roadWord("-gatan", ["se", "fi"]); // Swedish definite "the street"
+roadWord("-gränd", ["se", "fi"]);
 roadWord("gata / gate", ["se", "no", "is", "fi"]);
 roadWord("-vegur", ["fo", "is"]); // Faroese / Icelandic
 roadWord("-stígur / -braut", ["is"]);
