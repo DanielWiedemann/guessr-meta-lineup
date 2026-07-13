@@ -158,7 +158,7 @@ const countryLanguages: Record<string, string[]> = {
   ro: ["Romanian"], ru: ["Russian"], sm: ["Italian"], rs: ["Serbian"], sk: ["Slovak"],
   si: ["Slovenian"], es: ["Spanish"], sj: ["Norwegian"], se: ["Swedish"],
   ch: ["German", "French", "Italian", "Romansh"], tr: ["Turkish"], ua: ["Ukrainian", "Russian"],
-  gb: ["English"],
+  gb: ["English", "Welsh", "Scottish Gaelic"], // Welsh/Gaelic appear on bilingual UK signage
   // Africa
   bw: ["English"], eg: ["Arabic"], sz: ["English"], gh: ["English"], ke: ["Swahili", "English"],
   ls: ["English"], mg: ["Malagasy", "French"], ml: ["French"], na: ["English"], ng: ["English"],
@@ -569,27 +569,77 @@ function scriptsFor(code: string): string[] {
 
 const roadNameWords: Record<string, string[]> = {};
 function roadWord(word: string, codes: string[]) {
-  for (const code of codes) (roadNameWords[code] ??= []).push(word);
+  for (const code of codes) {
+    const arr = (roadNameWords[code] ??= []);
+    if (!arr.includes(word)) arr.push(word);
+  }
 }
 
 roadWord("Jalan / Jl.", ["id", "my", "sg"]);
-roadWord("ul. / ulica / ulice", ["pl", "hr", "si", "rs", "me", "mk", "cz", "sk"]);
-roadWord("ул. / вул. (Ulitsa)", ["ru", "ua", "by", "bg", "kz", "kg"]); // Cyrillic "street", romanized Ulitsa
-roadWord("-straße / Str.", ["de", "at", "ch", "li", "lu"]);
+
+// --- Europe: German-speaking (Straße vs Strasse is a classic tell) -------
+roadWord("-straße / Str.", ["de", "at", "lu"]); // ß spelling: Germany, Austria, Luxembourg
+roadWord("-strasse", ["ch", "li"]); // Swiss / Liechtenstein spelling drops the ß
+roadWord("-gasse", ["de", "at", "ch", "li"]);
+roadWord("-weg", ["de", "at", "ch", "li", "nl", "be", "za"]); // German Weg + Dutch weg
+roadWord("Allee / -allé", ["de", "at", "dk", "se", "no"]);
+roadWord("Platz", ["de", "at", "ch", "li"]);
+roadWord("Ring", ["de", "at"]);
+roadWord("Strooss / Wee", ["lu"]); // Luxembourgish
+
+// --- Europe: Dutch / Flemish --------------------------------------------
 roadWord("-straat", ["nl", "be", "za", "cw"]); // Dutch + Afrikaans
-roadWord("-weg", ["nl", "be", "de", "za"]);
-roadWord("-vej", ["dk", "gl"]); // Danish street names also appear in Greenland
-roadWord("-veien / -vegen", ["no", "sj"]);
-roadWord("-vägen / -gatan", ["se"]);
-roadWord("-vegur", ["is", "fo"]);
-roadWord("-gata", ["is", "no"]);
-roadWord("-tie / -katu", ["fi"]);
-roadWord("iela", ["lv"]);
-roadWord("g. / gatvė", ["lt"]);
-roadWord("tänav / tee / mnt", ["ee"]);
+roadWord("-steenweg", ["be"]); // very distinctive Belgian
+roadWord("-laan", ["nl", "be"]);
+roadWord("-gracht", ["nl"]); // canal-side, Amsterdam
+roadWord("-singel", ["nl"]);
+roadWord("-dreef", ["nl", "be"]);
+roadWord("plein", ["nl", "be"]);
+roadWord("Chaussée", ["be", "fr"]); // distinctive in Belgian French
+
+// --- Europe: Nordic -----------------------------------------------------
+roadWord("-vej / -gade", ["dk", "gl"]); // Danish (also Greenland)
+roadWord("-vei / -veien", ["no", "sj"]); // Norwegian Bokmål (+ Svalbard)
+roadWord("-veg / -vegen", ["no"]); // Norwegian Nynorsk
+roadWord("-vägen", ["se"]); // Swedish
+roadWord("-gatan", ["se"]); // Swedish definite - very distinctive
+roadWord("-gränd", ["se"]);
+roadWord("gata / gate", ["se", "no", "is", "fi"]);
+roadWord("-vegur", ["fo", "is"]); // Faroese / Icelandic
+roadWord("-stígur / -braut", ["is"]);
+roadWord("-tie / -katu", ["fi"]); // Finnish
+roadWord("-kuja / -polku", ["fi"]);
+
+// --- Europe: Baltic -----------------------------------------------------
+roadWord("-iela", ["lv"]); // Latvian "street" - unmistakable
+roadWord("gatve / prospekts", ["lv"]);
+roadWord("-gatvė", ["lt"]); // Lithuanian
+roadWord("kelias / prospektas / alėja", ["lt"]);
+roadWord("tänav / tee", ["ee"]); // Estonian
+roadWord("-maantee / puiestee", ["ee"]); // distinctive Estonian
+
+// --- Europe: Central ----------------------------------------------------
+roadWord("ulica / ul.", ["pl", "hr", "si", "rs", "me", "sk"]); // Latin-script "street"
+roadWord("ulice / třída", ["cz"]); // Czech
+roadWord("aleja / al. / plac / pl.", ["pl"]); // Polish
+roadWord("osiedle", ["pl"]);
+roadWord("cesta", ["hr", "si", "sk", "cz"]);
+roadWord("námestie / náměstí", ["sk", "cz"]);
 roadWord("utca / út", ["hu"]);
+roadWord("körút / köz", ["hu"]); // distinctive Hungarian
 roadWord("Strada / Str.", ["ro"]);
-roadWord("Rruga / Rr.", ["al"]); // Albanian "street"
+roadWord("calea / bulevardul", ["ro"]);
+
+// --- Europe: Balkan -----------------------------------------------------
+roadWord("put / cesta", ["hr", "me", "rs"]);
+roadWord("trg", ["hr", "si", "me", "rs"]);
+roadWord("Rruga / Rr.", ["al", "mk"]); // Albanian - also in North Macedonia
+
+// --- Europe: Cyrillic ---------------------------------------------------
+roadWord("улица / ул. (Ulitsa)", ["ru", "by", "bg", "rs", "mk", "kz", "kg"]);
+roadWord("вулиця / вул. (Vulytsia)", ["ua"]); // distinctly Ukrainian
+roadWord("проспект (Prospekt)", ["ru", "ua", "by", "bg", "kz", "kg"]);
+roadWord("булевар / булевард", ["bg", "rs", "mk"]);
 // Catalan "street": Andorra, plus bilingual signage in Spain's Catalan-
 // speaking regions (Catalonia, Balearics, Valencia) and in France's
 // Roussillon / Perpignan, where official street plaques are French-Catalan.
@@ -603,9 +653,27 @@ roadWord("Rue", [
 const SPANISH_SPEAKING = ["es", "ar", "bo", "cl", "co", "ec", "pe", "uy", "cr", "do", "gt", "mx", "pa", "pr"];
 roadWord("Calle / Cl.", SPANISH_SPEAKING); // Cl. is the standard Calle abbreviation on address signs
 roadWord("Carretera / Ctra.", SPANISH_SPEAKING); // the Spanish word for "highway"
+roadWord("Avenida / Av.", SPANISH_SPEAKING);
+roadWord("Plaza", SPANISH_SPEAKING);
+roadWord("Paseo / Camino / Ronda", ["es"]);
 roadWord("Cra. / Carrera", ["co"]); // Colombia's grid: Calle (E-W) × Carrera (N-S), a strong ID
+// Spain's co-official languages - each is a strong regional tell
+roadWord("Avinguda / Passeig (Catalan)", ["es", "ad"]);
+roadWord("Plaça / Camí (Catalan)", ["es", "ad"]);
+roadWord("Rúa / Praza / Camiño (Galician)", ["es"]);
+roadWord("Kalea (Basque)", ["es"]); // unmistakable Basque Country
+roadWord("Bidea / Etorbidea (Basque)", ["es"]);
 roadWord("Rua", ["pt", "br", "pt-az", "pt-ma", "st", "mo"]); // Macau keeps Portuguese street names
+roadWord("Travessa / Largo (Portuguese)", ["pt", "br", "pt-az", "pt-ma"]);
+roadWord("Estrada / Praça (Portuguese)", ["pt", "br", "pt-az", "pt-ma"]);
 roadWord("Via", ["it", "sm", "ch"]);
+roadWord("Corso / Viale / Vicolo (Italian)", ["it", "sm"]);
+roadWord("Piazza", ["it", "sm", "ch"]);
+roadWord("Οδός / Λεωφόρος / Πλατεία", ["gr", "cy"]); // Greek street / avenue / square
+roadWord("Triq / Pjazza", ["mt"]); // distinctly Maltese
+roadWord("Ffordd / Stryd / Heol (Welsh)", ["gb"]); // bilingual Welsh signage
+roadWord("Bóthar / Sráid (Irish)", ["ie", "gb"]);
+roadWord("Rathad (Scottish Gaelic)", ["gb"]);
 roadWord("Street / Road / Rd", [
   "us", "us-ak", "us-hi", "ca", "gb", "ie", "au", "nz", "za", "ke", "ng", "gh", "ug", "tz",
   "in", "pk", "ph", "sg", "hk", "mt", "cy", "gi", "im", "je", "bm", "vi", "fk", "as", "gu",
