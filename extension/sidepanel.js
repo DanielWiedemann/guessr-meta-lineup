@@ -868,12 +868,22 @@ function clueCard(country) {
       `<path d="M4 8h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
     const label = country.license_plate_label ? escapeXml(country.license_plate_label) : "License plate";
     const desc = country.license_plate_desc ? `<span class="cc-plate-desc">${escapeXml(country.license_plate_desc)}</span>` : "";
+    // Full-resolution version for the lightbox (strip Plonk It's thumbnail resize segment).
+    const full = country.license_plate_image.replace(/\/images\/resize\/\d+\/\d+\//, "/images/");
     html +=
       `<div class="cc-plate"><span class="cc-cat">${plateIcon}<span>License plate</span></span>` +
-      `<div class="cc-plate-body"><img class="cc-plate-img" src="${escapeXml(country.license_plate_image)}" alt="${label} of ${escapeXml(country.name)}" loading="lazy" />` +
+      `<div class="cc-plate-body">` +
+      `<img class="cc-plate-img" src="${escapeXml(country.license_plate_image)}" data-full="${escapeXml(full)}" alt="${label} of ${escapeXml(country.name)}" title="Click to enlarge" loading="lazy" />` +
       `<div class="cc-plate-text"><span class="cc-plate-label">${label}</span>${desc}</div></div></div>`;
   }
   card.innerHTML = html || `<div class="cc-none">No clue data recorded yet.</div>`;
+  const pimg = card.querySelector(".cc-plate-img");
+  if (pimg) {
+    pimg.addEventListener("click", (e) => {
+      e.stopPropagation(); // don't collapse the card
+      openImageLightbox(pimg.dataset.full || pimg.src, `${country.name} — ${country.license_plate_label || "License plate"}`);
+    });
+  }
   return card;
 }
 
@@ -981,6 +991,26 @@ function closeCompare() {
   document.getElementById("compare-overlay").hidden = true;
 }
 
+// --- Image lightbox (click a plate to view it large) ------------------------
+function openImageLightbox(src, caption) {
+  const ov = document.getElementById("img-lightbox");
+  ov.innerHTML =
+    `<button type="button" class="lb-close" aria-label="Close">✕</button>` +
+    `<div class="lb-inner"><img src="${escapeXml(src)}" alt="${escapeXml(caption || "")}" />` +
+    (caption ? `<div class="lb-cap">${escapeXml(caption)}</div>` : "") +
+    `</div>`;
+  ov.hidden = false;
+  ov.onclick = (e) => {
+    if (e.target === ov || e.target.classList.contains("lb-close")) closeImageLightbox();
+  };
+}
+
+function closeImageLightbox() {
+  const ov = document.getElementById("img-lightbox");
+  ov.hidden = true;
+  ov.innerHTML = "";
+}
+
 function updateClearButton() {
   document.getElementById("clear-btn").disabled = !hasAnyFilterSelected();
 }
@@ -1003,7 +1033,7 @@ async function init() {
     document.getElementById("clear-btn").addEventListener("click", clearFilters);
     document.getElementById("toggle-all").addEventListener("click", toggleAllSections);
     document.getElementById("compare-btn").addEventListener("click", renderCompare);
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeCompare(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeImageLightbox(); closeCompare(); } });
   } catch (err) {
     document.getElementById("status").textContent = `Couldn't load filter data: ${err.message}`;
   }
