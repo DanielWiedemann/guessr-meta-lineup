@@ -166,7 +166,11 @@ function valuesFor(country, cat) {
 }
 
 async function loadData() {
-  const cols = ["code", "name", "region", "flag_code", ...CATEGORIES.map((c) => c.col)];
+  const cols = [
+    "code", "name", "region", "flag_code",
+    "license_plate_image", "license_plate_label", "license_plate_desc",
+    ...CATEGORIES.map((c) => c.col),
+  ];
   const countries = await sb(`countries?select=${cols.join(",")}&order=name`);
   state.countries = countries;
 
@@ -855,6 +859,19 @@ function clueCard(country) {
     html +=
       `<div class="cc-row"><span class="cc-cat">${headerIcon(cat.icon ?? cat.kind)}<span>${cat.name}</span></span>` +
       `<span class="cmp-chips">${compareValueChips(cat, vals, new Set())}</span></div>`;
+  }
+  // License plate (not a filter - shown as reference imagery + text).
+  if (country.license_plate_image) {
+    const plateIcon =
+      `<svg class="cat-icon" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">` +
+      `<rect x="1.5" y="4" width="13" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/>` +
+      `<path d="M4 8h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+    const label = country.license_plate_label ? escapeXml(country.license_plate_label) : "License plate";
+    const desc = country.license_plate_desc ? `<span class="cc-plate-desc">${escapeXml(country.license_plate_desc)}</span>` : "";
+    html +=
+      `<div class="cc-plate"><span class="cc-cat">${plateIcon}<span>License plate</span></span>` +
+      `<div class="cc-plate-body"><img class="cc-plate-img" src="${escapeXml(country.license_plate_image)}" alt="${label} of ${escapeXml(country.name)}" loading="lazy" />` +
+      `<div class="cc-plate-text"><span class="cc-plate-label">${label}</span>${desc}</div></div></div>`;
   }
   card.innerHTML = html || `<div class="cc-none">No clue data recorded yet.</div>`;
   return card;

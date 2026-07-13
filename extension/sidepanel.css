@@ -810,6 +810,49 @@ body {
   font-style: italic;
 }
 
+/* License plate block inside a clue card */
+.cc-plate {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0 2px;
+}
+
+.cc-plate-body {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.cc-plate-img {
+  width: 92px;
+  height: auto;
+  border-radius: 4px;
+  border: 1px solid #1e293b;
+  background: #0f172a;
+  flex-shrink: 0;
+}
+
+.cc-plate-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cc-plate-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.cc-plate-desc {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #94a3b8;
+}
+
 /* Countries kept only because a selected clue has no data for them yet —
    still possible, but visually secondary to confirmed matches. */
 #results li.uncertain {

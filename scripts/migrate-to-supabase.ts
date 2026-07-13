@@ -18,18 +18,25 @@ if (!url || !serviceRoleKey) {
 const supabase = createClient(url, serviceRoleKey);
 
 async function run() {
-  console.log("Clearing existing rows...");
-  // Child tables first (FK order).
+  console.log("Clearing meta rows...");
+  // Child tables first (FK order). NOTE: we do NOT delete `countries` here.
+  // The extension's filter data (driving side, languages, colours, plate
+  // summary, ...) lives in wide columns on `countries` that are populated
+  // by scripts/seed-filters.ts. Wiping + reinserting countries would blow
+  // those away (it once broke the extension), so instead we UPSERT the
+  // base columns and leave the wide columns untouched.
   await supabase.from("variants").delete().gte("sort_order", -1);
   await supabase.from("facts").delete().gte("sort_order", -1);
   await supabase.from("country_meta_entries").delete().not("id", "is", null);
   await supabase.from("metas").delete().not("id", "is", null);
-  await supabase.from("countries").delete().not("code", "is", null);
 
-  console.log(`Inserting ${countries.length} countries...`);
-  const { error: countriesError } = await supabase.from("countries").insert(
-    countries.map((c) => ({ code: c.code, name: c.name, region: c.region, flag_code: c.flagCode ?? null }))
-  );
+  console.log(`Upserting ${countries.length} countries (base columns only)...`);
+  const { error: countriesError } = await supabase
+    .from("countries")
+    .upsert(
+      countries.map((c) => ({ code: c.code, name: c.name, region: c.region, flag_code: c.flagCode ?? null })),
+      { onConflict: "code" }
+    );
   if (countriesError) throw countriesError;
 
   console.log(`Inserting ${metas.length} metas...`);

@@ -99,8 +99,10 @@ would fabricate a signal rather than honestly reflect a gap.
   colour can no longer eliminate the correct country without trace.
 - **Clue cards** - click any result row to unfold that country's full
   recorded profile (drive side, line colours, chevrons, stop sign,
-  currency, language, script, letters, road words) right in the panel;
-  the ↗ button opens its Meta Lineup page instead.
+  currency, language, script, letters, road words) right in the panel,
+  including its **license plate** photo where documented; the ↗ button
+  opens its Meta Lineup page instead. (License plate is reference info,
+  not a filter.)
 
 ### What's different? (tie-breaker)
 

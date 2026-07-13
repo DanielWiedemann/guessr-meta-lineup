@@ -33,6 +33,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { currency } from "../data/currency";
 import { phoneNumbers } from "../data/phoneNumbers";
+import { licensePlates } from "../data/licensePlates";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -56,6 +57,9 @@ type Facts = {
   road_name_words: string[];
   currency_symbols: string[];
   phone_codes: string[];
+  license_plate_image: string | null;
+  license_plate_label: string | null;
+  license_plate_desc: string | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -746,6 +750,14 @@ for (const entry of currency.countries) {
 // PLUS one value per area code: ["+44", "+44 1624"] - so seeing just "+44"
 // matches the whole UK group, while the full "+44 1624" pins the Isle of
 // Man (players genuinely memorise the +1-XXX Caribbean/Pacific codes).
+// License-plate summary (first documented variant per country) so the
+// extension can show the plate in a country's clue card - not a filter.
+const countryPlate: Record<string, { image: string; label: string; desc: string }> = {};
+for (const entry of licensePlates.countries) {
+  const v = entry.variants?.[0];
+  if (v) countryPlate[entry.code] = { image: v.image, label: v.label, desc: v.description };
+}
+
 const countryPhone: Record<string, string[]> = {};
 for (const entry of phoneNumbers.countries) {
   const raw = entry.facts.find((f) => f.label === "Calling code")?.value?.trim();
@@ -803,6 +815,9 @@ async function run() {
         road_name_words: roadNameWords[code] ?? [],
         currency_symbols: countryCurrency[code] ?? [],
         phone_codes: countryPhone[code] ?? [],
+        license_plate_image: countryPlate[code]?.image ?? null,
+        license_plate_label: countryPlate[code]?.label ?? null,
+        license_plate_desc: countryPlate[code]?.desc ?? null,
       },
     });
   }
