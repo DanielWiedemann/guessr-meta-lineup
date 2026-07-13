@@ -184,7 +184,9 @@ export const licensePlates: GalleryMeta = {
       v("no-plate", "White plate, green commercial", "Long white plates with the standard European strip; commercial vans commonly use green plates, a distinctly Norwegian feature in Europe.", pk("norway", "no_licenceplate.png")),
     ]),
     c("pl", "poland", [], "No dedicated license plate close-up documented on Plonk It for Poland."),
-    c("pt", "portugal", [], "No dedicated license plate close-up documented on Plonk It for Portugal."),
+    c("pt", "portugal", [
+      v("pt-plate", "White plate", "Portuguese plates are long and white, with a blue strip on the left. Most plates have a yellow strip on the right, which is unique to Portugal.", "https://www.plonkit.net/images/resize/600/80/portugal/transparent-pt_summary_2026.png"),
+    ]),
     c("ro", "romania", [], "No dedicated license plate close-up documented on Plonk It for Romania."),
     c("ru", "russia", [
       v("ru-plate", "White plate, black text", "Fully white with black text and no blue strip, unlike most European plates.", pk("russia", "licenceplate.png")),
@@ -224,5 +226,129 @@ export const licensePlates: GalleryMeta = {
     { code: "by", sourceUrl: "https://www.plonkit.net/belarus", variants: [] },
     { code: "fo", sourceUrl: "https://www.plonkit.net/faroe-islands", variants: [] },
     { code: "pt-ma", sourceUrl: "https://www.plonkit.net/madeira", variants: [] },
+    // --- Africa / Asia / Oceania + territories (added from Plonk It) ---
+    c("bt", "bhutan", [
+      v("bt-plate", "Red plate", "Licence plates in Bhutan are almost always red and can easily be seen on vehicles.", "https://www.plonkit.net/images/resize/600/80/bhutan/0_Copy_of_Copy_of_Copy_of_Copy_of_Copy_of_Infographic__283_29.png"),
+    ]),
+    c("bd", "bangladesh", [
+      v("bd-plate", "White plate", "Bangladeshi licence plates are either white, black or turquoise.", "https://www.plonkit.net/images/resize/600/80/bangladesh/0_Shitcam_Summary_Graphic.png"),
+    ]),
+    c("au", "australia", [
+      v("au-plate", "License plate", "Different states use different licence plate designs, which can be somewhat visible through the blur.", "https://www.plonkit.net/images/resize/600/80/australia/aus_license_plates.png"),
+    ]),
+    c("cw", "curacao", [
+      v("cw-plate", "White plate", "Curaçao uses square licence plates that appear completely white through the blur.", "https://www.plonkit.net/images/resize/600/80/curacao/image.png"),
+    ]),
+    c("cn", "china", [
+      v("cn-plate", "White plate", "Chinese licence plates are blue with white text.", "https://www.plonkit.net/images/resize/600/80/china/cn_licenceplate.png"),
+    ]),
+    c("hk", "hong-kong", [
+      v("hk-plate", "White plate", "Hong Kong has white front licence plates and yellow rear licence plates. The licence plates can be long or short. Some cars have an additional [black.", "https://www.plonkit.net/images/resize/600/80/hong-kong/Hong_Kong_License_Plate.png"),
+    ]),
+    c("in", "india", [
+      v("in-plate", "White plate", "Indian licence plates are typically fairly long, with the most common design being white. Commercial vehicles typically use yellow plates, while electric vehicles use green.", "https://www.plonkit.net/images/resize/600/80/india/in_licenceplates.png"),
+    ]),
+    c("id", "indonesia", [
+      v("id-plate", "White plate", "Indonesian licence plates are black with white letters. The letters usually appear as three white sections through the blur.", "https://www.plonkit.net/images/resize/600/80/indonesia/Indonesia_summary_graphic.png"),
+    ]),
+    c("ke", "kenya", [
+      v("ke-plate", "White plate", "Kenya uses long white front licence plates. The rear counterpart is square and yellow.", "https://www.plonkit.net/images/resize/600/80/kenya/Kenya_License_Plate.png"),
+    ]),
+    c("jo", "jordan", [
+      v("jo-plate", "White plate", "Jordanian licence plates are white and can be long or short. Commercial transport vehicles, such as taxis, have a distinctive green strip on the left.", "https://www.plonkit.net/images/resize/600/80/jordan/Jordan_License_Plate.png"),
+    ]),
+    c("kh", "cambodia", [
+      v("kh-plate", "White plate", "Licence plates are white with blue letters. The blue sheen of the letters can be hard to see through the blur, and the plates might appear as plain white.", "https://www.plonkit.net/images/resize/600/80/cambodia/0_summary_cambo.png"),
+    ]),
+    c("jp", "japan", [
+      v("jp-plate", "White plate", "Japan uses a standard short white licence plate with green text. You will often see a different short yellow version with black text issued to “light automobiles”, otherwise known as Kei Cars.", "https://www.plonkit.net/images/resize/600/80/japan/11.png"),
+    ]),
+    c("kg", "kyrgyzstan", [
+      v("kg-plate", "Red plate", "Licence plates in Kyrgyzstan have a red strip on them.", "https://www.plonkit.net/images/resize/600/80/kyrgyzstan/0_summary_kyrgyzstan.png"),
+    ]),
+    c("ls", "lesotho", [
+      v("ls-plate", "White plate", "Lesotho uses long white licence plates with blue text. If partially unblurred, you may see the [Mokorotlo hat.", "https://www.plonkit.net/images/resize/600/80/lesotho/Lesotho_License_Plate.png"),
+    ]),
+    c("la", "laos", [
+      v("la-plate", "White plate", "Laotian licence plates are short and yellow. This distinguishes them from nearby Thailand and Cambodia, who both use white plates on non-commercial vehicles.", "https://www.plonkit.net/images/resize/600/80/laos/Laos_License_Plate.png"),
+    ]),
+    c("lb", "lebanon", [
+      v("lb-plate", "Blue plate", "Standard Lebanese licence plates are either long with a blue strip on the left, similar to most licence plates in Europe, or short with a similar blue strip. Licence plates on taxis are notably deep red.", "https://www.plonkit.net/images/resize/600/80/lebanon/0_Shitcam_Summary_Graphic.png"),
+    ]),
+    c("kr", "south-korea", [
+      v("kr-plate", "License plate", "South Korea uses a variety of different licence plates.", "https://www.plonkit.net/images/resize/600/80/south-korea/0_skr.png"),
+    ]),
+    c("kz", "kazakhstan", [
+      v("kz-plate", "White plate", "When blurred, the standard Kazakh licence plates are mostly white, with a small hint of blue on the left side.", "https://www.plonkit.net/images/resize/600/80/kazakhstan/0_1.png"),
+    ]),
+    c("my", "malaysia", [
+      v("my-plate", "White plate", "Malaysian licence plates are black and generally have two white sections. These are visible even when blurred.", "https://www.plonkit.net/images/resize/600/80/malaysia/transparent-my_summary_2026.png"),
+    ]),
+    c("na", "namibia", [
+      v("na-plate", "White plate", "Namibia primarily uses yellow front and back licence plates. Vanity plates are white, with blue lettering.", "https://www.plonkit.net/images/resize/600/80/namibia/0_summary.png"),
+    ]),
+    c("mn", "mongolia", [
+      v("mn-plate", "White plate", "Mongolian licence plates are mostly white with a hint of red on the left side from the [Soyombo symbol.", "https://www.plonkit.net/images/resize/600/80/mongolia/0_mn.png"),
+    ]),
+    c("mo", "macau", [
+      v("mo-plate", "White plate", "Macau uses black licence plates with white text. Licence plates can either be long or square.", "https://www.plonkit.net/images/resize/600/80/macau/Licence_Plates.png"),
+    ]),
+    c("pk", "pakistan", [
+      v("pk-plate", "Green plate", "Pakistan uses short licence plates and each region has its unique design. However, as all of the coverage was taken in Punjab, most plates will have the Punjab design, with a green strip on the left side.", "https://www.plonkit.net/images/resize/600/80/pakistan/pk_licenceplate.png"),
+    ]),
+    c("ph", "philippines", [
+      v("ph-plate", "White plate", "Standard white licence plates with black text are used for passenger vehicles. You can also find many older plates from the 2002 series, which are recognisable due to their green tint.", "https://www.plonkit.net/images/resize/600/80/philippines/2_licenseplate.png"),
+    ]),
+    c("om", "oman", [
+      v("om-plate", "Yellow plate", "Licence plates on private vehicles are generally yellow, while commercial vehicles have red plates.", "https://www.plonkit.net/images/resize/600/80/oman/3.png"),
+    ]),
+    c("ng", "nigeria", [
+      v("ng-plate", "Green plate", "Nigeria uses short licence plates that appear somewhat green through the blur.", "https://www.plonkit.net/images/resize/600/80/nigeria/0HpTmNo.png"),
+    ]),
+    c("np", "nepal", [
+      v("np-plate", "White plate", "Nepali licence plates are typically fairly long, with the most common design being white. Private vehicles use red plates, while public vehicles use black ones.", "https://www.plonkit.net/images/resize/600/80/nepal/0_I77DC4X.png"),
+    ]),
+    c("nz", "new-zealand", [
+      v("nz-plate", "White plate", "New Zealand uses white licence plates with black text, which appears mostly white through the blur.", "https://www.plonkit.net/images/resize/600/80/new-zealand/Ohne_Titel_2824_29.png"),
+    ]),
+    c("rw", "rwanda", [
+      v("rw-plate", "White plate", "Rwanda uses long white front and yellow back licence plates.", "https://www.plonkit.net/images/resize/600/80/rwanda/0_summary_rwanda.png"),
+    ]),
+    c("sn", "senegal", [
+      v("sn-plate", "White plate", "Senegal is the only African country to use fully blue licence plates. A newer version exists in Generation 4 which looks like the standard European licence plate which is white with a blue strip on the left.", "https://www.plonkit.net/images/resize/600/80/senegal/0_summary_senegal.png"),
+    ]),
+    c("sg", "singapore", [
+      v("sg-plate", "White plate", "Most Singaporean licence plates are black, with white text. Occasionally, you will be able to see the British style white-and-yellow plates and very rarely red plates.", "https://www.plonkit.net/images/resize/600/80/singapore/Singapore_License_Plate.png"),
+    ]),
+    c("qa", "qatar", [
+      v("qa-plate", "White plate", "Regular cars in Qatar have long, white licence plates with a maroon strip on the left. Trucks have square, black licence plates and police plates are blue.", "https://www.plonkit.net/images/resize/600/80/qatar/0_summary_qatar.png"),
+    ]),
+    c("sz", "eswatini", [
+      v("sz-plate", "Green plate", "Licence plates in Eswatini are long and green at the bottom.", "https://www.plonkit.net/images/resize/600/80/eswatini/Eswatini_License_Plate.png"),
+    ]),
+    c("tn", "tunisia", [
+      v("tn-plate", "White plate", "Tunisian licence plates are black with white text.", "https://www.plonkit.net/images/resize/600/80/tunisia/0_Copy_of_Copy_of_Basic_Summary_Graphic_285_29.png"),
+    ]),
+    c("th", "thailand", [
+      v("th-plate", "White plate", "Thailand uses large, white licence plates on passenger vehicles, and yellow ones on commercial vehicles.", "https://www.plonkit.net/images/resize/600/80/thailand/0_Copy_of_Copy_of_Copy_of_Copy_of_Copy_of_Copy_of_Copy_of_Infographic.png"),
+    ]),
+    c("za", "south-africa", [
+      v("za-plate", "Blue plate", "Each province features a different licence plate design, which can be somewhat visible through the blur. Most notably Free State or KwaZulu-Natal, which have a slight green tint and blue tint respectively.", "https://www.plonkit.net/images/resize/600/80/south-africa/ZA-map21.png"),
+    ]),
+    c("vn", "vietnam", [
+      v("vn-plate", "White plate", "Vietnamese licence plates are white with black lettering. Both long and short versions are in use.", "https://www.plonkit.net/images/resize/600/80/vietnam/vietnam_plate2.png"),
+    ]),
+    c("pt-az", "azores", [
+      v("pt-az-plate", "White plate", "Same as mainland Portugal: long white plates with a blue strip on the left.", "https://www.plonkit.net/images/resize/600/80/portugal/transparent-pt_summary_2026.png"),
+    ]),
+    c("pt-ma", "madeira", [
+      v("pt-ma-plate", "White plate", "Same as mainland Portugal: long white plates with a blue strip on the left.", "https://www.plonkit.net/images/resize/600/80/portugal/transparent-pt_summary_2026.png"),
+    ]),
+    c("mq", "martinique", [
+      v("mq-plate", "White plate", "Standard French plates: long and white with blue strips on both sides.", "https://www.plonkit.net/images/resize/600/80/france/1_licenceplate2.png"),
+    ]),
+    c("re", "reunion", [
+      v("re-plate", "White plate", "Standard French plates: long and white with blue strips on both sides.", "https://www.plonkit.net/images/resize/600/80/france/1_licenceplate2.png"),
+    ]),
   ],
 };
