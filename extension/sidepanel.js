@@ -603,7 +603,7 @@ function anySectionExpanded() {
 
 function updateToggleAllLabel() {
   const btn = document.getElementById("toggle-all");
-  if (btn) btn.textContent = anySectionExpanded() ? "Collapse all" : "Expand all";
+  if (btn) btn.textContent = anySectionExpanded() ? "Collapse filters" : "Expand filters";
 }
 
 function toggleAllSections() {
