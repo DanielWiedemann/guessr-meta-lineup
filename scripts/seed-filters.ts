@@ -576,6 +576,8 @@ function roadWord(word: string, codes: string[]) {
 }
 
 roadWord("Jalan / Jl.", ["id", "my", "sg"]);
+roadWord("Gg. / Gang", ["id"]); // Indonesian alley - a distinct Indonesia tell
+roadWord("Lorong / Lrg.", ["my", "sg", "id"]); // Malay/Indonesian lane
 
 // --- Europe: German-speaking (Straße vs Strasse is a classic tell) -------
 roadWord("-straße / Str.", ["de", "at", "lu"]); // ß spelling: Germany, Austria, Luxembourg
