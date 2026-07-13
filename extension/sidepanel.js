@@ -589,6 +589,31 @@ function renderFilters() {
 
   // Re-applying after a rebuild (collapse/expand wipes the badge elements).
   if (state.lastConfirmed) updateNextBadge(state.lastConfirmed);
+  updateToggleAllLabel();
+}
+
+// Expand/collapse-all control. The button always offers the action that
+// affects the most sections: if anything is open it collapses everything,
+// otherwise it expands everything.
+function anySectionExpanded() {
+  return CATEGORIES.some(
+    (c) => (state.optionsByCat.get(c.id)?.length ?? 0) > 0 && !state.collapsed.has(c.id)
+  );
+}
+
+function updateToggleAllLabel() {
+  const btn = document.getElementById("toggle-all");
+  if (btn) btn.textContent = anySectionExpanded() ? "Collapse all" : "Expand all";
+}
+
+function toggleAllSections() {
+  if (anySectionExpanded()) {
+    state.collapsed = new Set(CATEGORIES.map((c) => c.id));
+  } else {
+    state.collapsed = new Set();
+  }
+  savePrefs();
+  renderFilters();
 }
 
 function renderResults() {
@@ -959,6 +984,7 @@ async function init() {
     renderResults();
     updateClearButton();
     document.getElementById("clear-btn").addEventListener("click", clearFilters);
+    document.getElementById("toggle-all").addEventListener("click", toggleAllSections);
     document.getElementById("compare-btn").addEventListener("click", renderCompare);
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeCompare(); });
   } catch (err) {

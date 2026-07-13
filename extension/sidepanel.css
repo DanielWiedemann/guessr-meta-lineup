@@ -254,6 +254,31 @@ body {
   cursor: default;
 }
 
+/* Fixed toolbar above the scrolling filters. */
+.filters-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+#toggle-all {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid #1e293b;
+  background: #0f172a;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+#toggle-all:hover {
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
 /* The scrolling middle: all filter sections. */
 #filters {
   flex: 1;
