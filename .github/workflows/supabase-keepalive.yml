@@ -1,0 +1,23 @@
+name: Supabase keep-alive
+
+# Supabase pauses free-tier projects after ~7 days of no activity.
+# This makes one tiny read request per day so the project stays awake.
+# The anon key below is a PUBLIC publishable key (already shipped in the
+# web bundle and Chrome extension); tables are read-only via RLS, so
+# hardcoding it here exposes nothing that isn't already public.
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # every day at 06:00 UTC
+  workflow_dispatch: {} # allows manual runs from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query Supabase REST API
+        run: |
+          curl --fail --silent --show-error \
+            "https://ofiiluzxhnyzkbjlqfgk.supabase.co/rest/v1/countries?select=code&limit=1" \
+            -H "apikey: sb_publishable_AfMMFkL2mEu48zpi1HjowQ_HYt511A3" \
+            -H "Authorization: Bearer sb_publishable_AfMMFkL2mEu48zpi1HjowQ_HYt511A3"
